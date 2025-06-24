@@ -1,0 +1,346 @@
+﻿@page "/addgoals"
+@using MyFinace.Modules.Goals
+@using System.ComponentModel.DataAnnotations
+@using System.Globalization
+@using FluentValidation;
+
+
+@implements IAsyncDisposable
+
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-8 px-4 sm:px-6 md:px-8">
+    <MudText Typo="Typo.h4" Align="Align.Center" Color="Color.Primary" Class="mb-6 font-weight-bold">
+        <MudIcon Icon="@Icons.Material.Filled.AddTask" Size="Size.Large" Class="mr-2" /> Add New Financial Goal
+    </MudText>
+    <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-8 ">
+        Set your financial aspirations and track your progress with ease.
+    </MudText>
+
+    <MudPaper Elevation="6" Class="pa-6 rounded-xl animate__animated animate__fadeInUp">
+        <MudForm Model="@Goal" @ref="form" Validation="@(GoalValidator)">
+            <MudGrid Spacing="4">
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="Goal.Name"
+                                  Label="Goal Name"
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Lightbulb"
+                                  AdornmentColor="Color.Warning"
+                                  Required="true"
+                                  RequiredError="Goal Name is required!"
+                                  Clearable="true"
+                                  For="@(() => Goal.Name)" />
+                </MudItem>
+                <MudItem xs="12" sm="6">                    
+                    <MudSelect @bind-Value="Goal.InvestmentCategory"
+                               Label="Investment Category"
+                               Variant="Variant.Outlined"
+                               Adornment="Adornment.Start"
+                               AdornmentIcon="@Icons.Material.Filled.Category"
+                               AdornmentColor="Color.Info"
+                               Required="true"
+                               RequiredError="Investment Category is required!"
+                               For="@(() => Goal.InvestmentCategory)">
+                        @foreach (InvestmentCategory category in Enum.GetValues(typeof(InvestmentCategory)))
+                        {
+                            <MudSelectItem Value="@category">@category.ToString()</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="Goal.Description"
+                                  Label="Description"
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Description"
+                                  Lines="3"
+                                  AdornmentColor="Color.Secondary"
+                                  For="@(() => Goal.Description)" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudNumericField @bind-Value="Goal.TargetAmount"
+                                     Label="Target Amount"
+                                     Variant="Variant.Outlined"
+                                     Adornment="Adornment.Start"
+                                     AdornmentIcon="@Icons.Material.Filled.AttachMoney"
+                                     AdornmentText="₹"
+                                     AdornmentColor="Color.Success"
+                                     Required="true"
+                                     RequiredError="Target Amount is required and must be greater than 0!"
+                                     Format="N2"
+                                     HideSpinButtons="true"
+                                     For="@(() => Goal.TargetAmount)" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudNumericField @bind-Value="Goal.TotalAmountInvested"
+                                     Label="Amount Already Invested"
+                                     Variant="Variant.Outlined"
+                                     Adornment="Adornment.Start"
+                                     AdornmentIcon="@Icons.Material.Filled.Payments"
+                                     AdornmentText="₹"
+                                     AdornmentColor="Color.Success"
+                                     Required="true"
+                                     RequiredError="Amount Invested is required and cannot be negative!"
+                                     Format="N2"
+                                     HideSpinButtons="true"
+                                     For="@(() => Goal.TotalAmountInvested)" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudDatePicker @bind-Date="Goal.StartedYear"
+                                   Label="Start Date"
+                                   Variant="Variant.Outlined"
+                                   Adornment="Adornment.Start"
+                                   AdornmentIcon="@Icons.Material.Filled.DateRange"
+                                   AdornmentColor="Color.Tertiary"
+                                   Required="true"
+                                   RequiredError="Start Date is required!"
+                                   MaxDate="@DateTime.Today"
+                                   For="@(() => Goal.StartedYear)" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudDatePicker @bind-Date="Goal.TargetYear"
+                                   Label="Target Date"
+                                   Variant="Variant.Outlined"
+                                   Adornment="Adornment.Start"
+                                   AdornmentIcon="@Icons.Material.Filled.CalendarToday"
+                                   AdornmentColor="Color.Tertiary"
+                                   Required="true"
+                                   RequiredError="Target Date is required!"
+                                   MinDate="@(Goal.StartedYear)"
+                                   For="@(() => Goal.TargetYear)" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudNumericField @bind-Value="Goal.TotalSIPAmount"
+                                     Label="Total SIP Amount"
+                                     Variant="Variant.Outlined"
+                                     Adornment="Adornment.Start"
+                                     AdornmentIcon="@Icons.Material.Filled.Payments"
+                                     AdornmentText="₹"
+                                     AdornmentColor="Color.Success"
+                                     Required="true"
+                                     RequiredError="SIP Amount is required and cannot be negative!"
+                                     Format="N2"
+                                     HideSpinButtons="true"
+                                     For="@(() => Goal.TotalSIPAmount)" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSelect @bind-Value="Goal.Status"
+                               Label="Goal Status"
+                               Variant="Variant.Outlined"
+                               Adornment="Adornment.Start"
+                               AdornmentIcon="@Icons.Material.Filled.PieChart"
+                               AdornmentColor="Color.Primary"
+                               Required="true"
+                               RequiredError="Goal Status is required!"
+                               For="@(() => Goal.Status)">
+                        @foreach (GoalStatus status in Enum.GetValues(typeof(GoalStatus)))
+                        {
+                            <MudSelectItem Value="@status">@status.ToString()</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                     <MudTextField @bind-Value="Goal.ImageSVG"
+                                  Label="Image (SVG)"
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Image"
+                                  AdornmentColor="Color.Warning"
+                                  HelperText="Paste your SVG code here. (e.g., &lt;svg&gt;...&lt;/svg&gt;)"
+                                  Lines="5"
+                                  For="@(() => Goal.ImageSVG)" />
+                    @if (!string.IsNullOrWhiteSpace(Goal.ImageSVG))
+                    {
+                        <div class="d-flex justify-center mt-4">
+                            <MudPaper Class="rounded-lg pa-2 mud-border-primary" Style="max-width: 150px; max-height: 150px; overflow: hidden;">
+                                <div dangerouslySetInnerHTML="@((MarkupString)Goal.ImageSVG)"></div>
+                            </MudPaper>
+                        </div>
+                        <MudText Typo="Typo.caption" Align="Align.Center" Class="mt-2">
+                            SVG Preview
+                        </MudText>
+                        <MudText Typo="Typo.caption" Align="Align.Center" Class="mt-1 text-danger">
+                            Note: If the SVG preview is not visible, ensure your pasted SVG is valid and check your browser's console for Content Security Policy (CSP) errors.
+                        </MudText>
+                    }
+                </MudItem>
+                 <MudItem xs="12">
+                    <MudTextField @bind-Value="Goal.Tag"
+                                  Label="Tags (comma-separated)"
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Label"
+                                  AdornmentColor="Color.Dark"
+                                  HelperText="E.g., #retirement, #education, #car"
+                                  For="@(() => Goal.Tag)" />
+                </MudItem>
+            </MudGrid>
+            <div class="d-flex justify-center mt-8 gap-4">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Save"
+                           Size="Size.Large"
+                           OnClick="Submit"
+                           Class="px-6 py-3 rounded-lg mud-elevation-5">
+                    Save Goal
+                </MudButton>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.Refresh"
+                           Size="Size.Large"
+                           OnClick="Reset"
+                           Class="px-6 py-3 rounded-lg mud-elevation-5">
+                    Reset
+                </MudButton>
+            </div>
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private GoalEntity Goal = new GoalEntity();
+    private MudForm? form;
+
+    // Parameter to receive an IAsyncDisposable instance (e.g., SupabaseService)
+    [Parameter]
+    public MyFinance.Utility.SupabaseService? SupabaseService { get; set; }
+
+
+    protected override void OnInitialized()
+    {
+        Goal.CreatedAt = DateTime.UtcNow;
+        Goal.StartedYear = DateTime.Today;
+        Goal.TargetYear = DateTime.Today.AddYears(1);
+        Goal.Status = GoalStatus.InProgress;
+        Goal.OwnedBy = "CurrentUser"; // Replace with actual user ID
+        Goal.TotalAmountInvested = 15000;
+        Goal.TotalSIPAmount = 25000;
+        Goal.TargetAmount = 25000;
+
+        Goal.Tag = "#status, #retirement, #education";
+        Goal.Name = "My Financial Goal"; // Default name for the goal
+        Goal.Description = "This is a sample goal description. Please update it with your actual goal details.";
+		Goal.InvestmentCategory = InvestmentCategory.MutualFunds; // Default category for the goal
+		Goal.ImageSVG = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='lightblue'/></svg>"; // Default SVG
+        
+
+
+
+        // Optional: If SupabaseService is critical and not provided via parameter,
+        // you might want to inject a fallback or throw an error.
+        // Example: if (SupabaseService == null) { /* Handle missing service, e.g., throw or inject fallback */ }
+    }
+
+    private async Task Submit()
+    {
+        if (SupabaseService?.CurrentSession == null)
+        {
+            Snackbar.Add("You must be logged in to add a goal.", MudBlazor.Severity.Error);
+            return;
+        }
+
+        await form!.Validate();
+
+        if (form.IsValid)
+        {
+            Goal.OwnedBy = SupabaseService?.CurrentSession?.User?.Email ?? "Current";
+            // Set OwenedBy if not already set (e.g., from an authenticated user)
+            if (string.IsNullOrEmpty(Goal.OwnedBy) || Goal.OwnedBy == "CurrentUser")
+            {
+                Goal.OwnedBy = "PlaceholderUser123"; // Replace with actual authenticated user ID
+            }
+            //Add Goal Logics.
+            var result = await SupabaseService!.Add<GoalEntity>("Goal", Goal);
+
+
+            if(result.Success)
+            {
+                Snackbar.Add($"Goal '{Goal.Name}' added successfully!", MudBlazor.Severity.Success);
+                Reset();
+            }
+            else
+            {
+                Snackbar.Add($"Goal '{Goal.Name}', Failed to Save. {result.ErrorMessage}", MudBlazor.Severity.Error);
+            }
+            
+            Console.WriteLine("Goal Saved:");
+            Console.WriteLine($"Name: {Goal.Name}");
+            Console.WriteLine($"Description: {Goal.Description}");
+            Console.WriteLine($"Status: {Goal.Status}");
+            Console.WriteLine($"Category: {Goal.InvestmentCategory}");
+            Console.WriteLine($"Invested: {Goal.TotalAmountInvested}");
+            Console.WriteLine($"Target: {Goal.TargetAmount}");
+            Console.WriteLine($"Start: {Goal.StartedYear}");
+            Console.WriteLine($"Target: {Goal.TargetYear}");
+            Console.WriteLine($"Image SVG: {(string.IsNullOrEmpty(Goal.ImageSVG) ? "N/A" : "Provided")}");
+            Console.WriteLine($"Tags: {Goal.Tag}");
+            Console.WriteLine($"Owned By: {Goal.OwnedBy}");
+        }
+        else
+        {
+            Snackbar.Add("Please correct the errors in the form.", MudBlazor.Severity.Error);
+        }
+    }
+
+    private void Reset()
+    {
+        Goal = new GoalEntity();
+        OnInitialized(); // Re-initialize default values
+        form?.ResetValidation(); // Reset validation state
+    }
+
+    // This is the implementation of IAsyncDisposable
+    public async ValueTask DisposeAsync()
+    {
+        // This method is called when the component is being disposed of.
+        // It's the place to clean up any IAsyncDisposable resources that
+        // were passed as parameters or created by this component.
+        if (SupabaseService is not null)
+        {
+            await SupabaseService.DisposeAsync();
+            Console.WriteLine("SupabaseService (passed as parameter) disposed asynchronously.");
+        }
+    }
+
+    // Validation class for GoalEntity
+    public class GoalEntityValidator : AbstractValidator<GoalEntity>
+    {
+        public GoalEntityValidator()
+        {
+            RuleFor(x => x.Name)
+                .NotEmpty()
+                .WithMessage("Goal Name is required.")
+                .Length(3, 100)
+                .WithMessage("Goal Name must be between 3 and 100 characters.");
+
+            RuleFor(x => x.InvestmentCategory)
+                .NotEmpty()
+                .WithMessage("Investment Category is required.");
+
+            RuleFor(x => x.TargetAmount)
+                .GreaterThan(0)
+                .WithMessage("Target Amount must be greater than 0.");
+
+            RuleFor(x => x.TotalAmountInvested)
+                .GreaterThanOrEqualTo(0)
+                .WithMessage("Amount Already Invested cannot be negative.");
+
+            RuleFor(x => x.StartedYear)
+                .NotNull()
+                .WithMessage("Start Date is required.");
+
+            RuleFor(x => x.TargetYear)
+                .NotNull()
+                .WithMessage("Target Date is required.")
+                .GreaterThanOrEqualTo(x => x.StartedYear)
+                .WithMessage("Target Date cannot be before Start Date.");
+
+            RuleFor(x => x.Status)
+                .IsInEnum()
+                .WithMessage("Invalid Goal Status.");
+        }
+    }
+
+    private GoalEntityValidator GoalValidator = new GoalEntityValidator();
+}

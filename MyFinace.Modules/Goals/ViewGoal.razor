@@ -1,0 +1,206 @@
+﻿@page "/viewgoal/{GoalId:guid}"
+@using MyFinance.Utility
+@inject SupabaseService SupabaseService
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
+    <MudText Typo="Typo.h4" Align="Align.Left" Color="Color.Primary" Class="mb-6 font-weight-bold">Your Financial Goal</MudText>
+
+    @if (Goal == null && !IsLoading)
+    {
+        <MudAlert Severity="Severity.Warning" Class="my-4" Dense="true" Outlined="true" Icon="@Icons.Material.Filled.ErrorOutline">
+            Goal not found or an error occurred. Please check the Goal ID.
+        </MudAlert>
+        <div class="d-flex justify-center">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowBack" Class="mt-4 mud-elevation-2">
+                Back to Find Goal
+            </MudButton>
+            @* OnClick="(() => NavigationManager.NavigateTo("/findgoal"))"  *@
+        </div>
+    }
+    else if (IsLoading)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" Class="d-block mx-auto" />
+        <MudText Align="Align.Center" Class="mt-4" Color="Color.Secondary">Loading goal details...</MudText>
+    }
+    else if (Goal != null)
+    {
+        <MudCard Elevation="8" Class="rounded-lg pa-6">
+            <MudCardHeader Class="pb-0">
+                <CardHeaderContent>
+                    <div class="d-flex align-left justify-start flex-column flex-sm-row">
+                        @if (!string.IsNullOrEmpty(Goal.ImageSVG))
+                        {
+                            <div style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin-right: 16px; margin-bottom: 8px; flex-shrink: 0;">
+                                @((MarkupString)Goal.ImageSVG)
+                            </div>
+                        }
+                        <div class="text-center text-sm-left">
+                            <MudText Typo="Typo.h5" Class="font-weight-bold mud-text-primary">@Goal.Name</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">ID: @Goal.Id</MudText>
+                        </div>
+                    </div>
+                    <MudText Typo="Typo.body2" Align="Align.Left" Class="mt-2" Color="Color.Secondary">@(string.IsNullOrWhiteSpace(Goal.Description) ? "N/A" : Goal.Description)</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudGrid Spacing="4">
+                    <MudItem xs="12" Class="d-flex justify-center align-center flex-column">
+                        <MudText Typo="Typo.subtitle1" Class="mb-2 mud-text-secondary">Goal Progress</MudText>
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudProgressLinear Value="ProgressPercentage" Color="Color.Success" Size="Size.Large" Class="my-2 rounded-pill mud-elevation-1">
+                            <MudText Typo="Typo.subtitle2" Color="Color.Dark" Class="font-weight-bold">@ProgressPercentage.ToString("F1")% Completed</MudText>
+                        </MudProgressLinear>
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudPaper Elevation="4" Class="pa-4 rounded-lg mud-border mud-border-grey-lighten2">
+                            <MudText Typo="Typo.subtitle1" Class="mb-3 font-weight-bold mud-text-tertiary">General Information</MudText>
+                            <MudList T="string" Dense="true">
+                                <MudListItem Icon="@Icons.Material.Filled.Info" IconColor="Color.Warning">
+                                    <MudText Typo="Typo.subtitle2">Status:</MudText>
+                                    <MudChip Color="Color.Info" Size="Size.Small" Class="ml-2 mud-elevation-1">@Goal.Status.ToString()</MudChip>
+                                </MudListItem>
+                                <MudListItem Icon="@Icons.Material.Filled.Category" IconColor="Color.Primary">
+                                    <MudText Typo="Typo.subtitle2">Investment Category:</MudText>
+                                    <MudChip Color="Color.Secondary" Size="Size.Small" Class="ml-2 mud-elevation-1">@Goal.InvestmentCategory.ToString()</MudChip>
+                                </MudListItem>
+                                <MudListItem Icon="@Icons.Material.Filled.Person" IconColor="Color.Dark">
+                                    <MudText Typo="Typo.subtitle2">Owned By:</MudText>
+                                    <MudChip Color="Color.Dark" Size="Size.Small" Class="ml-2 mud-elevation-1">@(string.IsNullOrWhiteSpace(Goal.OwnedBy) ? "N/A" : Goal.OwnedBy)</MudChip>
+                                </MudListItem>
+                                <MudListItem Icon="@Icons.Material.Filled.Label" IconColor="Color.Success">
+                                    <MudText Typo="Typo.subtitle2">Tags:</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">@(string.IsNullOrWhiteSpace(Goal.Tag) ? "N/A" : Goal.Tag)</MudText>
+                                </MudListItem>
+                            </MudList>
+                        </MudPaper>
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudPaper Elevation="4" Class="pa-4 rounded-lg mud-border mud-border-grey-lighten2">
+                            <MudText Typo="Typo.subtitle1" Class="mb-3 font-weight-bold mud-text-tertiary">Financial Breakdown</MudText>
+                            <MudList T="string"  Dense="true">
+                                <MudListItem Icon="@Icons.Material.Filled.AttachMoney" IconColor="Color.Success">
+                                    <MudText Typo="Typo.subtitle2">Target Amount:</MudText>
+                                    <MudChip Color="Color.Primary" Size="Size.Small" Class="ml-2 mud-elevation-1">@Goal.TargetAmount.ToString("C", CultureInfo_IN)</MudChip>
+                                </MudListItem>
+                                <MudListItem Icon="@Icons.Material.Filled.MonetizationOn" IconColor="Color.Warning">
+                                    <MudText Typo="Typo.subtitle2">Amount Invested:</MudText>
+                                    <MudChip Color="Color.Warning" Size="Size.Small" Class="ml-2 mud-elevation-1">@Goal.TotalAmountInvested.ToString("C", CultureInfo_IN)</MudChip>
+                                </MudListItem>
+                                <MudListItem Icon="@Icons.Material.Filled.CalendarMonth" IconColor="Color.Info">
+                                    <MudText Typo="Typo.subtitle2">SIP Amount (Monthly):</MudText>
+                                    <MudChip Color="Color.Info" Size="Size.Small" Class="ml-2 mud-elevation-1">@Goal.TotalSIPAmount.ToString("C", CultureInfo_IN)</MudChip>
+                                </MudListItem>
+                                <MudListItem Icon="@Icons.Material.Filled.DateRange" IconColor="Color.Tertiary">
+                                    <MudText Typo="Typo.subtitle2">Target Year:</MudText>
+                                    <MudChip Color="Color.Success" Size="Size.Small" Class="ml-2 mud-elevation-1">@(Goal.TargetYear?.Year.ToString() ?? "N/A")</MudChip>
+                                </MudListItem>
+                                <MudListItem Icon="@Icons.Material.Filled.Start" IconColor="Color.Secondary">
+                                    <MudText Typo="Typo.subtitle2">Started Year:</MudText>
+                                    <MudChip Color="Color.Tertiary" Size="Size.Small" Class="ml-2 mud-elevation-1">@(Goal.StartedYear?.Year.ToString() ?? "N/A")</MudChip>
+                                </MudListItem>
+                            </MudList>
+                        </MudPaper>
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.h6" Class="mt-6 mb-3 text-center mud-text-primary">Time Horizon & Projections</MudText>
+                        <MudPaper Elevation="4" Class="pa-4 rounded-lg mud-border mud-border-grey-lighten2">
+                            <MudList T="string"  Dense="true">
+                                <MudListItem Icon="@Icons.Material.Filled.Event" IconColor="Color.Primary">
+                                    <MudText>
+                                        Years Remaining to Target:
+                                        <MudChip Color="Color.Info" Size="Size.Medium" Class="ml-2 mud-elevation-1">@YearsRemaining</MudChip>
+                                    </MudText>
+                                </MudListItem>
+                                <MudListItem Icon="@Icons.Material.Filled.TrendingUp" IconColor="Color.Success">
+                                    <MudText>
+                                        Amount Needed:
+                                        <MudChip Color="Color.Warning" Size="Size.Medium" Class="ml-2 mud-elevation-1">@AmountNeeded.ToString("C", CultureInfo_IN)</MudChip>
+                                    </MudText>
+                                </MudListItem>
+                                @if (Goal.TotalSIPAmount > 0)
+                                {
+                                    <MudListItem Icon="@Icons.Material.Filled.Payments" IconColor="Color.Warning">
+                                        <MudText>
+                                            Est. Months to Reach Goal (with current SIP):
+                                            <MudChip Color="Color.Primary" Size="Size.Medium" Class="ml-2 mud-elevation-1">@EstimatedMonthsToReachGoal</MudChip>
+                                        </MudText>
+                                    </MudListItem>
+                                }
+                            </MudList>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+            <MudCardActions Class="d-flex justify-center pt-4">
+                <MudButton  Variant="Variant.Filled" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowBack" Class="mud-elevation-2">
+                    Back to Find Goal
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public Guid GoalId { get; set; }
+
+    private GoalEntity? Goal { get; set; }
+    private bool IsLoading { get; set; } = true;
+
+    // CultureInfo for Indian Rupees
+    private System.Globalization.CultureInfo CultureInfo_IN = new System.Globalization.CultureInfo("en-IN");
+
+    // Calculated properties for display
+    private double ProgressPercentage => Goal != null && Goal.TargetAmount > 0 ?
+        Math.Min(100, (double)(Goal.TotalAmountInvested / Goal.TargetAmount * 100)) : 0;
+
+    private int YearsRemaining => Goal != null && Goal.TargetYear.HasValue ?
+        Math.Max(0, Goal.TargetYear.Value.Year - DateTime.Now.Year) : 0;
+
+    private decimal AmountNeeded => Goal != null ?
+        Math.Max(0, Goal.TargetAmount - Goal.TotalAmountInvested) : 0;
+
+    private int EstimatedMonthsToReachGoal
+    {
+        get
+        {
+            if (Goal == null || Goal.TotalSIPAmount <= 0)
+            {
+                return 0; // Cannot estimate without SIP or if goal is already met
+            }
+
+            decimal remainingAmount = Goal.TargetAmount - Goal.TotalAmountInvested;
+            if (remainingAmount <= 0)
+            {
+                return 0; // Goal already reached or surpassed
+            }
+
+            // Simple calculation: remaining amount divided by monthly SIP
+            // Does not account for interest/returns or inflation
+            return (int)Math.Ceiling(remainingAmount / Goal.TotalSIPAmount);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGoalDetails();
+    }
+
+    private async Task LoadGoalDetails()
+    {
+        IsLoading = true;
+        // Assuming your table name is "Goal" (singular) based on your feedback
+        Goal = await SupabaseService.SearchEntityByIdAsync<GoalEntity>("Goal", GoalId);
+        if (Goal == null)
+        {
+            Snackbar.Add($"Could not find goal with ID: {GoalId}", Severity.Error);
+        }
+        IsLoading = false;
+    }
+}

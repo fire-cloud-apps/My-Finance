@@ -1,0 +1,52 @@
+﻿@page "/dynamic-forms/{Module}/{Component}/{Id:guid?}"
+
+@using MyFinance.Utility
+@using MyFinace.Modules.Goals
+
+@if(string.IsNullOrEmpty(Module) || string.IsNullOrEmpty(Component))
+{
+	<MudText Typo="Typo.h6" Class="text-danger">Module or Component not specified.</MudText>
+}
+else
+{
+	<PageTitle>MyFinance - @Module#@Component</PageTitle>
+	@switch (Module)
+	{
+		case "Goals":
+			@switch(Component)
+			{
+				case "Add":
+				case "Add-Goals":
+				case "addgoals":
+					<AddGoals SupabaseService="@SupabaseService" />
+					break;
+				case "Edit":
+				case "Edit-Goals":
+					<EditGoals Id="@Id.Value" />
+					break;
+				case "Find":
+					<FindGoal SupabaseService="@SupabaseService" />
+					break;
+				case "List":
+				case "ListGoals":
+					<ListGoals />
+					break;
+				default:
+					<MudText Typo="Typo.h6" Class="text-warning">Unknown Goal Component: @Component</MudText>;
+					break;
+			}			
+			break;
+		default:
+			Console.WriteLine($"Module {Module} & Component {Component} not recognized.");
+			break;
+	}
+}
+
+@code {
+	[Parameter]
+	public string Module { get; set; }
+	[Parameter]
+	public string Component { get; set; }
+	[Parameter]
+	public Guid? Id { get; set; }
+}

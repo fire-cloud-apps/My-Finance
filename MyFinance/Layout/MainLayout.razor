@@ -1,0 +1,157 @@
+﻿
+@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+@inject SupabaseService SupabaseService
+
+@* Required *@
+<MudThemeProvider IsDarkMode="@isDarkMode" />
+<MudPopoverProvider />
+
+@* Needed for dialogs *@
+<MudDialogProvider />
+
+@* Needed for snackbars *@
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+
+        <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                       Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        <MudSpacer />
+
+
+        <MudToggleIconButton @bind-Toggled="isDarkMode"
+                             Icon="@Icons.Material.Filled.LightMode"
+                             Color="@Color.Error"
+                             ToggledIcon="@Icons.Material.Filled.DarkMode"
+                             ToggledColor="@Color.Success"
+                             title="@(isDarkMode ? "On" : "Off")" />
+
+        <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                       Color="Color.Info" Edge="Edge.Start"
+                       OnClick="RefreshSession" />
+
+
+        
+        @if(SupabaseService.CurrentSession != null && SupabaseService.CurrentSession.User?.Id != null)
+        {            
+            <MudMenu>
+                <ActivatorContent>
+                    <MudAvatar>
+                        <MudImage Src="@(SupabaseService.CurrentSession.GetUserMetadataString("avatar_url") ?? $"https://placehold.co/96x96/aabbcc/ffffff?text={SupabaseService.CurrentSession.User.Email?[0].ToString().ToUpper() ?? "U"}")" ></MudImage>
+                    </MudAvatar> 
+                </ActivatorContent>
+                <ChildContent>
+					
+                    <MudMenuItem Label="@SupabaseService.CurrentSession.GetUserMetadataString("name")" Icon="@Icons.Material.Filled.Person" />
+                    <MudMenuItem Label="@SupabaseService.CurrentSession.User?.Email" Icon="@Icons.Material.Filled.VerifiedUser" />
+                    <MudMenuItem Label="@SupabaseService.CurrentSession.User?.Id" Icon="@Icons.Material.Filled.PermIdentity" />
+                    <MudMenuItem Label="Logout" Icon="@Icons.Material.Filled.Logout"
+                                 OnClick="SignOut" IconColor="Color.Secondary" />
+                </ChildContent>
+            </MudMenu>
+		}
+
+       
+        <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" 
+        Edge="Edge.End" />
+
+    </MudAppBar>
+
+    <MudDrawer @bind-Open="_drawerOpen" >
+        <NavMenu />
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer>
+            @Body
+        </MudContainer>
+            @* <MudText Typo="Typo.h5" GutterBottom="true">Welcome to the Main Layout</MudText>
+			<MudText>Content goes here...</MudText> *@       
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    
+    private bool isDarkMode = true;// Default to dark mode
+    private bool _isMasterKeySet = false;
+    private string _masterKey = string.Empty;
+    private bool _drawerOpen = true;
+    private string _localStorageToken = "Loading...";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Initialize the SupabaseService to set up JS Interop callbacks
+        await SupabaseService.InitializeAsync();
+        // Subscribe to auth state changes to update the UI
+        SupabaseService.OnAuthStateChanged += OnAuthStateChangedHandler;
+        await UpdateLocalStorageTokenDisplay();
+
+    }
+    private void OnAuthStateChangedHandler(JsSession? session)
+    {
+        // This method is called when the auth state changes.
+        // It triggers a re-render of this component (MainLayout)
+        // so the AppBar buttons and user info can be updated.
+        //@if (SupabaseService.CurrentSession == null || SupabaseService.CurrentSession.User?.Id == null)
+        StateHasChanged(); // Re-render this component
+        _ = UpdateLocalStorageTokenDisplay(); // Update local storage display
+        if (session == null || session.User?.Id == null)
+        {
+            NavigationManager.NavigateTo("/login");
+        }
+    }
+
+    private async Task UpdateLocalStorageTokenDisplay()
+    {
+        try
+        {
+            var storedSessionJson = await SupabaseService.GetLocalStorageTokenJson();
+            if (!string.IsNullOrEmpty(storedSessionJson) && storedSessionJson != "No Supabase session found in local storage.")
+            {
+                _localStorageToken = System.Text.Json.JsonSerializer.Serialize(
+                    System.Text.Json.JsonDocument.Parse(storedSessionJson).RootElement,
+                    new System.Text.Json.JsonSerializerOptions { WriteIndented = true }
+                );
+            }
+            else
+            {
+                _localStorageToken = storedSessionJson;
+            }
+        }
+        catch (Exception ex)
+        {
+            _localStorageToken = $"Error parsing stored session: {ex.Message}";
+            Console.WriteLine($"Error in Home.razor UpdateLocalStorageTokenDisplay: {ex.Message}");
+        }
+    }
+
+    private async Task RefreshSession()
+    {
+        await SupabaseService.RefreshSession();
+    }
+
+    private async Task SignOut()
+    {
+        await SupabaseService.SignOut();
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe to prevent memory leaks
+        SupabaseService.OnAuthStateChanged -= OnAuthStateChangedHandler;
+    }
+
+    private void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    private void ToggleTheme(bool value)
+    {
+        isDarkMode = value;
+    }
+
+
+    
+}

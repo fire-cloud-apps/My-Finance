@@ -1,0 +1,56 @@
+﻿@page "/findgoal"
+@using MyFinance.Utility
+@* @inject SupabaseService SupabaseService *@
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h5" Class="mb-4">Find Your Financial Goal</MudText>
+
+<MudAutocomplete T="GoalEntity"
+                 Label="Search Goal by Name"
+                 Variant="Variant.Filled"
+                 SearchFunc="@SearchGoals"
+                 ToStringFunc="@(g => g?.Name ?? string.Empty)"
+                 Clearable="true"
+                 ResetValueOnEmptyText="true"
+                 CoerceText="true"
+                 AdornmentIcon="@Icons.Material.Filled.Search"
+                 AdornmentColor="Color.Primary"
+                 Placeholder="Start typing a goal name..."
+                 ValueChanged="OnGoalSelected" />
+
+<MudAlert Severity="Severity.Info" Class="mt-4">
+    Type a few characters of your goal's name to see suggestions.
+    Select a goal from the list to view its details.
+</MudAlert>
+
+@code {
+    [Parameter]
+    public MyFinance.Utility.SupabaseService? SupabaseService { get; set; }
+
+    private async Task<IEnumerable<GoalEntity>> SearchGoals(string value, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return new List<GoalEntity>();
+        }
+
+        // Call the C# service which in turn calls the JS interop for Supabase search
+        var goals = await SupabaseService.SearchEntitiesByNameAsync<GoalEntity>("Goal", value);
+
+        // Filter and return only the top 5 or so, if you have many results
+        // The JS function `searchByName` returns all matches, so we can limit here if needed.
+        // Or, you can modify `searchByName` in JS to add a limit directly.
+        return goals.Where(g => g.Name.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10);
+    }
+
+    private void OnGoalSelected(GoalEntity? selectedGoal)
+    {
+        if (selectedGoal != null)
+        {
+            Snackbar.Add($"Navigating to goal: {selectedGoal.Name}", Severity.Success);
+            // Navigate to the ViewGoal page with the selected goal's ID
+            NavigationManager.NavigateTo($"/viewgoal/{selectedGoal.Id}");
+        }
+    }
+}

@@ -1,0 +1,38 @@
+﻿@page "/login"
+@using MyFinance.Layout
+
+@inject SupabaseService SupabaseService
+@inject ISnackbar Snackbar
+@layout EmptyLayout // A simple layout without app bar for login page
+
+<MudContainer MaxWidth="MaxWidth.ExtraSmall" Class="d-flex align-center justify-center" Style="min-height: 100vh;">
+    <MudPaper Class="animate__animated animate__jackInTheBox  pa-8 pt-6 rounded-2xl shadow-lg mud-width-full" Elevation="10">
+        <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-6 font-bold text-gray-800">Welcome!</MudText>
+        <MudText Align="Align.Center" Class="mb-8 text-gray-600">Sign in to 'My Finance' with your Google account.</MudText>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Size="Size.Large"
+                   Class="mud-width-full py-3 rounded-full text-white font-semibold shadow-lg"
+                   OnClick="SignInWithGoogle"
+                   StartIcon="@Icons.Custom.Brands.Google"
+                   Style="background-color: #4285F4; transition: background-color 0.3s ease, transform 0.3s ease; transform: translateY(0); display: flex; align-items: center; justify: center;"
+                   Target="_self">
+            Sign in with Google
+        </MudButton>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        // Initialize the SupabaseService to set up JS Interop callbacks
+        await SupabaseService.InitializeAsync();
+    }
+
+    private async Task SignInWithGoogle()
+    {
+        await SupabaseService.SignInWithGoogle();
+        // The SupabaseService will handle navigation after successful login via JS callback
+    }
+}

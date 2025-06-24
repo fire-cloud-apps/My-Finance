@@ -1,0 +1,51 @@
+﻿@using MyFinance.Component
+
+
+<MudNavMenu Rounded="true" Class="pa-2" Bordered="true" Color="Color.Success">
+
+    <Logo />
+
+    <MudDivider Class="my-2" />
+
+    <MudNavLink Href="/#" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
+
+    <MudNavGroup Title="Goals" Icon="material-symbols-outlined/nearby" Expanded="true">
+        
+        <MudNavLink Href="dynamic-forms/Goals/Add-Goals" Match="NavLinkMatch.Prefix"
+                    Icon="material-symbols-outlined/trophy"
+                    IconColor="Color.Success">
+            Add Goals
+        </MudNavLink>
+
+        <MudNavLink Href="dynamic-forms/Goals/List" Match="NavLinkMatch.Prefix"
+                    Icon="material-symbols-outlined/directions_walk"
+                    IconColor="Color.Info">
+            Goal List
+        </MudNavLink>
+        <MudNavLink Href="dynamic-forms/Goals/Edit-Goals/6bfa82f2-1209-42d4-9d32-6c618c2889f5" Match="NavLinkMatch.Prefix"
+                    Icon="material-symbols-outlined/directions_walk"
+                    IconColor="Color.Info">
+            Goal Update
+        </MudNavLink>
+    </MudNavGroup>
+
+    <MudNavGroup Title="Goals Contribution" Icon="material-symbols-outlined/nearby" Expanded="false">
+
+        <MudNavLink Href="goals/add-goals-plans" Match="NavLinkMatch.Prefix"
+                    Icon="material-symbols-outlined/trophy"
+                    IconColor="Color.Success">
+            Add Plans
+        </MudNavLink>
+
+        <MudNavLink Href="goals/list-goals-plans" Match="NavLinkMatch.Prefix"
+                    Icon="material-symbols-outlined/directions_walk"
+                    IconColor="Color.Info">
+            Plan List
+        </MudNavLink>
+        <MudNavLink Href="goals/edit-goals-plans/10/bd58f5a9-74dc-40bd-84e7-edff93bb9adc" Match="NavLinkMatch.Prefix"
+                    Icon="material-symbols-outlined/directions_walk"
+                    IconColor="Color.Info">
+            Update Plans
+        </MudNavLink>
+    </MudNavGroup>
+</MudNavMenu>

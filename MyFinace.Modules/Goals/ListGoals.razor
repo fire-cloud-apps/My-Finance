@@ -1,0 +1,378 @@
+﻿@page "/goals"
+@using Microsoft.JSInterop
+@using MyFinace.Modules.Goals
+@using MyFinance.Utility
+@inject SupabaseService SupabaseService
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+@implements IAsyncDisposable
+@inject IJSRuntime JSRuntime
+@inject IDialogService DialogService
+
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-8 px-4 sm:px-6 md:px-8">
+    <MudText Typo="Typo.h4" Align="Align.Center" Color="Color.Primary" Class="mb-6 font-weight-bold">
+        <MudIcon Icon="@Icons.Material.Filled.FormatListBulleted" Size="Size.Large" Class="mr-2" /> Your Financial Goals
+    </MudText>
+    <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-8 ">
+        A comprehensive list of all your financial aspirations.
+    </MudText>
+
+    <MudPaper Elevation="6" Class="pa-6 rounded-xl animate__animated animate__fadeInUp mb-8">
+        <MudTextField @bind-Value="SearchTerm"
+                      Label="Search Goals by Name"
+                      Variant="Variant.Outlined"
+                      Adornment="Adornment.End"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      AdornmentColor="Color.Primary"
+                      Clearable="true"
+                      OnAdornmentClick="PerformSearch"
+                      OnClearButtonClick="ClearSearch"
+                      DebounceInterval="300" />
+    </MudPaper>
+
+    @if (isLoadingInitial)
+    {
+        <div class="d-flex justify-center align-center py-8">
+            <MudProgressCircular Indeterminate Color="Color.Primary" Size="Size.Large" />
+            <MudText Class="ml-4">Loading Goals...</MudText>
+        </div>
+    }
+    else if (!Goals.Any() && string.IsNullOrEmpty(SearchTerm))
+    {
+        <MudAlert Severity="Severity.Info" Class="my-4" Dense="true" Outlined="true" Icon="@Icons.Material.Filled.Info">
+            No financial goals found. Start by adding a new goal!
+        </MudAlert>
+        <div class="d-flex justify-center">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" EndIcon="@Icons.Material.Filled.Add" Class="mt-4 mud-elevation-2" >
+                Add New Goal
+            </MudButton>
+        </div>
+    }
+    else if (!FilteredGoals.Any() && !string.IsNullOrEmpty(SearchTerm))
+    {
+        <MudAlert Severity="Severity.Info" Class="my-4" Dense="true" Outlined="true" Icon="@Icons.Material.Filled.Info">
+            No goals matching "@SearchTerm" found.
+        </MudAlert>
+    }
+    else
+    {
+        <MudGrid Spacing="4">
+            @foreach (var goal in FilteredGoals.Skip((CurrentPage - 1) * PageSize).Take(PageSize))
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <MudCard Elevation="8" Class="rounded-lg pa-4 d-flex flex-column" Style="height: 100%;">
+                        <MudCardHeader Class="pb-2">
+                            <CardHeaderContent>
+                                <div class="d-flex align-center">
+                                    @if (!string.IsNullOrEmpty(goal.ImageSVG))
+                                    {
+                                        <div style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; margin-right: 8px; flex-shrink: 0;">
+                                            @((MarkupString)goal.ImageSVG)
+                                        </div>
+                                    }
+                                    <div class="flex-grow-1">
+                                        <MudText Typo="Typo.h6" Class="font-weight-bold mud-text-primary mud-text-truncate">@goal.Name</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@goal.InvestmentCategory.ToString()</MudText>
+                                    </div>
+                                </div>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent Class="flex-grow-1">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3 mud-text-truncate-2-lines">@(string.IsNullOrWhiteSpace(goal.Description) ? "No description provided." : goal.Description)</MudText>
+
+                            <MudList T="string" Dense="true">
+                                <MudListItem Icon="@Icons.Material.Filled.AttachMoney" IconColor="Color.Success">
+                                    <MudText Typo="Typo.body2">Target: <span class="font-weight-bold">@goal.TargetAmount.ToString("C", CultureInfo_IN)</span></MudText>
+                                </MudListItem>
+                                <MudListItem Icon="@Icons.Material.Filled.MonetizationOn" IconColor="Color.Warning">
+                                    <MudText Typo="Typo.body2">Invested: <span class="font-weight-bold">@goal.TotalAmountInvested.ToString("C", CultureInfo_IN)</span></MudText>
+                                </MudListItem>
+                                <MudListItem Icon="@Icons.Material.Filled.DateRange" IconColor="Color.Tertiary">
+                                    <MudText Typo="Typo.body2">Target Year: <span class="font-weight-bold">@(goal.TargetYear?.Year.ToString() ?? "N/A")</span></MudText>
+                                </MudListItem>
+                            </MudList>
+
+                            @* Progress Bar on Amount *@
+                            <MudText Typo="Typo.caption" Class="mt-3 mb-1">Investment Progress:</MudText>
+                            <MudProgressLinear Value="@(CalculateProgressPercentage(goal.TotalAmountInvested, goal.TargetAmount))"
+                                               Color="Color.Success" Size="Size.Small" Class="rounded-pill">
+                                <MudText Typo="Typo.caption" Color="Color.Dark" Class="font-weight-bold">@CalculateProgressPercentage(goal.TotalAmountInvested, goal.TargetAmount).ToString("F0")%</MudText>
+                            </MudProgressLinear>
+
+                            @* Progress Bar on Years Remaining *@
+                            @if (CalculateYearsRemaining(goal.TargetYear) > 0 && goal.TargetYear.HasValue)
+                            {
+                                <MudText Typo="Typo.caption" Class="mt-2 mb-1">Time Remaining:</MudText>
+                                <MudProgressLinear Value="@(CalculateTimeProgressPercentage(goal.StartedYear, goal.TargetYear))"
+                                                   Color="Color.Info" Size="Size.Small" Class="rounded-pill">
+                                    <MudText Typo="Typo.caption" Color="Color.Dark" Class="font-weight-bold">@CalculateYearsRemaining(goal.TargetYear) Years Left</MudText>
+                                </MudProgressLinear>
+                            }
+                            else if (CalculateYearsRemaining(goal.TargetYear) == 0 && goal.TargetYear.HasValue && goal.TargetYear.Value.Year <= DateTime.Now.Year)
+                            {
+                                <MudText Typo="Typo.caption" Class="mt-2 mb-1" Color="Color.Warning">Target year reached or passed!</MudText>
+                            }
+
+
+                        </MudCardContent>
+                        <MudCardActions Class="d-flex justify-space-between pt-0">
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Visibility" Size="Size.Small" OnClick="(() => NavigateToViewGoal(goal.Id))">View</MudButton>
+                            <MudButton Variant="Variant.Text" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="(() => NavigateToEditGoal(goal.Id))">Edit</MudButton>
+                            <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Size="Size.Small" OnClick="(() => ConfirmDelete(goal.Id, goal.Name))">Delete</MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+
+        @if (FilteredGoals.Count > PageSize)
+        {
+            <div class="d-flex justify-center mt-8">
+                <MudPagination
+                    Count="@TotalPages"
+                    Selected="@CurrentPage"
+                    SelectedChanged="OnPageChanged"
+                    Color="Color.Primary"
+                    Size="Size.Large"
+                    ShowFirstLastButton="true"
+                    ShowQuickJumper="true" />
+            </div>
+        }
+
+        @if (isLoadingMore)
+        {
+            <div class="d-flex justify-center align-center py-4">
+                <MudProgressCircular Indeterminate Color="Color.Secondary" Size="Size.Small" />
+                <MudText Class="ml-4">Loading more goals...</MudText>
+            </div>
+        }
+
+        <div @ref="loadMoreSentinel" class="load-more-sentinel" style="height: 10px;"></div>
+    }
+</MudContainer>
+
+
+@code {
+    private List<GoalEntity> Goals { get; set; } = new List<GoalEntity>();
+    private List<GoalEntity> FilteredGoals { get; set; } = new List<GoalEntity>();
+    private bool isLoadingInitial = true;
+    private bool isLoadingMore = false;
+    private string SearchTerm { get; set; } = string.Empty;
+
+    // Pagination properties
+    private int CurrentPage { get; set; } = 1;
+    private int PageSize { get; set; } = 8; // Number of items per page
+    private int TotalPages => (int)Math.Ceiling(FilteredGoals.Count / (double)PageSize);
+
+    // Intersection Observer for lazy loading
+    private ElementReference loadMoreSentinel;
+    private DotNetObjectReference<ListGoals>? _dotNetRef;
+
+
+    // CultureInfo for Indian Rupees for currency formatting
+    private System.Globalization.CultureInfo CultureInfo_IN = new System.Globalization.CultureInfo("en-IN");
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (SupabaseService.CurrentSession == null)
+        {
+            Snackbar.Add("You must be logged in to view goals.", Severity.Error);
+            isLoadingInitial = false;
+            return;
+        }
+        await LoadGoals();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            // Initialize Intersection Observer in JavaScript
+            // You will need to create a JavaScript function 'initializeIntersectionObserver' in your JS interop file
+            // that targets the 'loadMoreSentinel' element and calls 'LoadMoreGoals' when it enters the viewport.
+            //await JSRuntime.InvokeVoidAsync("supabaseInterop.initializeIntersectionObserver", loadMoreSentinel, _dotNetRef, "LoadMoreGoals");
+        }
+    }
+
+    // This method will be called by JavaScript when the sentinel element is intersected
+    [JSInvokable]
+    public async Task LoadMoreGoals()
+    {
+        if (isLoadingMore || CurrentPage >= TotalPages)
+        {
+            return; // Already loading or no more pages
+        }
+
+        isLoadingMore = true;
+        // In a real lazy loading scenario, you would fetch the next page from Supabase here.
+        // For now, we simulate it by incrementing the page number.
+        CurrentPage++;
+        // If you were fetching from Supabase, it would look something like:
+        // var (success, newGoals, errorMessage) = await SupabaseService.GetPaginated<GoalEntity>("Goal", CurrentPage, PageSize);
+        // if (success && newGoals != null) { Goals.AddRange(newGoals); ApplyFilter(); }
+        // For this example, since we fetch all goals initially, we just update the UI.
+        StateHasChanged();
+        isLoadingMore = false;
+    }
+
+    private async Task LoadGoals()
+    {
+        isLoadingInitial = true;
+        try
+        {
+            // Assuming SupabaseService.SearchEntitiesByNameAsync can fetch all if name is empty
+            // Or you would have a dedicated GetAll<TEntity> method.
+            // For now, let's use SearchEntitiesByNameAsync with an empty string to get all initially
+            var goalsResult = await SupabaseService.SearchEntitiesByNameAsync<GoalEntity>("Goal", string.Empty);
+            if (goalsResult != null)
+            {
+                Goals = goalsResult.OrderByDescending(g => g.CreatedAt).ToList(); // Sort by creation date
+                ApplyFilter();
+            }
+            else
+            {
+                Snackbar.Add("Failed to load goals.", Severity.Error);
+                Console.Error.WriteLine("C#: Failed to load goals from Supabase.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"An unexpected error occurred: {ex.Message}", Severity.Error);
+            Console.Error.WriteLine($"C#: Exception in LoadGoals: {ex.Message}");
+        }
+        finally
+        {
+            isLoadingInitial = false;
+        }
+    }
+
+    private void ApplyFilter()
+    {
+        if (string.IsNullOrWhiteSpace(SearchTerm))
+        {
+            FilteredGoals = Goals;
+        }
+        else
+        {
+            FilteredGoals = Goals.Where(g => g.Name.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+        CurrentPage = 1; // Reset to first page on filter change
+    }
+
+    private void OnSearchTermChanged(string value)
+    {
+        SearchTerm = value;
+        ApplyFilter();
+    }
+
+    private void PerformSearch()
+    {
+        ApplyFilter();
+    }
+
+    private void ClearSearch()
+    {
+        SearchTerm = string.Empty;
+        ApplyFilter();
+    }
+
+    private void OnPageChanged(int page)
+    {
+        CurrentPage = page;
+    }
+
+    private double CalculateProgressPercentage(decimal invested, decimal target)
+    {
+        if (target <= 0) return 0;
+        return Math.Min(100, (double)(invested / target * 100));
+    }
+
+    private int CalculateYearsRemaining(DateTime? targetYear)
+    {
+        if (!targetYear.HasValue) return 0;
+        return Math.Max(0, targetYear.Value.Year - DateTime.Now.Year);
+    }
+
+    private double CalculateTimeProgressPercentage(DateTime? startedYear, DateTime? targetYear)
+    {
+        if (!startedYear.HasValue || !targetYear.HasValue || startedYear.Value >= targetYear.Value) return 0;
+
+        var totalYears = (targetYear.Value - startedYear.Value).TotalDays / 365.25;
+        var elapsedYears = (DateTime.Now - startedYear.Value).TotalDays / 365.25;
+
+        if (totalYears <= 0) return 0;
+        return Math.Min(100, (elapsedYears / totalYears) * 100);
+    }
+
+
+    private void NavigateToEditGoal(Guid id)
+    {
+        NavigationManager.NavigateTo($"/editgoals/{id}");
+    }
+
+    private void NavigateToViewGoal(Guid id)
+    {
+        NavigationManager.NavigateTo($"/viewgoal/{id}");
+    }
+
+    // New method to confirm deletion
+    private async Task ConfirmDelete(Guid id, string goalName)
+    {
+        var parameters = new DialogParameters
+        {
+            { "ContentText", $"Are you sure you want to delete the goal '{goalName}'?" },
+            { "ButtonText", "Delete" },
+            { "Color", Color.Error }
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        var dialog = DialogService.Show<DeleteDialog>("Confirm Delete", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled) // If dialog was not canceled (i.e., "Delete" was clicked)
+        {
+            await PerformDelete(id);
+        }
+    }
+
+    // New method to perform deletion
+    private async Task PerformDelete(Guid id)
+    {
+        if (SupabaseService.CurrentSession == null)
+        {
+            Snackbar.Add("You must be logged in to delete goals.", Severity.Error);
+            return;
+        }
+
+        var (success, errorMessage) = await SupabaseService.Delete("Goal", id);
+
+        if (success)
+        {
+            // Remove the deleted goal from the lists to update UI
+            Goals.RemoveAll(g => g.Id == id);
+            FilteredGoals.RemoveAll(g => g.Id == id);
+            Snackbar.Add("Goal deleted successfully!", Severity.Success);
+            // Trigger a re-render
+            StateHasChanged();
+        }
+        else
+        {
+            Snackbar.Add($"Failed to delete goal: {errorMessage}", Severity.Error);
+            Console.Error.WriteLine($"C#: Error deleting goal with ID {id}: {errorMessage}");
+        }
+    }
+
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_dotNetRef != null)
+        {
+            // Dispose the DotNetObjectReference to prevent memory leaks
+            //await JSRuntime.InvokeVoidAsync("supabaseInterop.disconnectIntersectionObserver", loadMoreSentinel);
+            _dotNetRef.Dispose();
+        }
+    }
+}
