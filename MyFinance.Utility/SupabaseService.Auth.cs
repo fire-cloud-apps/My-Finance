@@ -24,7 +24,7 @@ namespace MyFinance.Utility
             if (session?.User?.Id != null)
             {
                 _snackbar.Add("Logged in successfully!", Severity.Success);
-                _navigationManager.NavigateTo("/");
+                //_navigationManager.NavigateTo("/");
             }
             else
             {

@@ -1,5 +1,6 @@
 ﻿@page "/dynamic-forms/{Module}/{Component}/{Id:guid?}"
 
+@using MyFinace.Modules.GoalEntry
 @using MyFinance.Utility
 @using MyFinace.Modules.Goals
 
@@ -35,6 +36,28 @@ else
 					<MudText Typo="Typo.h6" Class="text-warning">Unknown Goal Component: @Component</MudText>;
 					break;
 			}			
+			break;
+		case "GoalContribution":
+		@switch(Component)
+			{
+				case "Add":
+				case "add-plan":
+					<AddGoalEntry />
+					break;
+				case "Edit":
+				case "Edit-Goals-Plans":
+					<MudText Typo="Typo.h6" Class="text-warning">Unknown Goals Contribution Component: @Component</MudText>
+					
+					break;
+				case "List":
+				case "ListGoalsPlans":
+					<MudText Typo="Typo.h6" Class="text-warning">Unknown Goals Contribution Component: @Component</MudText>
+					
+					break;
+				default:
+					<MudText Typo="Typo.h6" Class="text-warning">Unknown Goals Contribution Component: @Component</MudText>
+					break;
+			}
 			break;
 		default:
 			Console.WriteLine($"Module {Module} & Component {Component} not recognized.");

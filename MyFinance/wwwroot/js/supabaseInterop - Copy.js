@@ -264,10 +264,9 @@ window.supabaseInterop = {
             return { success: false, errorMessage: "Supabase JS client not initialized." };
         }
 
-        try {            
-
+        try {
             // Log the attempt to insert, indicating the table and the entity
-            console.log(`JS: Attempting to insert into table '${tableName}' with entity:`, JSON.stringify(entity, null, 2)); // Log entity clearly
+            console.log(`JS: Attempting to insert into table '${tableName}' with entity:`, entity);
             // Perform the insert operation using the provided table name and entity object
             const { data, error } = await window.supabaseJSClient
                 .from(tableName) // Dynamically use the table name passed as an argument
@@ -276,16 +275,11 @@ window.supabaseInterop = {
 
             if (error) {
                 // Log and return the error message if the Supabase operation fails
-                console.error(`JS: 1.Error inserting into '${tableName}':`, error);
-                console.error(`JS: 2.Error inserting into '${tableName}':`, error.message);
+                console.error(`JS: Error inserting into '${tableName}':`, error.message);
                 return { success: false, errorMessage: error.message };
             } else {
-                // Check if data is returned, it might be null for certain insert operations
-                if (data && data.length > 0) {
-                    console.log(`JS: Successfully inserted into '${tableName}'. Raw data:`, JSON.stringify(data, null, 2));
-                } else {
-                    console.log(`JS: Successfully inserted into '${tableName}', but no data returned.`);
-                }
+                // Log the successful insertion and return success
+                console.log(`JS: Successfully inserted into '${tableName}'. Raw data:`, data);
                 return { success: true, errorMessage: null };
             }
         } catch (e) {

@@ -1,0 +1,289 @@
+﻿@page "/goalentrylist"
+@using MyFinace.Modules.GoalEntry
+@using MyFinace.Modules.Goals
+@using MyFinance.Utility
+@using MyFinance.Utility.Helper
+@inject SupabaseService SupabaseService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="my-8 px-4">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Class="mb-6">
+        <MudIcon Icon="@Icons.Material.Filled.FormatListBulleted" Color="Color.Primary" Size="Size.Large" />
+        <MudText Typo="Typo.h4" Align="Align.Center" Class="mud-text-primary">Your Goal Entries</MudText>
+    </MudStack>
+
+    <MudPaper Elevation="4" Class="pa-4 mb-6 rounded-lg">
+        <MudTextField T="string"
+                      Label="Search Goal Entries"
+                      Variant="Variant.Outlined"
+                      @bind-Value="searchTerm"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      AdornmentColor="Color.Primary"
+                      Clearable="true"
+                      OnClearButtonClick="OnClearSearch"
+                      DebounceInterval="500"
+                      OnDebounceIntervalElapsed="OnSearchInputChanged" />
+    </MudPaper>
+
+    @if (isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" Class="d-flex justify-center my-8" />
+        <MudText Typo="Typo.h6" Align="Align.Center" Color="Color.Tertiary">Loading Goal Entries...</MudText>
+    }
+    else if (!goalEntries.Any())
+    {
+        <MudAlert Severity="Severity.Info" Class="my-8">No goal entries found. Try adding some!</MudAlert>
+        <div class="d-flex justify-center">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick='() => NavigationManager.NavigateTo("/addgoalentry")' StartIcon="@Icons.Material.Filled.AddCircle">
+                Add New Goal Entry
+            </MudButton>
+        </div>
+    }
+    else
+    {
+        <MudList T="string" Clickable="true" Dense="false" Class="rounded-lg mud-elevation-2" Padding="true">
+            @foreach (var entry in goalEntries)
+            {
+                <MudListItem Class="pa-4 my-2 rounded-lg mud-elevation-1">
+                    <ChildContent>
+                        <MudGrid AlignItems="AlignItems.Center">
+                            <MudItem xs="12" sm="1">
+                                @if (!string.IsNullOrEmpty(entry.ImageSVG))
+                                {
+                                    <div class="d-flex justify-center align-center">
+                                        @((MarkupString)entry.ImageSVG)
+                                    </div>
+                                }
+                                else
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.EmojiObjects" Color="Color.Tertiary" Size="Size.Large" Class="d-flex justify-center align-center" />
+                                }
+                            </MudItem>
+                            <MudItem xs="12" sm="7">
+                                <MudText Typo="Typo.h6" Color="Color.Primary">@entry.Name</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">@entry.Description</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Dark">Platform: @entry.Platform | Fund: @entry.FundName</MudText>
+                            </MudItem>
+                            <MudItem xs="12" sm="4">
+                                @{
+                                    var progress = CalculateProgress(entry.InvestedAmount, entry.TargetAmount);
+                                    Color progressColor = Color.Primary;
+                                    if (progress >= 100) progressColor = Color.Success;
+                                    else if (progress > 75) progressColor = Color.Info;
+                                    else if (progress > 50) progressColor = Color.Warning;
+                                    else progressColor = Color.Error;
+                                }
+                                <MudText Typo="Typo.body2" Color="Color.Primary" Class="mb-1">
+                                    Progress: @progress% (@entry.InvestedAmount.ToString("C0") / @entry.TargetAmount.ToString("C0"))
+                                </MudText>
+                                <MudProgressLinear Value="@progress" Color="@progressColor" Size="Size.Large" Rounded="true">
+                                    <ProgressContent>
+                                        <MudText Color="Color.Dark" Typo="Typo.caption">@progress%</MudText>
+                                    </ProgressContent>
+                                </MudProgressLinear>
+                                <div class="d-flex justify-end mt-2">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info" Size="Size.Small" OnClick='() => EditGoalEntry(entry.Id)' Title="Edit Goal Entry" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick='() => ConfirmDelete(entry.Id, entry.Name)' Title="Delete Goal Entry" />
+                                </div>
+                            </MudItem>
+                        </MudGrid>
+                    </ChildContent>
+                </MudListItem>
+            }
+        </MudList>
+
+        <div class="d-flex justify-center mt-6">
+            <MudPagination Count="@(TotalPages)" @bind-Selected="currentPage" Size="Size.Medium" Color="Color.Primary" OnChange="OnPageChanged" />
+        </div>
+    }
+</MudContainer>
+
+@code {
+    private List<GoalEntry> goalEntries = new();
+    private bool isLoading = true;
+    private int totalItems = 0;
+    private int currentPage = 1;
+    private int pageSize = 5; // You can adjust this value
+    private string searchTerm = string.Empty;
+
+    private const string GoalEntryTableName = "GoalEntry";
+
+    protected override async Task OnInitializedAsync()
+    {
+        SupabaseService.OnAuthStateChanged += HandleAuthStateChanged;
+        await LoadGoalEntriesAsync();
+    }
+
+    // Handles authentication state changes and reloads data if necessary
+    private async void HandleAuthStateChanged(JsSession? session)
+    {
+        // Reload data if the user's ID changes (e.g., login/logout)
+        // Or if it's the initial auth state loaded after service initialization
+        if (SupabaseService.CurrentSession?.User?.Id != goalEntries.FirstOrDefault()?.OwnedBy)
+        {
+            await LoadGoalEntriesAsync();
+        }
+        StateHasChanged();
+    }
+
+    private async Task LoadGoalEntriesAsync()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            string userId = SupabaseService.CurrentSession?.User?.Id ?? string.Empty;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                Snackbar.Add("Authentication required to load goal entries.", Severity.Warning);
+                goalEntries = new List<GoalEntry>();
+                totalItems = 0;
+                return;
+            }
+
+            //var goalsResult = await SupabaseService.SearchEntitiesByNameAsync<GoalEntity>("Goal", string.Empty);
+            var result = await SupabaseService.SearchEntitiesByNameAsync<GoalEntry>(
+                GoalEntryTableName,
+                strin.
+                //searchTerm//,
+                //(currentPage - 1) * pageSize,
+                //pageSize
+            );
+
+            if (result.Error == null)
+            {
+                // Filter by OwnedBy in client-side if RLS cannot entirely handle it,
+                // or if you want to ensure only owned data is displayed for current session.
+                // It's best to rely on RLS if possible, but this is a fallback.
+                goalEntries = result.Data?
+                                .Where(g => g.OwnedBy == userId)
+                                .ToList() ?? new List<GoalEntry>();
+
+                // Supabase 'count' should ideally be filtered by RLS as well.
+                // If not, you might need to adjust totalItems based on client-side filtered count
+                // or ensure your Supabase RLS policies are tightly coupled to `ownedBy`.
+                totalItems = result.Count;
+
+                // Adjust current page if it's out of bounds after filtering/reloading
+                if (currentPage > TotalPages && TotalPages > 0)
+                {
+                    currentPage = TotalPages;
+                    await LoadGoalEntriesAsync(); // Reload to last valid page
+                    return;
+                }
+            }
+            else
+            {
+                Snackbar.Add($"Error loading goal entries: {result.Error.Message}", Severity.Error);
+                goalEntries = new List<GoalEntry>();
+                totalItems = 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"An unexpected error occurred: {ex.Message}", Severity.Error);
+            Console.Error.WriteLine($"Error loading goal entries: {ex.Message}");
+            goalEntries = new List<GoalEntry>();
+            totalItems = 0;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private int TotalPages => (int)Math.Ceiling(totalItems / (double)pageSize);
+
+    private async Task OnPageChanged(int page)
+    {
+        currentPage = page;
+        await LoadGoalEntriesAsync();
+    }
+
+    private async Task OnSearchInputChanged()
+    {
+        currentPage = 1; // Reset to first page on new search
+        await LoadGoalEntriesAsync();
+    }
+
+    private void OnClearSearch()
+    {
+        searchTerm = string.Empty;
+        OnSearchInputChanged(); // Trigger reload with empty search term
+    }
+
+    private double CalculateProgress(decimal investedAmount, decimal targetAmount)
+    {
+        if (targetAmount <= 0) return 0;
+        var progress = (double)(investedAmount / targetAmount) * 100;
+        return Math.Min(progress, 100); // Cap at 100%
+    }
+
+    private void EditGoalEntry(Guid id)
+    {
+        NavigationManager.NavigateTo($"/editgoalentry/{id}");
+    }
+
+    private async Task ConfirmDelete(Guid id, string name)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("ContentText", $"Are you sure you want to delete goal entry '{name}'?");
+        parameters.Add("ButtonText", "Delete");
+        parameters.Add("Color", Color.Error);
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Small };
+
+        var dialog = await DialogService.Show<MudBlazor.Dialog>(
+            "Confirm Deletion", parameters, options); // Using standard MudBlazor.Dialog for confirmation
+
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await DeleteGoalEntry(id);
+        }
+        else
+        {
+            Snackbar.Add("Deletion cancelled.", Severity.Info);
+        }
+    }
+
+    private async Task DeleteGoalEntry(Guid id)
+    {
+        isLoading = true;
+        StateHasChanged();
+        try
+        {
+            var (success, errorMessage) = await SupabaseService.Delete(GoalEntryTableName, id);
+            if (success)
+            {
+                Snackbar.Add("Goal Entry deleted successfully!", Severity.Success);
+                await LoadGoalEntriesAsync(); // Reload the list after deletion
+            }
+            else
+            {
+                Snackbar.Add($"Error deleting Goal Entry: {errorMessage}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"An unexpected error occurred: {ex.Message}", Severity.Error);
+            Console.Error.WriteLine($"Error deleting Goal Entry: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        SupabaseService.OnAuthStateChanged -= HandleAuthStateChanged;
+    }
+}
