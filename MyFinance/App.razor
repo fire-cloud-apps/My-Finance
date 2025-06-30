@@ -1,4 +1,5 @@
-﻿<Router AppAssembly="@typeof(Program).Assembly"
+﻿@using Supabase.RestAPI
+<Router AppAssembly="@typeof(Program).Assembly"
         AdditionalAssemblies="@(new[] { typeof(MyFinace.Modules.Goals.GoalEntity).Assembly })"> @* Added AdditionalAssemblies *@
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
@@ -13,5 +14,57 @@
 </Router>
 
 @code {
-    // You might have other @code content here
+
+    protected override async Task OnInitializedAsync()
+    {
+        // // Initialize the SupabaseService to set up JS Interop callbacks.
+        // // This should ideally be called once, perhaps in App.razor or Program.cs,
+        // // but if it handles component-specific initialization, keep it here.
+        await SupabaseService.InitializeAsync();
+
+        // // Subscribe to auth state changes to update the UI.
+        // // This ensures the UI reacts to login/logout.
+        SupabaseService.OnAuthStateChanged += OnAuthStateChangedHandler;
+    }
+
+
+    private void OnAuthStateChangedHandler(JsSession? session)
+    {
+        // This method is called when the auth state changes.
+        // It triggers a re-render of this component (MainLayout)
+        // so the AppBar buttons and user info can be updated.
+        // We only call StateHasChanged if the session status has actually changed
+        // from what the UI is currently displaying, to avoid unnecessary re-renders.
+
+        // Get the current session state from the service for comparison
+        bool isAuthenticated = SupabaseService.CurrentSession != null && SupabaseService.CurrentSession.User?.Id != null;
+        bool newSessionAuthenticated = session != null && session.User?.Id != null;
+
+        /*
+        if (SupabaseService.CurrentSession != null)
+        {
+            GlobalServices.JsSession = SupabaseService.CurrentSession;
+            var user = SupabaseService.CurrentSession.User;
+            GlobalServices.AuthToken = SupabaseService.CurrentSession.AccessToken;
+            GlobalServices.UserInfo = new UserInfo()
+            {
+                Id = SupabaseService.CurrentSession.User.Id,
+                Name = SupabaseService.CurrentSession.GetUserMetadataString("name"),
+                Email = SupabaseService.CurrentSession.GetUserMetadataString("email")
+            };
+            Console.WriteLine("App.Razor:: Seems page is refreshed hence loaded again.");
+        }
+        else
+        {
+            Console.WriteLine($"App.Razor::JsSession Failed!");
+        }
+        */
+
+        // Only re-render if the authentication status changes
+        if (isAuthenticated != newSessionAuthenticated)
+        {
+            StateHasChanged(); // Re-render this component
+        }
+        Console.WriteLine("App.razor: OnAuthStateChangedHandler - Triggered.");
+    }
 }

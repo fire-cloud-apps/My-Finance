@@ -3,19 +3,21 @@
   "WorkspaceRootPath": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinance\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{6CDF67F2-189B-4ABC-B507-EB4FFA0DF97F}|..\\MyFinace.Modules\\MyFinace.Modules.csproj|d:\\github\\git.hotmail\\my-finance\\myfinace.modules\\goalentry\\listgoalentry.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{6CDF67F2-189B-4ABC-B507-EB4FFA0DF97F}|..\\MyFinace.Modules\\MyFinace.Modules.csproj|d:\\github\\git.hotmail\\my-finance\\myfinace.modules\\goals\\goaldashboard.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{6CDF67F2-189B-4ABC-B507-EB4FFA0DF97F}|..\\MyFinace.Modules\\MyFinace.Modules.csproj|d:\\github\\git.hotmail\\my-finance\\myfinace.modules\\goals\\listgoals.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{6CDF67F2-189B-4ABC-B507-EB4FFA0DF97F}|..\\MyFinace.Modules\\MyFinace.Modules.csproj|d:\\github\\git.hotmail\\my-finance\\myfinace.modules\\goals\\viewgoal.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{5B9CCCD5-2EDB-492C-9324-598C5CFE1F76}|..\\MyFinance.Utility\\MyFinance.Utility.csproj|d:\\github\\git.hotmail\\my-finance\\myfinance.utility\\supabaseservice.find.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{8B2536E8-14E1-46C6-B058-8ABA163005EC}|MyFinance.csproj|d:\\github\\git.hotmail\\my-finance\\myfinance\\pages\\home.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{8B2536E8-14E1-46C6-B058-8ABA163005EC}|MyFinance.csproj|solutionrelative:pages\\home.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{5B9CCCD5-2EDB-492C-9324-598C5CFE1F76}|..\\MyFinance.Utility\\MyFinance.Utility.csproj|d:\\github\\git.hotmail\\my-finance\\myfinance.utility\\supabaseservice.delete.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{6712A166-FA73-4AB0-AEBC-51FCEB94D015}|..\\Supabase.RestAPI\\Supabase.RestAPI.csproj|d:\\github\\git.hotmail\\my-finance\\supabase.restapi\\supabaseapiservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{5B9CCCD5-2EDB-492C-9324-598C5CFE1F76}|..\\MyFinance.Utility\\MyFinance.Utility.csproj|d:\\github\\git.hotmail\\my-finance\\myfinance.utility\\supabaseservice.auth.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{8B2536E8-14E1-46C6-B058-8ABA163005EC}|MyFinance.csproj|d:\\github\\git.hotmail\\my-finance\\myfinance\\layout\\navmenu.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{8B2536E8-14E1-46C6-B058-8ABA163005EC}|MyFinance.csproj|solutionrelative:layout\\navmenu.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     }
   ],
   "DocumentGroupContainers": [
@@ -25,76 +27,76 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "ListGoals.razor",
-              "DocumentMoniker": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\Goals\\ListGoals.razor",
-              "RelativeDocumentMoniker": "..\\MyFinace.Modules\\Goals\\ListGoals.razor",
-              "ToolTip": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\Goals\\ListGoals.razor",
-              "RelativeToolTip": "..\\MyFinace.Modules\\Goals\\ListGoals.razor",
-              "ViewState": "AgIAAM8AAAAAAAAAAAAAAOMAAABwAAAAAAAAAA==",
+              "Title": "ViewGoal.razor",
+              "DocumentMoniker": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\Goals\\ViewGoal.razor",
+              "RelativeDocumentMoniker": "..\\MyFinace.Modules\\Goals\\ViewGoal.razor",
+              "ToolTip": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\Goals\\ViewGoal.razor",
+              "RelativeToolTip": "..\\MyFinace.Modules\\Goals\\ViewGoal.razor",
+              "ViewState": "AgIAAI8AAAAAAAAAAAAkwJwAAABsAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-06-25T07:59:36.304Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "SupabaseService.Delete.cs",
-              "DocumentMoniker": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinance.Utility\\SupabaseService.Delete.cs",
-              "RelativeDocumentMoniker": "..\\MyFinance.Utility\\SupabaseService.Delete.cs",
-              "ToolTip": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinance.Utility\\SupabaseService.Delete.cs",
-              "RelativeToolTip": "..\\MyFinance.Utility\\SupabaseService.Delete.cs",
-              "ViewState": "AgIAACkAAAAAAAAAAAAkwAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-25T07:59:19.533Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "SupabaseService.Auth.cs",
-              "DocumentMoniker": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinance.Utility\\SupabaseService.Auth.cs",
-              "RelativeDocumentMoniker": "..\\MyFinance.Utility\\SupabaseService.Auth.cs",
-              "ToolTip": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinance.Utility\\SupabaseService.Auth.cs",
-              "RelativeToolTip": "..\\MyFinance.Utility\\SupabaseService.Auth.cs",
-              "ViewState": "AgIAAFIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-25T07:59:08.572Z",
+              "WhenOpened": "2025-06-30T07:15:01.514Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "SupabaseService.Find.cs",
-              "DocumentMoniker": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinance.Utility\\SupabaseService.Find.cs",
-              "RelativeDocumentMoniker": "..\\MyFinance.Utility\\SupabaseService.Find.cs",
-              "ToolTip": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinance.Utility\\SupabaseService.Find.cs",
-              "RelativeToolTip": "..\\MyFinance.Utility\\SupabaseService.Find.cs",
-              "ViewState": "AgIAAA0AAAAAAAAAAAAzwBoAAAASAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-06-25T07:58:22.823Z",
+              "Title": "Home.razor",
+              "DocumentMoniker": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinance\\Pages\\Home.razor",
+              "RelativeDocumentMoniker": "Pages\\Home.razor",
+              "ToolTip": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinance\\Pages\\Home.razor",
+              "RelativeToolTip": "Pages\\Home.razor",
+              "ViewState": "AgIAACQAAAAAAAAAAAAkwDEAAAAlAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-06-30T07:10:01.31Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "ListGoalEntry.razor",
-              "DocumentMoniker": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\GoalEntry\\ListGoalEntry.razor",
-              "RelativeDocumentMoniker": "..\\MyFinace.Modules\\GoalEntry\\ListGoalEntry.razor",
-              "ToolTip": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\GoalEntry\\ListGoalEntry.razor",
-              "RelativeToolTip": "..\\MyFinace.Modules\\GoalEntry\\ListGoalEntry.razor",
-              "ViewState": "AgIAAIgAAAAAAAAAAAAQwJYAAAAWAAAAAAAAAA==",
+              "Title": "GoalDashboard.razor",
+              "DocumentMoniker": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\Goals\\GoalDashboard.razor",
+              "RelativeDocumentMoniker": "..\\MyFinace.Modules\\Goals\\GoalDashboard.razor",
+              "ToolTip": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\Goals\\GoalDashboard.razor",
+              "RelativeToolTip": "..\\MyFinace.Modules\\Goals\\GoalDashboard.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-06-25T07:38:19.269Z",
+              "WhenOpened": "2025-06-30T06:44:03.455Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "SupabaseApiService.cs",
+              "DocumentMoniker": "D:\\GitHub\\Git.Hotmail\\My-Finance\\Supabase.RestAPI\\SupabaseApiService.cs",
+              "RelativeDocumentMoniker": "..\\Supabase.RestAPI\\SupabaseApiService.cs",
+              "ToolTip": "D:\\GitHub\\Git.Hotmail\\My-Finance\\Supabase.RestAPI\\SupabaseApiService.cs",
+              "RelativeToolTip": "..\\Supabase.RestAPI\\SupabaseApiService.cs",
+              "ViewState": "AgIAACAAAAAAAAAAAAAUwOgAAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-06-30T06:42:54.583Z",
               "EditorCaption": ""
             },
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "NavMenu.razor",
+              "DocumentMoniker": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinance\\Layout\\NavMenu.razor",
+              "RelativeDocumentMoniker": "Layout\\NavMenu.razor",
+              "ToolTip": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinance\\Layout\\NavMenu.razor",
+              "RelativeToolTip": "Layout\\NavMenu.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-06-30T06:38:36.378Z",
+              "EditorCaption": ""
             }
           ]
         }

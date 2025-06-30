@@ -22,6 +22,19 @@ public class JsUser
     [JsonPropertyName("app_metadata")]
     public JsonElement AppMetadata { get; set; }
 }
+
+/// <summary>
+/// Used to store some besic info in Local Store.
+/// </summary>
+public class UserInfo
+{
+    public string? Id { get; set; }
+    
+    public string? Email { get; set; }
+    public string? Name { get; set; }
+
+
+}
 //public class JsTasksResponse
 //{
 //    [JsonPropertyName("data")]

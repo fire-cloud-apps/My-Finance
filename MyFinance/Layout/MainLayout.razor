@@ -1,7 +1,8 @@
-﻿
+﻿@using Supabase.RestAPI
 @inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
 @inject SupabaseService SupabaseService
+@inject IAuthTokenProvider AuthTokenProvider
 
 @* Required *@
 <MudThemeProvider IsDarkMode="@isDarkMode" />
@@ -14,7 +15,13 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar Elevation="1">
+    @if (!_isInitialized)
+    {
+        <MudProgressLinear Color="Color.Tertiary" Indeterminate="true" Class="my-7" />
+    }
+    else
+    {
+        <MudAppBar Elevation="1">
 
         <MudIconButton Icon="@Icons.Material.Filled.Menu"
                        Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
@@ -33,17 +40,17 @@
                        OnClick="RefreshSession" />
 
 
-        
-        @if(SupabaseService.CurrentSession != null && SupabaseService.CurrentSession.User?.Id != null)
-        {            
+        @* Only render the MudMenu if the user is authenticated *@
+        @if (SupabaseService.CurrentSession != null && SupabaseService.CurrentSession.User?.Id != null)
+        {
             <MudMenu>
                 <ActivatorContent>
                     <MudAvatar>
-                        <MudImage Src="@(SupabaseService.CurrentSession.GetUserMetadataString("avatar_url") ?? $"https://placehold.co/96x96/aabbcc/ffffff?text={SupabaseService.CurrentSession.User.Email?[0].ToString().ToUpper() ?? "U"}")" ></MudImage>
-                    </MudAvatar> 
+                        @* Use a null-coalescing operator for avatar_url and a placeholder for initial if email is null *@
+                        <MudImage Src="@(SupabaseService.CurrentSession.GetUserMetadataString("avatar_url") ?? $"https://placehold.co/96x96/aabbcc/ffffff?text={(SupabaseService.CurrentSession.User.Email?.Length > 0 ? SupabaseService.CurrentSession.User.Email[0].ToString().ToUpper() : "U")}")"></MudImage>
+                    </MudAvatar>
                 </ActivatorContent>
                 <ChildContent>
-					
                     <MudMenuItem Label="@SupabaseService.CurrentSession.GetUserMetadataString("name")" Icon="@Icons.Material.Filled.Person" />
                     <MudMenuItem Label="@SupabaseService.CurrentSession.User?.Email" Icon="@Icons.Material.Filled.VerifiedUser" />
                     <MudMenuItem Label="@SupabaseService.CurrentSession.User?.Id" Icon="@Icons.Material.Filled.PermIdentity" />
@@ -51,95 +58,121 @@
                                  OnClick="SignOut" IconColor="Color.Secondary" />
                 </ChildContent>
             </MudMenu>
-		}
+        }
 
-       
-        <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" 
-        Edge="Edge.End" />
+
+        <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit"
+                       Edge="Edge.End" />
 
     </MudAppBar>
 
-    <MudDrawer @bind-Open="_drawerOpen" >
+    <MudDrawer @bind-Open="_drawerOpen">
         <NavMenu />
     </MudDrawer>
     <MudMainContent>
         <MudContainer>
             @Body
         </MudContainer>
-            @* <MudText Typo="Typo.h5" GutterBottom="true">Welcome to the Main Layout</MudText>
-			<MudText>Content goes here...</MudText> *@       
     </MudMainContent>
+    }
+
 </MudLayout>
 
 @code {
-    
-    private bool isDarkMode = true;// Default to dark mode
-    private bool _isMasterKeySet = false;
-    private string _masterKey = string.Empty;
-    private bool _drawerOpen = true;
-    private string _localStorageToken = "Loading...";
+
+    private bool isDarkMode = true; // Default to dark mode
+    private bool _drawerOpen = true; // Default to drawer open for initial load
+    private bool _isInitialized = false;
+
+    // No need for _isMasterKeySet, _masterKey, _localStorageToken in MainLayout if not directly displayed/used
 
     protected override async Task OnInitializedAsync()
     {
-        // Initialize the SupabaseService to set up JS Interop callbacks
-        await SupabaseService.InitializeAsync();
-        // Subscribe to auth state changes to update the UI
-        SupabaseService.OnAuthStateChanged += OnAuthStateChangedHandler;
-        await UpdateLocalStorageTokenDisplay();
-
-    }
-    private void OnAuthStateChangedHandler(JsSession? session)
-    {
-        // This method is called when the auth state changes.
-        // It triggers a re-render of this component (MainLayout)
-        // so the AppBar buttons and user info can be updated.
-        //@if (SupabaseService.CurrentSession == null || SupabaseService.CurrentSession.User?.Id == null)
-        StateHasChanged(); // Re-render this component
-        _ = UpdateLocalStorageTokenDisplay(); // Update local storage display
-        if (session == null || session.User?.Id == null)
-        {
-            NavigationManager.NavigateTo("/login");
-        }
-    }
-
-    private async Task UpdateLocalStorageTokenDisplay()
-    {
+        _isInitialized = false;
         try
         {
-            var storedSessionJson = await SupabaseService.GetLocalStorageTokenJson();
-            if (!string.IsNullOrEmpty(storedSessionJson) && storedSessionJson != "No Supabase session found in local storage.")
-            {
-                _localStorageToken = System.Text.Json.JsonSerializer.Serialize(
-                    System.Text.Json.JsonDocument.Parse(storedSessionJson).RootElement,
-                    new System.Text.Json.JsonSerializerOptions { WriteIndented = true }
-                );
-            }
-            else
-            {
-                _localStorageToken = storedSessionJson;
-            }
+            // Initialize the SupabaseService to set up JS Interop callbacks.
+            // This should ideally be called once, perhaps in App.razor or Program.cs,
+            // but if it handles component-specific initialization, keep it here.
+            await SupabaseService.InitializeAsync();
+            await Task.Delay(500);
         }
-        catch (Exception ex)
+        finally
         {
-            _localStorageToken = $"Error parsing stored session: {ex.Message}";
-            Console.WriteLine($"Error in Home.razor UpdateLocalStorageTokenDisplay: {ex.Message}");
-        }
+            _isInitialized = true;
+        }        
+
+        // Subscribe to auth state changes to update the UI.
+        // This ensures the UI reacts to login/logout.
+        //SupabaseService.OnAuthStateChanged += OnAuthStateChangedHandler;
+
+        // Optionally, check initial session state here if needed for immediate UI update on first load.
+        // However, OnAuthStateChangedHandler will cover this after the initial check from SupabaseService.
     }
+
+   //  private void OnAuthStateChangedHandler(JsSession? session)
+   //  {
+   //      // This method is called when the auth state changes.
+   //      // It triggers a re-render of this component (MainLayout)
+   //      // so the AppBar buttons and user info can be updated.
+   //      // We only call StateHasChanged if the session status has actually changed
+   //      // from what the UI is currently displaying, to avoid unnecessary re-renders.
+
+   //      // Get the current session state from the service for comparison
+   //      bool isAuthenticated = SupabaseService.CurrentSession != null && SupabaseService.CurrentSession.User?.Id != null;
+   //      bool newSessionAuthenticated = session != null && session.User?.Id != null;
+
+   //      // Only re-render if the authentication status changes
+   //      if (isAuthenticated != newSessionAuthenticated)
+   //      {
+   //          StateHasChanged(); // Re-render this component
+   //      }
+
+   //      // Navigate to login if session is null/invalid.
+   //      // This should be done only if the user is truly unauthenticated.
+   //      if (newSessionAuthenticated)
+   //      {
+   //          UserInfo userInfo = new UserInfo()
+   //              {
+   //                  Id = session.User.Id,
+   //                  Name = session.GetUserMetadataString("name"),
+   //                  Email = session.GetUserMetadataString("email")
+
+   //              };
+			// LocalStorage.SetItemAsStringAsync("accessToken", session.AccessToken);
+   //          LocalStorage.SetItemAsync<UserInfo>("userInfo", userInfo);
+			// AuthTokenProvider.SetAuthToken(session.AccessToken);
+   //      }
+   //      else
+   //      {
+   //          // Only navigate if not already on the login page to prevent looping
+   //          if (!NavigationManager.Uri.Contains("/login"))
+   //          {
+   //              NavigationManager.NavigateTo("/login");
+   //          }
+   //      }
+   //      Console.WriteLine("MainLayout: OnAuthStateChangedHandler - Triggered.");
+   //  }
 
     private async Task RefreshSession()
     {
-        await SupabaseService.RefreshSession();
+        // Only refresh if there's an active session to begin with
+        if (SupabaseService.CurrentSession != null)
+        {
+            await SupabaseService.RefreshSession();
+        }
     }
 
     private async Task SignOut()
     {
         await SupabaseService.SignOut();
+        // Navigation to login will be handled by OnAuthStateChangedHandler
     }
 
     public void Dispose()
     {
         // Unsubscribe to prevent memory leaks
-        SupabaseService.OnAuthStateChanged -= OnAuthStateChangedHandler;
+        //SupabaseService.OnAuthStateChanged -= OnAuthStateChangedHandler;
     }
 
     private void DrawerToggle()
@@ -151,7 +184,4 @@
     {
         isDarkMode = value;
     }
-
-
-    
 }

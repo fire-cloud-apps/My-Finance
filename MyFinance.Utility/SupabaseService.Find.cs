@@ -74,18 +74,36 @@ public partial class SupabaseService
         }
     }
 
-    // Helper class to deserialize the JS interop search results
+    /// <summary>
+    /// Represents the result of a Supabase operation, containing either data or an error.
+    /// This class is used to deserialize the JSON response from the Supabase JS interop.
+    /// </summary>
+    /// <typeparam name="T">The type of the data returned by the operation.</typeparam>
     public class SupabaseSearchResult<T>
     {
+        /// <summary>
+        /// The data returned by the Supabase operation.
+        /// It is null if an error occurred.
+        /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("data")]
         public T? Data { get; set; }
 
+        /// <summary>
+        /// The error returned by the Supabase operation.
+        /// It is null if the operation was successful.
+        /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("error")]
         public SupabaseError? Error { get; set; }
     }
 
+    /// <summary>
+    /// Represents an error returned from a Supabase operation.
+    /// </summary>
     public class SupabaseError
     {
+        /// <summary>
+        /// The error message.
+        /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("message")]
         public string? Message { get; set; }
     }

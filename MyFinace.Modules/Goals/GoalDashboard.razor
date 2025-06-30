@@ -1,0 +1,338 @@
+﻿@page "/goaldashboard"
+@using MyFinance.Model
+@using Supabase.RestAPI
+@using MudBlazor
+@using MudBlazor.Charts 
+@using MudBlazor.Utilities 
+
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation // For navigation actions like Edit
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-8">
+    <MudText Typo="Typo.h4" GutterBottom="true" Class="mud-text-align-center mud-text-primary">Financial Goals Dashboard</MudText>
+    <MudText Typo="Typo.subtitle1" Class="mud-text-align-center mud-text-secondary">Visualize and manage your financial aspirations.</MudText>
+
+    @if (_isLoading)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="my-4" />
+        <MudText Typo="Typo.body1" Class="mud-text-align-center mud-text-secondary">Loading your financial goals...</MudText>
+    }
+    else if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Class="my-4 rounded-lg">@_errorMessage</MudAlert>
+    }
+    else if (_goals == null || !_goals.Any())
+    {
+        <MudAlert Severity="Severity.Info" Class="my-4 rounded-lg">No financial goals found. Start by adding a new goal!</MudAlert>
+        <div class="d-flex justify-center">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Href="/addgoal" Class="rounded-pill px-6 py-3">Add New Goal</MudButton>
+        </div>
+    }
+    else
+    {
+        <MudGrid Spacing="4" Class="mt-8">
+            <!-- Summary Tiles -->
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Elevation="6" Class="pa-4 d-flex flex-column align-center justify-center text-center mud-bg-surface rounded-lg py-6 mud-shadow-sm-blur">
+                    <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Size="Size.Large" Color="Color.Warning" />
+                    <MudText Typo="Typo.h5" Class="mt-2 mud-text-secondary">@_goals.Count()</MudText>
+                    <MudText Typo="Typo.subtitle2" Class="mud-text-tertiary">Total Goals</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Elevation="6" Class="pa-4 d-flex flex-column align-center justify-center text-center mud-bg-surface rounded-lg py-6 mud-shadow-sm-blur">
+                    <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Size="Size.Large" Color="Color.Success" />
+                    <MudText Typo="Typo.h5" Class="mt-2 mud-text-secondary">@_goals.Count(g => g.Status.Equals(GoalStatus.InProgress))</MudText>
+                    <MudText Typo="Typo.subtitle2" Class="mud-text-tertiary">Goals In Progress</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Elevation="6" Class="pa-4 d-flex flex-column align-center justify-center text-center mud-bg-surface rounded-lg py-6 mud-shadow-sm-blur">
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Large" Color="Color.Info" />
+                    <MudText Typo="Typo.h5" Class="mt-2 mud-text-secondary">@_goals.Count(g => g.Status.Equals(GoalStatus.Completed))</MudText>
+                    <MudText Typo="Typo.subtitle2" Class="mud-text-tertiary">Goals Completed</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Elevation="6" Class="pa-4 d-flex flex-column align-center justify-center text-center mud-bg-surface rounded-lg py-6 mud-shadow-sm-blur">
+                    <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Size="Size.Large" Color="Color.Tertiary" />
+                    <MudText Typo="Typo.h5" Class="mt-2 mud-text-secondary">@_goals.Sum(g => g.TargetAmount).ToString("C", CultureInfo_IN)</MudText>
+                    <MudText Typo="Typo.subtitle2" Class="mud-text-tertiary">Total Target Amount</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Elevation="6" Class="pa-4 d-flex flex-column align-center justify-center text-center mud-bg-surface rounded-lg py-6 mud-shadow-sm-blur">
+                    <MudIcon Icon="@Icons.Material.Filled.Savings" Size="Size.Large" Color="Color.Warning" />
+                    <MudText Typo="Typo.h5" Class="mt-2 mud-text-secondary">@_goals.Sum(g => g.TotalAmountInvested).ToString("C", CultureInfo_IN)</MudText>
+                    <MudText Typo="Typo.subtitle2" Class="mud-text-tertiary">Total Invested Amount</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Elevation="6" Class="pa-4 d-flex flex-column align-center justify-center text-center mud-bg-surface rounded-lg py-6 mud-shadow-sm-blur">
+                    <MudIcon Icon="@Icons.Material.Filled.Payment" Size="Size.Large" Color="Color.Error" />
+                    <MudText Typo="Typo.h5" Class="mt-2 mud-text-secondary">
+                        @((_goals.Sum(g => g.TargetAmount) - _goals.Sum(g => g.TotalAmountInvested)).ToString("C", CultureInfo_IN))</MudText>
+                    <MudText Typo="Typo.subtitle2" Class="mud-text-tertiary">Amount Remaining</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Elevation="6" Class="pa-4 d-flex flex-column align-center justify-center text-center mud-bg-surface rounded-lg py-6 mud-shadow-sm-blur">
+                    <MudIcon Icon="@Icons.Material.Filled.RepeatOne" Size="Size.Large" Color="Color.Secondary" />
+                    <MudText Typo="Typo.h5" Class="mt-2 mud-text-secondary">@_goals.Sum(g => g.TotalSIPAmount).ToString("C", CultureInfo_IN)</MudText>
+                    <MudText Typo="Typo.subtitle2" Class="mud-text-tertiary">Total SIP Amount</MudText>
+                </MudPaper>
+            </MudItem>
+             <MudItem xs="12" sm="6" md="3">
+                <MudPaper Elevation="6" Class="pa-4 d-flex flex-column align-center justify-center text-center mud-bg-surface rounded-lg py-6 mud-shadow-sm-blur">
+                    <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Size="Size.Large" Color="Color.Tertiary" />
+                    <MudText Typo="Typo.h5" Class="mt-2 mud-text-secondary">@_goals.Sum(g => g.SIPCount)</MudText>
+                    <MudText Typo="Typo.subtitle2" Class="mud-text-tertiary">Total Active SIPs</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <MudGrid Spacing="4" Class="mt-8">
+            <!-- Charts -->
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="6" Class="pa-4 rounded-lg mud-shadow-sm-blur">
+                    <MudText Typo="Typo.h6" Class="mb-4 mud-text-primary">Goal Status Distribution</MudText>
+                    @if (_goalStatusData != null && _goalStatusData.Any())
+                    {
+                        <MudChart ChartType="ChartType.Donut" InputData="@_goalStatusData" InputLabels="@_goalStatusLabels" Width="100%" Height="300px" />
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">No data available for Goal Status Distribution.</MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="6" Class="pa-4 rounded-lg mud-shadow-sm-blur">
+                    <MudText Typo="Typo.h6" Class="mb-4 mud-text-primary">Investment Category Distribution (by Target Amount)</MudText>
+                    @if (_investmentCategoryData != null && _investmentCategoryData.Any())
+                    {
+                        <MudChart ChartType="ChartType.Pie" InputData="@_investmentCategoryData" InputLabels="@_investmentCategoryLabels" Width="100%" Height="300px" />
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">No data available for Investment Category Distribution.</MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+           
+        </MudGrid>
+
+        
+    }
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public SupabaseApiService<Goal> GoalApiService {get;set;}
+    private List<Goal> _goals = new List<Goal>(); // Initialize to avoid null reference
+    private bool _isLoading = true;
+    private string _errorMessage;
+    private string _searchString = "";
+    // CultureInfo for Indian Rupees
+    private System.Globalization.CultureInfo CultureInfo_IN = new System.Globalization.CultureInfo("en-IN");
+    // Chart Data
+    // For single series (Donut, Pie), InputData expects double[]
+    private double[] _goalStatusData = new double[0];
+    private string[] _goalStatusLabels = new string[0];
+    private double[] _investmentCategoryData = new double[0];
+    private string[] _investmentCategoryLabels = new string[0];
+    // For multi-series (Bar, Line), InputData expects IEnumerable<double[]>
+    private double[][] _investmentProgressData = new double[2][]; // Array for two series: Target, Invested
+    private string[] _investmentProgressLabels = new string[0];
+    private double[][] _sipContributionData = new double[1][]; // Array for one series: SIP Amount
+    private string[] _sipContributionLabels = new string[0];
+
+    // Chart Options
+    private ChartOptions _barChartOptions = new ChartOptions
+    {
+        ChartPalette = new[] { Colors.Blue.Lighten1, Colors.Green.Lighten1 }, // Custom colors for Target and Invested
+        YAxisFormat = "C0", // Currency format
+        // XAxisLabels is set directly on MudChart, not ChartOptions
+        InterpolationOption = InterpolationOption.Straight,
+        XAxisLabelPosition = XAxisLabelPosition.Bottom,
+        YAxisLabelPosition = YAxisLabelPosition.Right,
+        YAxisLines = true,
+        YAxisTicks = 5,
+        //YAxisMin = 0,
+        //Tooltips = true, // This is correct for ChartOptions
+        // TooltipOptions is a direct property of ChartOptions, no nested type
+        //TooltipOptions = new MudBlazor.Charts.ChartOptions.ChartTooltipOptions() { ShowTooltipMarkers = true },
+    };
+
+    private ChartOptions _lineChartOptions = new ChartOptions
+    {
+        ChartPalette = new[] { Colors.Red.Default, Colors.Teal.Default, Colors.Indigo.Default, Colors.Purple.Default, Colors.Orange.Default },
+        YAxisFormat = "C0", // Currency format
+        // XAxisLabels is set directly on MudChart, not ChartOptions
+        InterpolationOption = InterpolationOption.Straight,
+        XAxisLabelPosition = XAxisLabelPosition.Bottom,
+        YAxisLabelPosition = YAxisLabelPosition.Right,
+        //LegendPosition = LegendPosition.Bottom,
+        YAxisLines = true,
+        YAxisTicks = 5,
+        //YAxisMin = 0,
+        //Tooltips = true,
+        //TooltipOptions = new MudBlazor.Charts.ChartOptions.ChartTooltipOptions() { ShowTooltipMarkers = true },
+    };
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGoals();
+    }
+
+    private async Task LoadGoals()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+        try
+        {
+            var result = await GoalApiService.GetAll(); // Using the GetAll method
+
+            if (result.IsSuccess)
+            {
+                // Ensure result.Data is not null before ordering and converting
+                _goals = result.Data?.OrderBy(g => g.TargetYear ?? DateTime.MaxValue).ToList() ?? new List<Goal>();
+                CalculateChartData();
+            }
+            else
+            {
+                _errorMessage = result.ErrorMessage;
+                Snackbar.Add($"Error loading goals: {_errorMessage}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"An unexpected error occurred: {ex.Message}";
+            Snackbar.Add($"An unexpected error occurred: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged(); // Ensures UI updates after data loading
+        }
+    }
+
+    private void CalculateChartData()
+    {
+        // Always ensure chart data arrays/collections are initialized, even if empty
+        _goalStatusData = new double[0];
+        _goalStatusLabels = new string[0];
+        _investmentCategoryData = new double[0];
+        _investmentCategoryLabels = new string[0];
+        _investmentProgressData = new double[2][]; // Initialize with 2 empty inner arrays
+        _investmentProgressData[0] = new double[0];
+        _investmentProgressData[1] = new double[0];
+        _investmentProgressLabels = new string[0];
+        _sipContributionData = new double[1][]; // Initialize with 1 empty inner array
+        _sipContributionData[0] = new double[0];
+        _sipContributionLabels = new string[0];
+
+
+        if (_goals == null || !_goals.Any())
+        {
+            return; // No goals to calculate data for
+        }
+
+        // Goal Status Distribution (Donut Chart)
+        var statusGroups = _goals.GroupBy(g => g.Status)
+                                 .ToDictionary(g => g.Key, g => g.Count());
+        _goalStatusLabels = statusGroups.Keys.Select(s => s.ToString()).ToArray();
+        _goalStatusData = statusGroups.Values.Select(v => (double)v).ToArray();
+
+        // Investment Category Distribution (Pie Chart)
+        var categoryGroups = _goals.GroupBy(g => g.InvestmentCategory)
+                                   .Select(g => new { Category = g.Key, TotalTarget = g.Sum(x => x.TargetAmount) })
+                                   .Where(x => x.TotalTarget > 0) // Only include categories with a positive target amount
+                                   .ToList();
+
+        _investmentCategoryLabels = categoryGroups.Select(c => c.Category.ToString()).ToArray();
+        _investmentCategoryData = categoryGroups.Select(v => (double)v.TotalTarget).ToArray();
+
+        // Investment Progress (Bar Chart) - Top N goals for readability
+        // Order by target amount and take a reasonable number to avoid clutter
+        var topGoalsForProgress = _goals.OrderByDescending(g => g.TargetAmount).Take(10).ToList();
+        _investmentProgressLabels = topGoalsForProgress.Select(g => g.Name).ToArray();
+        _investmentProgressData = new double[2][];
+        _investmentProgressData[0] = topGoalsForProgress.Select(g => (double)g.TargetAmount).ToArray(); // Series 1: Target
+        _investmentProgressData[1] = topGoalsForProgress.Select(g => (double)g.TotalAmountInvested).ToArray(); // Series 2: Invested
+
+        // SIP Contribution Trends (Line Chart) - Top N goals by SIP amount
+        // Only consider goals with active SIPs
+        var topGoalsForSIP = _goals.Where(g => g.TotalSIPAmount > 0).OrderByDescending(g => g.TotalSIPAmount).Take(5).ToList();
+        _sipContributionLabels = topGoalsForSIP.Select(g => g.Name).ToArray();
+        _sipContributionData = new double[1][];
+        _sipContributionData[0] = topGoalsForSIP.Select(g => (double)g.TotalSIPAmount).ToArray();
+    }
+
+    private Color GetStatusColor(GoalStatus status)
+    {
+        return status switch
+        {
+            GoalStatus.YTB => Color.Info, // Yet To Begin
+            GoalStatus.InProgress => Color.Primary,
+            GoalStatus.Completed => Color.Success,
+            GoalStatus.Cancelled => Color.Error,
+            GoalStatus.Hold => Color.Warning,
+            _ => Color.Dark, // Default for any unhandled status
+        };
+    }
+
+    // Filter function for MudTable search
+    private bool FilterFunc(Goal goal, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (goal.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (goal.Description?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false)
+            return true;
+        if (goal.InvestmentCategory.ToString().Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (goal.Status.ToString().Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (goal.Tag?.Contains(searchString, StringComparison.OrdinalIgnoreCase) ?? false)
+            return true;
+        return false;
+    }
+
+    private void EditGoal(object id)
+    {
+        // Navigate to an edit page. Assuming /editgoal/{id} route exists.
+        Navigation.NavigateTo($"/editgoal/{id}");
+    }
+
+    private async Task DeleteGoal(object id)
+    {
+        // bool? result = await Snackbar.Add(
+        //     "Are you sure you want to delete this goal?",
+        //     Severity.Warning,
+        //     config => {
+        //         config.Action = "Delete";
+        //         config.RequireInteraction = true; // User must interact
+        //         config.ActionColor = Color.Error;
+        //         config.Onclick = snackbar => { snackbar.Close(); return Task.CompletedTask; }; // Close on action click
+        //         config.ShowCloseIcon = true; // Allow user to close manually
+        //     }).Result; // Await the result of the interaction
+
+        // if (result == true) // Only proceed if 'Delete' action was clicked
+        // {
+        //     var deleteResult = await GoalApiService.Delete(id);
+        //     if (deleteResult.IsSuccess)
+        //     {
+        //         Snackbar.Add("Goal deleted successfully!", Severity.Success);
+        //         await LoadGoals(); // Reload goals after successful deletion
+        //     }
+        //     else
+        //     {
+        //         Snackbar.Add($"Failed to delete goal: {deleteResult.ErrorMessage}", Severity.Error);
+        //     }
+        // }
+    }
+}

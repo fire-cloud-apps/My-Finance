@@ -7,11 +7,17 @@
     <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Content Remove="Pages\Test.razor" />
+  </ItemGroup>
+
   <ItemGroup>    
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.6" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="9.0.6" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.6" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.6" />
     <PackageReference Include="MudBlazor" Version="8.8.0" />
+   <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />  
   </ItemGroup>
 
   <ItemGroup>
@@ -21,6 +27,13 @@
   <ItemGroup>
     <ProjectReference Include="..\MyFinace.Modules\MyFinace.Modules.csproj" />
     <ProjectReference Include="..\MyFinance.Utility\MyFinance.Utility.csproj" />
+    <ProjectReference Include="..\Supabase.RestAPI\Supabase.RestAPI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="wwwroot\.nojekyll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

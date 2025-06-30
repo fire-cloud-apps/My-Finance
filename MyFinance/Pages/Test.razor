@@ -1,0 +1,344 @@
+﻿@page "/testsupabase-mudblazor"
+@using MyFinance.Model
+@using Supabase.RestAPI 
+@using MudBlazor 
+@using System.Text.Json.Serialization
+@inject SupabaseApiService<Goal> GoalService
+@inject IAuthTokenProvider AuthTokenProvider
+@inject ISnackbar Snackbar 
+
+
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="my-8">
+    <MudText Typo="Typo.h3" Class="mb-6 text-center">Supabase API Test Page (Goals) with MudBlazor</MudText>
+
+
+    <MudGrid Spacing="4">
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="4">
+                <MudCardHeader>
+                    <MudText Typo="Typo.h5">Authentication</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudText Typo="Typo.body2" Class="mb-4">
+                        Current Token Status: <MudText Typo="Typo.body2" Color="@(string.IsNullOrEmpty(CurrentTokenStatus) || CurrentTokenStatus.Contains("No token") ? Color.Error : Color.Success)" Class="font-weight-bold d-inline">@CurrentTokenStatus</MudText>
+                    </MudText>
+                    <MudButton OnClick="SimulateLogin" Variant="Variant.Filled" Color="Color.Success" Class="mr-4">
+                        Simulate Login (Set Token)
+                    </MudButton>
+                    <MudButton OnClick="SimulateLogout" Variant="Variant.Filled" Color="Color.Error">
+                        Simulate Logout (Clear Token)
+                    </MudButton>
+                </MudCardContent>
+                <MudCardActions Class="pa-4">
+                    <MudAlert Severity="Severity.Info" Dense="true" Class="mt-2">
+                        Remember to replace "YOUR_SUPABASE_ANON_PUBLIC_KEY" in Program.cs and the simulated token with actual values for real testing.
+                    </MudAlert>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="4">
+                <MudCardHeader>
+                    <MudText Typo="Typo.h5">Test Operations</MudText>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12" sm="6">
+                            <MudButton OnClick="CreateNewGoal" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true">
+                                1. Create New Goal
+                            </MudButton>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudButton OnClick="GetAllGoals" Variant="Variant.Filled" Color="Color.Info" FullWidth="true">
+                                2. Get All Goals
+                            </MudButton>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudButton OnClick="(() => GetGoalById(latestGoal?.Id))" Disabled="@(latestGoal == null || latestGoal.Id == null)" Variant="Variant.Filled" Color="Color.Secondary" FullWidth="true">
+                                3. Get By ID (Latest Created)
+                            </MudButton>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudButton OnClick="(() => UpdateGoal(latestGoal?.Id))" Disabled="@(latestGoal == null || latestGoal.Id == null)" Variant="Variant.Filled" Color="Color.Warning" FullWidth="true">
+                                4. Update Goal (Latest Created)
+                            </MudButton>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudButton OnClick="(() => DeleteGoal(latestGoal?.Id))" Disabled="@(latestGoal == null || latestGoal.Id == null)" Variant="Variant.Filled" Color="Color.Error" FullWidth="true">
+                                5. Delete Goal (Latest Created)
+                            </MudButton>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudButton OnClick="FilterGoals" Variant="Variant.Filled" Color="Color.Tertiary" FullWidth="true">
+                                6. Filter Goals (by "Active" Status)
+                            </MudButton>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudButton OnClick="BatchReadGoals" Variant="Variant.Filled" Color="Color.Dark" FullWidth="true">
+                                7. Batch Read Goals (Offset 0, Limit 2)
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+
+    <MudCard Elevation="4" Class="mt-8">
+        <MudCardHeader>
+            <MudText Typo="Typo.h5">Status & Results</MudText>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudText Typo="Typo.subtitle1" Class="mb-2">Latest Operation Status:</MudText>
+            <MudAlert Severity="@(IsSuccess? Severity.Success: Severity.Error)" Dense="true" Class="mb-4">
+                @StatusMessage
+            </MudAlert>
+
+            @if (!string.IsNullOrEmpty(LatestOperationData))
+            {
+                <MudText Typo="Typo.subtitle1" Class="mb-2">Raw Data Result:</MudText>
+                <MudPaper Class="pa-4 grey-darken-4 text-white" Elevation="0">
+                    <pre><code class="language-json">@LatestOperationData</code></pre>
+                </MudPaper>
+            }
+
+            @if (allGoals != null && allGoals.Any())
+            {
+                <MudText Typo="Typo.subtitle1" Class="mb-2 mt-4">All Goals (from "Get All Goals" or "Batch Read"):</MudText>
+                <MudTable Items="@allGoals" Hover="true" Breakpoint="Breakpoint.Sm" Class="mb-4" Elevation="2">
+                    <HeaderContent>
+                        <MudTh>ID</MudTh>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Target Amount</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="ID">@(context.Id.ToString() ?? "N/A")</MudTd>
+                        <MudTd DataLabel="Name">@context.Name</MudTd>
+                        <MudTd DataLabel="Status">@context.Status</MudTd>
+                        <MudTd DataLabel="Target Amount">@context.TargetAmount.ToString("C")</MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText>No matching records found</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+            }
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private string StatusMessage { get; set; } = "Ready to perform operations.";
+    private bool IsSuccess { get; set; } = true;
+    private string LatestOperationData { get; set; }
+    private List<Goal> allGoals;
+    private Goal latestGoal; // To store the last created/retrieved goal for update/delete/getById testing
+    private string CurrentTokenStatus { get; set; } = "No token set.";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateTokenStatus();
+    }
+
+    private async Task UpdateTokenStatus()
+    {
+        string token = string.Empty;
+        //var token = await AuthTokenProvider.GetAuthTokenAsync();
+        CurrentTokenStatus = string.IsNullOrEmpty(token) ? "No token set." : "Token is present.";
+    }
+
+    private void SetStatus(string message, bool isSuccess, object data = null)
+    {
+        StatusMessage = message;
+        IsSuccess = isSuccess;
+        LatestOperationData = data != null ? System.Text.Json.JsonSerializer.Serialize(data, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }) : null;
+        StateHasChanged();
+        Snackbar.Add(message, isSuccess ? Severity.Success : Severity.Error); // Show MudSnackbar notification
+    }
+
+    private void ClearResults()
+    {
+        allGoals = null;
+        LatestOperationData = null;
+        StatusMessage = "Ready to perform operations.";
+        IsSuccess = true;
+        // Snackbar messages are transient and don't need explicit clearing
+        StateHasChanged();
+    }
+
+    private async Task SimulateLogin()
+    {
+        ClearResults();
+        // In a real application, this token would come from your actual authentication service
+        // e.g., after user inputs credentials and you get a JWT back from Supabase Auth.
+        // For testing, this is a placeholder token.
+        // Make sure it's a valid JWT for your Supabase project (e.g., from a test user).
+        var dummyToken = "eyJhbGciOiJIUzI1NiIsImtpZCI6Ik9jR3ZDdlhSOW5DZ0ZaVWoiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2NxZmt2eXBwenJ3anJpa3lhcXN2LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI5NzI3ZDBmZi1hOGUwLTRkNTYtYWNlMy1iNDlmOWM5NGNmZjEiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzUxNDM4OTE3LCJpYXQiOjE3NTA4MzQxMTcsImVtYWlsIjoic3IuZ2FuZXNocmFtQGdtYWlsLmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiLCJnb29nbGUiXX0sInVzZXJfbWV0YWRhdGEiOnsiYXZhdGFyX3VybCI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hL0FDZzhvY0l0T3NzUC1RdEQyRDFLb1M1b0VmREpGaDY3TWxadVczNlNXRXRkNV9LVjZuR2tTemFYR3c9czk2LWMiLCJlbWFpbCI6InNyLmdhbmVzaHJhbUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiZnVsbF9uYW1lIjoiR2FuZXNoIFJhbSIsImlzcyI6Imh0dHBzOi8vYWNjb3VudHMuZ29vZ2xlLmNvbSIsIm5hbWUiOiJHYW5lc2ggUmFtIiwicGhvbmVfdmVyaWZpZWQiOmZhbHNlLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSXRPc3NQLVF0RDJEMUtvUzVvRWZESkZoNjdNbFp1VzM2U1dFdGQ1X0tWNm5Ha1N6YVhHdz1zOTYtYyIsInByb3ZpZGVyX2lkIjoiMTA0OTEyODY1NjA0Mzk2MDg4ODc3Iiwic3ViIjoiMTA0OTEyODY1NjA0Mzk2MDg4ODc3In0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoib2F1dGgiLCJ0aW1lc3RhbXAiOjE3NTA4MzQxMTd9XSwic2Vzc2lvbl9pZCI6Ijg2ZWExMGE0LTUwOGQtNDQyNy1iZTVlLTQ0MjM3MDIzZWM4MCIsImlzX2Fub255bW91cyI6ZmFsc2V9.ZnTENfbr5KWZ_IVhMa28zta0wKG79krR7e0vD0XD9gM"; // REPLACE THIS WITH A REAL DUMMY TOKEN
+        AuthTokenProvider.SetAuthToken(dummyToken);
+        await UpdateTokenStatus();
+        SetStatus("Simulated login successful. Token set for API calls.", true);
+    }
+
+    private async Task SimulateLogout()
+    {
+        ClearResults();
+        AuthTokenProvider.SetAuthToken(null); // Clear the token
+        await UpdateTokenStatus();
+        SetStatus("Simulated logout successful. Token cleared.", true);
+    }
+
+    private async Task CreateNewGoal()
+    {
+        ClearResults();
+        var newGoal = new Goal
+        {
+            Name = $"Test Goal {DateTime.Now.ToString("HHmmss")}",
+            Description = "A goal created from Blazor WASM for testing.",
+            Status = 0,
+            InvestmentCategory = InvestmentCategory.Cryptocurrency,
+            TotalAmountInvested = 0,
+            TargetAmount = 50000 + (new Random().Next(0, 10000)),
+            StartedYear = DateTime.Now,
+            TargetYear = DateTime.Now.AddYears(5),
+            Tag = "Test",
+            TotalSIPAmount = 1000
+        };
+
+        var result = await GoalService.Create(newGoal);
+        if (result.IsSuccess)
+        {
+            latestGoal = result.Data; // Store the created goal for subsequent operations
+            SetStatus($"Goal '{latestGoal.Name}' created successfully with ID: {latestGoal.Id}.", true, latestGoal);
+        }
+        else
+        {
+            SetStatus($"Error creating goal: {result.ErrorMessage}", false);
+        }
+    }
+
+    private async Task GetAllGoals()
+    {
+        ClearResults();
+        var result = await GoalService.GetAll();
+        if (result.IsSuccess)
+        {
+            allGoals = result.Data;
+            SetStatus($"Successfully retrieved {allGoals?.Count ?? 0} goals.", true, allGoals);
+        }
+        else
+        {
+            SetStatus($"Error retrieving all goals: {result.ErrorMessage}", false);
+        }
+    }
+
+    private async Task GetGoalById(object id)
+    {
+        ClearResults();
+        if (id == null)
+        {
+            SetStatus("No goal ID available to fetch. Create a goal first.", false);
+            return;
+        }
+
+        var result = await GoalService.GetById(id);
+        if (result.IsSuccess)
+        {
+            latestGoal = result.Data; // Update latest goal with the fetched one
+            SetStatus($"Successfully retrieved goal with ID: {id}.", true, latestGoal);
+            allGoals = latestGoal != null ? new List<Goal> { latestGoal } : new List<Goal>(); // Display as a list
+        }
+        else
+        {
+            SetStatus($"Error retrieving goal by ID {id}: {result.ErrorMessage}", false);
+        }
+    }
+
+    private async Task UpdateGoal(object id)
+    {
+        ClearResults();
+        if (id == null || latestGoal == null)
+        {
+            SetStatus("No goal available to update. Create or get a goal first.", false);
+            return;
+        }
+
+        // Create a partial update object. Supabase will only update fields present in the JSON.
+        var updateData = new Goal
+        {
+            Id = latestGoal.Id, // Include ID to ensure correct matching, though not strictly needed for PATCH payload
+            Description = $"Updated: {DateTime.Now.ToShortTimeString()} - This description has been modified.",
+            Status = MyFinance.Model.GoalStatus.InProgress,
+            TargetAmount = latestGoal.TargetAmount * 1.1M // Increase target by 10%
+        };
+
+        var result = await GoalService.Update(id, updateData);
+        if (result.IsSuccess)
+        {
+            latestGoal = result.Data; // Update latest goal with the updated data
+            SetStatus($"Goal with ID {id} updated successfully.", true, latestGoal);
+            allGoals = latestGoal != null ? new List<Goal> { latestGoal } : new List<Goal>(); // Display as a list
+        }
+        else
+        {
+            SetStatus($"Error updating goal with ID {id}: {result.ErrorMessage}", false);
+        }
+    }
+
+    private async Task DeleteGoal(object id)
+    {
+        ClearResults();
+        if (id == null)
+        {
+            SetStatus("No goal ID available to delete. Create a goal first.", false);
+            return;
+        }
+
+        var result = await GoalService.Delete(id);
+        if (result.IsSuccess)
+        {
+            SetStatus($"Goal with ID {id} deleted successfully.", true, result.Data);
+            latestGoal = null; // Clear the latest goal as it's deleted
+            allGoals = null; // Clear displayed goals
+        }
+        else
+        {
+            SetStatus($"Error deleting goal with ID {id}: {result.ErrorMessage}", false);
+        }
+    }
+
+    private async Task FilterGoals()
+    {
+        ClearResults();
+        var result = await GoalService.Filter("status", "Active");
+        if (result.IsSuccess)
+        {
+            allGoals = result.Data;
+            SetStatus($"Successfully filtered {allGoals?.Count ?? 0} active goals.", true, allGoals);
+        }
+        else
+        {
+            SetStatus($"Error filtering goals: {result.ErrorMessage}", false);
+        }
+    }
+
+    private async Task BatchReadGoals()
+    {
+        ClearResults();
+        int offset = 0; // Start from the first record
+        int limit = 2;  // Get up to 2 records
+
+        var result = await GoalService.BatchRead(offset, limit);
+        if (result.IsSuccess)
+        {
+            allGoals = result.Data;
+            SetStatus($"Successfully batch read {allGoals?.Count ?? 0} goals (offset: {offset}, limit: {limit}).", true, allGoals);
+        }
+        else
+        {
+            SetStatus($"Error batch reading goals: {result.ErrorMessage}", false);
+        }
+    }
+}

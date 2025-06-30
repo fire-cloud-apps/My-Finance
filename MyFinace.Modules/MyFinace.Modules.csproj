@@ -15,10 +15,13 @@
     <PackageReference Include="FluentValidation" Version="12.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.6" />
     <PackageReference Include="MudBlazor" Version="8.8.0" />
+    <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MyFinance.Model\MyFinance.Model.csproj" />
     <ProjectReference Include="..\MyFinance.Utility\MyFinance.Utility.csproj" />
+    <ProjectReference Include="..\Supabase.RestAPI\Supabase.RestAPI.csproj" />
   </ItemGroup>
 
 </Project>

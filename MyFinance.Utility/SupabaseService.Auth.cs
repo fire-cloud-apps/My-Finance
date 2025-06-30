@@ -23,7 +23,8 @@ namespace MyFinance.Utility
 
             if (session?.User?.Id != null)
             {
-                _snackbar.Add("Logged in successfully!", Severity.Success);
+                Console.WriteLine($"C#: OnJsAuthStateChanged -> User ID from session: {session.User.Id}");
+                //_snackbar.Add("Logged in successfully!", Severity.Success);
                 //_navigationManager.NavigateTo("/");
             }
             else
@@ -43,7 +44,9 @@ namespace MyFinance.Utility
         public async Task SignInWithGoogle()
         {
             _snackbar.Add("Initiating Google sign-in...", Severity.Info);
-            var redirectUrl = _navigationManager.ToAbsoluteUri("/").ToString();
+            //var redirectUrl = _navigationManager.ToAbsoluteUri("/").ToString();
+            var redirectUrl = _navigationManager.ToAbsoluteUri("/handle-success").ToString();
+            ///
             await _jsRuntime.InvokeVoidAsync("supabaseInterop.signInWithGoogleRedirect", redirectUrl);
         }
 

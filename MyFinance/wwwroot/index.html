@@ -5,7 +5,29 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MyFinance</title>
-    <base href="/" />
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DC71JEKB5R"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-DC71JEKB5R');
+    </script>
+    <script type="text/javascript">
+        function SetBaseScript() {
+            console.log(window.location.hostname);
+            if (window.location.hostname == "localhost") {
+                console.log("Local Host True");
+                document.write("<base href='/' />");
+            } else {
+                document.write("<base href='/My.Finance/' />");
+            }
+        }
+        SetBaseScript();
+    </script>
+
+
     <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="css/app.css" />
     <link rel="icon" type="image/png" href="favicon.png" />

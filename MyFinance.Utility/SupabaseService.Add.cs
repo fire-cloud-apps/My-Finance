@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json; // Added for JsonSerializer
 using System.Threading.Tasks;
 
 namespace MyFinance.Utility;
@@ -22,7 +23,10 @@ public partial class SupabaseService
 
             // Get the type name of the entity being added for logging purposes
             var entityTypeName = typeof(TEntity).Name;
-            Console.WriteLine($"C#: Calling JS insert method for {entityTypeName}: {entity}");
+
+            // --- DEBUG LOGGING ---
+            Console.WriteLine($"C#: Calling JS insert method for {entityTypeName}. Entity data: {JsonSerializer.Serialize(entity, new JsonSerializerOptions { WriteIndented = true })}");
+            // ---------------------
 
             // Invoke the JavaScript interop method, passing the generic entity
             // We assume 'supabaseInterop.insert' is a generic method on the JS side
@@ -56,4 +60,3 @@ public partial class SupabaseService
         }
     }
 }
-

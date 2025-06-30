@@ -2,15 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Text.Json.Serialization;
-using MyFinance.Model;
+using System.Threading.Tasks;
 
-namespace MyFinace.Modules.Goals;
-/// <summary>
-/// Finance Goals Entity represents a financial goal with various properties such as name, description, status, investment category, amounts, target years, and ownership.
-/// </summary>
-public class GoalEntity : SupabaseModel
+namespace MyFinance.Model;
+
+public class Goal : SupabaseModel
 {
     /// <summary>
     /// Auto Generated Id for the GoalEntity.
@@ -72,16 +69,22 @@ public class GoalEntity : SupabaseModel
     /// Multi Text filed, where use can add the image in SVG format.
     /// </summary>
     public string ImageSVG { get; set; }
-    
+
     /// <summary>
     /// A comma separated string of tags for the GoalEntity.
     /// </summary>
-    public string Tag { get; set; }    
+    public string Tag { get; set; }
 
     /// <summary>
     /// OwenedBy is the user who owns the GoalEntity.
     /// </summary>
     public string OwnedBy { get; set; }
+
+    /// <summary>
+    /// Calculated only the active SIP's
+    /// </summary>
+    [JsonPropertyName("sipCount")]
+    public int SIPCount { get; set; } = 0;
 
 
 }
@@ -150,5 +153,3 @@ public enum InvestmentCategory
     FixedDeposit = 7,
 
 }
-
-

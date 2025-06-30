@@ -1,8 +1,25 @@
 ﻿@page "/dynamic-forms/{Module}/{Component}/{Id:guid?}"
 
 @using MyFinace.Modules.GoalEntry
+@using MyFinance.Model
 @using MyFinance.Utility
 @using MyFinace.Modules.Goals
+@using Supabase.RestAPI
+
+@inject SupabaseApiService<Goal> GoalService
+@inject SupabaseApiService<GoalEntry> GoalEntryService
+
+@* Paramer and Variable Decleration *@ 
+@code {
+	[Parameter]
+	public string Module { get; set; }
+	[Parameter]
+	public string Component { get; set; }
+	[Parameter]
+	public Guid? Id { get; set; }
+
+	private bool _isInitializing = true;
+}
 
 @if(string.IsNullOrEmpty(Module) || string.IsNullOrEmpty(Component))
 {
@@ -11,65 +28,104 @@
 else
 {
 	<PageTitle>MyFinance - @Module#@Component</PageTitle>
-	@switch (Module)
+	<MudContainer Class="ma-4 pa-4" >
+
+	@if (_isInitializing)
 	{
-		case "Goals":
-			@switch(Component)
-			{
-				case "Add":
-				case "Add-Goals":
-				case "addgoals":
-					<AddGoals SupabaseService="@SupabaseService" />
-					break;
-				case "Edit":
-				case "Edit-Goals":
-					<EditGoals Id="@Id.Value" />
-					break;
-				case "Find":
-					<FindGoal SupabaseService="@SupabaseService" />
-					break;
-				case "List":
-				case "ListGoals":
-					<ListGoals />
-					break;
-				default:
-					<MudText Typo="Typo.h6" Class="text-warning">Unknown Goal Component: @Component</MudText>;
-					break;
-			}			
-			break;
-		case "GoalContribution":
-		@switch(Component)
-			{
-				case "Add":
-				case "add-plan":
-					<AddGoalEntry />
-					break;
-				case "Edit":
-				case "Edit-Goals-Plans":
-					<MudText Typo="Typo.h6" Class="text-warning">Unknown Goals Contribution Component: @Component</MudText>
-					
-					break;
-				case "List":
-				case "ListGoalsPlans":
-					<MudText Typo="Typo.h6" Class="text-warning">Unknown Goals Contribution Component: @Component</MudText>
-					
-					break;
-				default:
-					<MudText Typo="Typo.h6" Class="text-warning">Unknown Goals Contribution Component: @Component</MudText>
-					break;
-			}
-			break;
-		default:
-			Console.WriteLine($"Module {Module} & Component {Component} not recognized.");
-			break;
+		<MudCard>
+			<MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="200px" />
+			<MudCardContent>
+				<MudSkeleton Width="30%" Height="42px;" />
+				<MudSkeleton Width="80%" />
+				<MudSkeleton Width="100%" />
+			</MudCardContent>
+			<MudCardActions>
+				<MudSkeleton Width="64px" Height="40px" Class="ml-2" />
+				<MudSkeleton Width="105px" Height="40px" Class="ml-3" />
+			</MudCardActions>
+		</MudCard>
 	}
+	else
+	{
+		@switch (Module)
+		{
+			case "Goals":
+				@switch (Component)
+				{
+					case "Add":
+					case "Add-Goals":
+					case "addgoals":
+						<AddGoals SupabaseService="@SupabaseService" />
+						break;
+					case "Edit":
+					case "Edit-Goals":
+						<EditGoals Id="@Id.Value" />
+						break;
+					case "Find":
+						<FindGoal SupabaseService="@SupabaseService" />
+						break;
+					case "List":
+					case "ListGoals":
+						<ListGoals />
+						break;
+					default:
+						<MudText Typo="Typo.h6" Class="text-warning">Unknown Goal Component: @Component</MudText>
+						;
+						break;
+				}
+				break;
+			case "GoalContribution":
+				@switch (Component)
+				{
+					case "Add":
+					case "add-plan":
+						<GoalEntryForm GoalService="@GoalService" GoalEntryService="@GoalEntryService" />
+						break;
+					case "Edit":
+					case "edit-plan":
+						<GoalEntryForm GoalService="@GoalService"
+							GoalEntryService="@GoalEntryService"
+							GoalID="@Id"/>
+
+						break;
+					case "List":
+					case "ListGoalsPlans":
+						<ListGoalEntry SupabaseService="GoalEntryService" />
+
+						break;
+					default:
+						<MudText Typo="Typo.h6" Class="text-warning">Unknown Goals Contribution Component: @Component</MudText>
+						break;
+				}
+				break;
+			default:
+				Console.WriteLine($"Module {Module} & Component {Component} not recognized.");
+				break;
+		}
+	}	
+	
+	</MudContainer>
 }
 
+
 @code {
-	[Parameter]
-	public string Module { get; set; }
-	[Parameter]
-	public string Component { get; set; }
-	[Parameter]
-	public Guid? Id { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		_isInitializing = true;
+		try
+		{
+			GlobalServices.AuthToken = await LocalStorage.GetItemAsync<string>("accessToken");
+			Console.WriteLine($"Dynamic Form:: Token exists? { !string.IsNullOrEmpty( GlobalServices.AuthToken)}.");
+			GoalService.AccessToken = GlobalServices.AuthToken;
+			GoalEntryService.AccessToken = GlobalServices.AuthToken;
+
+			await Task.Delay(500);
+		}
+		finally
+		{
+			_isInitializing = false;
+			StateHasChanged();
+		}
+	}
 }

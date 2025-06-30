@@ -106,7 +106,7 @@ window.supabaseInterop = {
 
         console.log("JS: Setting up auth state change listener.");
         window.supabaseJSClient.auth.onAuthStateChange((event, session) => {
-            console.log("JS: Auth state changed event:", event, "session:", session);
+            /*console.log("JS: Auth state changed event:", event, "session:", session);*/
             this.notifyBlazorAuthChange(session);
         });
     },
@@ -134,7 +134,7 @@ window.supabaseInterop = {
                 } : null
             } : null;
 
-            console.log("JS: Invoking Blazor method OnJsAuthStateChanged with session:", serializableSession);
+            /*console.log("JS: Invoking Blazor method OnJsAuthStateChanged with session:", serializableSession);*/
             supabaseServiceInstance.invokeMethodAsync('OnJsAuthStateChanged', serializableSession);
         } else {
             console.warn("JS: Blazor service instance not set for callback. Auth state change not notified.");
@@ -143,6 +143,7 @@ window.supabaseInterop = {
 
     getLocalStorageToken: function (projectRef) {
         const supabaseAuthKey = `sb-${projectRef}-auth-token`;
+        //const supabaseAuthKey = `sb-auth-token`;
         return localStorage.getItem(supabaseAuthKey);
     },
 
@@ -264,10 +265,13 @@ window.supabaseInterop = {
             return { success: false, errorMessage: "Supabase JS client not initialized." };
         }
 
-        try {            
+        try {
 
             // Log the attempt to insert, indicating the table and the entity
+            // --- DEBUG LOGGING ---
             console.log(`JS: Attempting to insert into table '${tableName}' with entity:`, JSON.stringify(entity, null, 2)); // Log entity clearly
+            // ---------------------
+
             // Perform the insert operation using the provided table name and entity object
             const { data, error } = await window.supabaseJSClient
                 .from(tableName) // Dynamically use the table name passed as an argument
@@ -276,8 +280,7 @@ window.supabaseInterop = {
 
             if (error) {
                 // Log and return the error message if the Supabase operation fails
-                console.error(`JS: 1.Error inserting into '${tableName}':`, error);
-                console.error(`JS: 2.Error inserting into '${tableName}':`, error.message);
+                console.error(`JS: Error inserting into '${tableName}':`, error);
                 return { success: false, errorMessage: error.message };
             } else {
                 // Check if data is returned, it might be null for certain insert operations
@@ -354,7 +357,7 @@ window.supabaseInterop = {
             }
         } catch (e) {
             console.error(`JS: Unexpected error searching by Name in '${tableName}':`, e.message);
-            return { data: [], error: { message: `Unexpected error: ${e.message}` } };
+            return { data: [], count: 0, error: { message: `Unexpected error: ${e.message}` } };
         }
     },
 

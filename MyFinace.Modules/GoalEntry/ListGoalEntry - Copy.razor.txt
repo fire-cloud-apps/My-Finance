@@ -1,8 +1,7 @@
 ﻿@page "/goalentries"
 @using MyFinance.Model
-@using MyFinance.Utility.Helper
 @using Supabase.RestAPI
-@using System.Globalization 
+@using System.Globalization // Required for CultureInfo
 @* SupabaseApiService is now a [Parameter] as requested *@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
@@ -40,16 +39,14 @@ else
                             }
                         </CardHeaderAvatar>
                         <CardHeaderContent>
-                            <MudText Typo="Typo.h6" Class="font-weight-bold mud-text-primary">
-                                @TextHelper.TruncateString(goal.Name, 20)
-                                </MudText>
+                            <MudText Typo="Typo.h6" Class="font-weight-bold mud-text-primary">@goal.Name</MudText>
                             <MudText Typo="Typo.caption" Class="mud-text-secondary">@goal.FundName</MudText>
                         </CardHeaderContent>
                     </MudCardHeader>
                     <MudCardContent Class="flex-grow-1 pt-2 pb-0">
                         <MudText Typo="Typo.body2" Class="mud-text-info mb-2">
                             <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" Class="mr-1" />
-                            @TextHelper.TruncateString(goal.Description, 98)
+                            @goal.Description
                         </MudText>
 
                         <!-- Using MudList for improved layout of details -->
@@ -72,8 +69,7 @@ else
                                     <MudChip T="string" Size="Size.Small" Color="Color.Info" Class="font-weight-bold">@goal.InvestedAmount.ToString("C", new CultureInfo("en-IN"))</MudChip>
                                 </MudStack>
                             </MudListItem>
-                            <MudListItem Icon="@Icons.Material.Filled.MilitaryTech" IconColor="Color.Warning">
-                                @* Changed icon to MilitaryTech *@
+                            <MudListItem Icon="@Icons.Material.Filled.MilitaryTech" IconColor="Color.Warning"> @* Changed icon to MilitaryTech *@
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-grow-1">
                                     <MudText Typo="Typo.subtitle2" Class="mud-text-tertiary">Target:</MudText>
                                     <MudChip T="string" Size="Size.Small" Color="Color.Warning" Class="font-weight-bold">@goal.TargetAmount.ToString("C", new CultureInfo("en-IN"))</MudChip>
@@ -84,8 +80,7 @@ else
                                 <MudListItem Icon="@Icons.Material.Filled.LocalOffer" IconColor="Color.Tertiary">
                                     <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-grow-1">
                                         <MudText Typo="Typo.subtitle2" Class="mud-text-tertiary">Tags:</MudText>
-                                        <MudStack Row="true" Spacing="0" Class="ml-2">
-                                            @* Using MudStack here to align multiple chips horizontally *@
+                                        <MudStack Row="true" Spacing="0" Class="ml-2"> @* Using MudStack here to align multiple chips horizontally *@
                                             @foreach (var tag in goal.Tag.Split(',', StringSplitOptions.RemoveEmptyEntries))
                                             {
                                                 <MudChip T="string" Size="Size.Small" Color="Color.Tertiary" Class="font-weight-bold mr-1">@tag.Trim()</MudChip>
@@ -112,8 +107,8 @@ else
                     </MudCardContent>
                     <MudCardActions Class="d-flex justify-end pa-3 pt-0">
                         <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Edit"
-                                   OnClick="(() => EditGoal(goal.Id))" Class="mr-2 ">Edit</MudButton>
-                        <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" StartIcon="@Icons.Material.Filled.Delete"
+                                   OnClick="(() => EditGoal(goal.Id))" Class="mr-2 rounded-lg">Edit</MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Error" Size="Size.Small" StartIcon="@Icons.Material.Filled.Delete"
                                    OnClick="(() => ConfirmDeleteGoal(goal.Id, goal.Name))" Class="rounded-lg">Delete</MudButton>
                     </MudCardActions>
                 </MudCard>
@@ -144,17 +139,15 @@ else
     private int limit = 4; // Display 4 cards per page
     private bool isLoading = false;
     private int totalGoalsCount = 0; // To store the total count of goals
-    private int totalPages = 0;
+    private int totalPages => (int)Math.Ceiling(totalGoalsCount / (double)limit);
 
     protected override async Task OnInitializedAsync()
     {
         Console.WriteLine("OnInitializedAsync: Starting...");
         await LoadTotalGoalsCount(); // First get the total count
-        totalPages = (int)Math.Ceiling(totalGoalsCount / (double)limit);
         await LoadGoals(currentPage); // Then load the first page
         Console.WriteLine($"OnInitializedAsync: totalGoalsCount = {totalGoalsCount}, totalPages = {totalPages}, currentPage = {currentPage}");
     }
-
 
     /// <summary>
     /// Loads the total count of financial goals from the Supabase API.
@@ -175,13 +168,10 @@ else
 
         try
         {
-            //var result = await SupabaseService.GetAll(); // Fetch all to get total count
-            var result = await SupabaseService.BatchRead(0, 1); // Gets top 1, record and in the Header 'Content-Range' it has the total count as '0-0/9'.
-
+            var result = await SupabaseService.GetAll(); // Fetch all to get total count
             if (result.IsSuccess && result.Data != null)
             {
-                totalGoalsCount = result.GetTotalCountFromContentRange();
-                //totalGoalsCount = result.Data.Count;
+                totalGoalsCount = result.Data.Count;
                 Console.WriteLine($"LoadTotalGoalsCount: Successfully fetched totalGoalsCount = {totalGoalsCount}");
             }
             else
@@ -339,8 +329,7 @@ else
     /// <param name="goalId">The unique identifier of the goal to be edited.</param>
     private void EditGoal(Guid goalId)
     {
-        Console.WriteLine($"EditGoal: Navigating to /dynamic-forms/GoalContribution/edit-plan/{goalId}");
-        //dynamic-forms/GoalContribution/edit-plan
-        NavigationManager.NavigateTo($"/dynamic-forms/GoalContribution/edit-plan/{goalId}");
+        Console.WriteLine($"EditGoal: Navigating to /goalentry/edit/{goalId}");
+        NavigationManager.NavigateTo($"/goalentry/edit/{goalId}");
     }
 }

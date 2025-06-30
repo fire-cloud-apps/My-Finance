@@ -17,6 +17,7 @@
         Set your financial aspirations and track your progress with ease.
     </MudText>
 
+    @* https://animate.style/ *@
     <MudPaper Elevation="6" Class="pa-6 rounded-xl animate__animated animate__fadeInUp">
         <MudForm Model="@Goal" @ref="form" Validation="@(GoalValidator)">
             <MudGrid Spacing="4">
@@ -224,8 +225,6 @@
 		Goal.InvestmentCategory = InvestmentCategory.MutualFunds; // Default category for the goal
 		Goal.ImageSVG = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='lightblue'/></svg>"; // Default SVG
         
-
-
 
         // Optional: If SupabaseService is critical and not provided via parameter,
         // you might want to inject a fallback or throw an error.

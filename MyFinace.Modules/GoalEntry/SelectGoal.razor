@@ -1,0 +1,165 @@
+﻿@using MudBlazor
+@using MyFinace.Modules.Goals
+@using MyFinance.Model
+@using Supabase.RestAPI
+
+
+<MudSelect Variant="Variant.Outlined" Label="Select Goal" @bind-Value="InternalSelectedGoalName">
+    @foreach (var goal in Goals)
+    {
+        <MudSelectItem Value="@goal.Name">
+            @goal.Name
+        </MudSelectItem>
+    }
+</MudSelect>
+
+@code {
+    [Parameter]
+    public SupabaseApiService<Goal> ApiService { get; set; }
+
+    // New parameter to receive the initial selected goal from the parent
+    [Parameter]
+    public GoalEntryModel? InitialSelectedGoal { get; set; }
+
+
+    private List<Goal> Goals { get; set; } = new();
+
+    // Use an internal backing field for the MudSelect's @bind-Value
+    private string _internalSelectedGoalName = string.Empty;
+
+    // This property's setter will be called when the MudSelect value changes
+    private string InternalSelectedGoalName
+    {
+        get => _internalSelectedGoalName;
+        set
+        {
+            if (_internalSelectedGoalName != value) // Check if the value has actually changed
+            {
+                _internalSelectedGoalName = value;
+                // Now that the MudSelect has updated the name, find the corresponding ID
+                UpdateSelectedGoalDetailsAndNotifyParent(value);
+            }
+        }
+    }
+
+    // These will hold the actual ID and Name of the truly selected goal
+    private string? InternalSelectedGoalId { get; set; }
+
+
+    [Parameter]
+    public EventCallback<GoalEntryModel> GoalSelected { get; set; }
+
+    public class GoalEntryModel
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ApiService != null)
+        {
+            await LoadGoals();
+        }
+        else
+        {
+            Console.WriteLine($"SelectGoal: ApiService is null, cannot load goals.");
+        }
+    }
+
+    // This method is called after parameters are set and when the component is re-rendered
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        // If an InitialSelectedGoal is provided and we haven't set the internal value yet,
+        // or if the initial goal has changed, update the internal state.
+        if (InitialSelectedGoal != null && _internalSelectedGoalName != InitialSelectedGoal.Name)
+        {
+            // Only set if the goal list is loaded, otherwise it might get overwritten by MudSelect's default
+            if (Goals.Any())
+            {
+                // Find the goal in the loaded list to ensure it exists
+                var goalToPreselect = Goals.FirstOrDefault(g => g.Id.ToString() == InitialSelectedGoal.Id);
+
+                if (goalToPreselect != null)
+                {
+                    _internalSelectedGoalName = goalToPreselect.Name;
+                    InternalSelectedGoalId = goalToPreselect.Id.ToString();
+                    Console.WriteLine($"SelectGoal: Pre-selecting '{_internalSelectedGoalName}' (ID: {InternalSelectedGoalId}) based on parent parameter.");
+                    StateHasChanged(); // Re-render to show the pre-selected value
+                }
+                else
+                {
+                    Console.WriteLine($"SelectGoal: InitialSelectedGoal with ID {InitialSelectedGoal.Id} and Name {InitialSelectedGoal.Name} not found in loaded goals.");
+                }
+            }
+            else
+            {
+                // This scenario means the InitialSelectedGoal was set before Goals were loaded.
+                // We'll handle setting the initial value once LoadGoals completes.
+                Console.WriteLine($"SelectGoal: InitialSelectedGoal set, but goals not loaded yet. Will attempt to set after LoadGoals completes.");
+            }
+        }
+    }
+
+
+    private async Task LoadGoals()
+    {
+        try
+        {
+            var goalsResult = await ApiService.GetAll();
+            if (goalsResult.IsSuccess && goalsResult.Data != null)
+            {
+                Goals = goalsResult.Data;
+
+                // After loading goals, check if an initial selection needs to be applied
+                if (InitialSelectedGoal != null)
+                {
+                    var goalToPreselect = Goals.FirstOrDefault(g => g.Id.ToString() == InitialSelectedGoal.Id);
+                    if (goalToPreselect != null)
+                    {
+                        _internalSelectedGoalName = goalToPreselect.Name;
+                        InternalSelectedGoalId = goalToPreselect.Id.ToString();
+                        Console.WriteLine($"SelectGoal: Pre-selecting '{_internalSelectedGoalName}' (ID: {InternalSelectedGoalId}) after goals loaded.");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"SelectGoal: InitialSelectedGoal with ID {InitialSelectedGoal.Id} and Name {InitialSelectedGoal.Name} not found in loaded goals after load.");
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Error loading goals: {goalsResult.ErrorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception loading goals: {ex.Message}");
+        }
+    }
+
+    // This method is now called from the setter of InternalSelectedGoalName
+    private async void UpdateSelectedGoalDetailsAndNotifyParent(string selectedName)
+    {
+        var selectedGoal = Goals.FirstOrDefault(g => g.Name == selectedName);
+
+        if (selectedGoal != null)
+        {
+            InternalSelectedGoalId = selectedGoal.Id.ToString();
+            // InternalSelectedGoalName is already updated by the setter
+            Console.WriteLine($"Child: Selected '{InternalSelectedGoalName}' (ID: {InternalSelectedGoalId}) - Notifying parent.");
+            await GoalSelected.InvokeAsync(new GoalEntryModel { Id = InternalSelectedGoalId, Name = InternalSelectedGoalName });
+        }
+        else
+        {
+            InternalSelectedGoalId = null;
+            // No need to clear InternalSelectedGoalName here as it's directly bound to the MudSelect.
+            Console.WriteLine($"SelectGoal: Selected an item not found in goals list: {selectedName}");
+            // If an item is not found, you might want to consider notifying the parent with an empty or null model
+            // await GoalSelected.InvokeAsync(new GoalEntryModel { Id = string.Empty, Name = string.Empty });
+        }
+        StateHasChanged(); // Re-render this component to update its display of Selected ID/Name
+    }
+}

@@ -96,8 +96,8 @@
                             @* Progress Bar on Amount *@
                             <MudText Typo="Typo.caption" Class="mt-3 mb-1">Investment Progress:</MudText>
                             <MudProgressLinear Value="@(CalculateProgressPercentage(goal.TotalAmountInvested, goal.TargetAmount))"
-                                               Color="Color.Success" Size="Size.Small" Class="rounded-pill">
-                                <MudText Typo="Typo.caption" Color="Color.Dark" Class="font-weight-bold">@CalculateProgressPercentage(goal.TotalAmountInvested, goal.TargetAmount).ToString("F0")%</MudText>
+                                               Color="Color.Success" Size="Size.Large" Class="rounded-pill">
+                                <MudText Typo="Typo.caption"  Class="font-weight-bold">@CalculateProgressPercentage(goal.TotalAmountInvested, goal.TargetAmount).ToString("F0")%</MudText>
                             </MudProgressLinear>
 
                             @* Progress Bar on Years Remaining *@
@@ -105,8 +105,8 @@
                             {
                                 <MudText Typo="Typo.caption" Class="mt-2 mb-1">Time Remaining:</MudText>
                                 <MudProgressLinear Value="@(CalculateTimeProgressPercentage(goal.StartedYear, goal.TargetYear))"
-                                                   Color="Color.Info" Size="Size.Small" Class="rounded-pill">
-                                    <MudText Typo="Typo.caption" Color="Color.Dark" Class="font-weight-bold">@CalculateYearsRemaining(goal.TargetYear) Years Left</MudText>
+                                                   Color="Color.Info" Size="Size.Large" Class="rounded-pill">
+                                    <MudText Typo="Typo.caption" Class="font-weight-bold">@CalculateYearsRemaining(goal.TargetYear) Years Left</MudText>
                                 </MudProgressLinear>
                             }
                             else if (CalculateYearsRemaining(goal.TargetYear) == 0 && goal.TargetYear.HasValue && goal.TargetYear.Value.Year <= DateTime.Now.Year)
