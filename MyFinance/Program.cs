@@ -1,14 +1,16 @@
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection; // Add this using directive at the top of the file
 using MudBlazor.Services;
 using MyFinance;
+using MyFinance.Helpers;
 using MyFinance.Utility;
+using MyFinance.Utility.Helper;
 using Supabase.RestAPI;
 using System.Net.Http.Headers;
-using Microsoft.Extensions.DependencyInjection; // Add this using directive at the top of the file
 using System.Net.Http.Json;
-using MyFinance.Utility.Helper;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -35,6 +37,10 @@ builder.Services.AddHttpClient("SupabaseApi", client =>
     // DO NOT set Authorization header here, it will be handled dynamically by SupabaseApiService.
 });
 
+// This automatically loads appsettings.json
+var configuration = builder.Configuration;
+// Bind MetaDetails section to the model
+builder.Services.Configure<MetaDetails>(configuration.GetSection("MetaDetails"));
 
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddMudServices();

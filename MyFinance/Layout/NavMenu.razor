@@ -7,7 +7,7 @@
 
     <MudDivider Class="my-2" />
 
-    <MudNavLink Href="/#" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
+    <MudNavLink Href="dashboard" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
 
     <MudNavGroup Title="Goals" Icon="material-symbols-outlined/nearby" Expanded="true">
         
@@ -31,13 +31,13 @@
 
     <MudNavGroup Title="Goals Plan" Icon="@Icons.Material.Filled.AddReaction" Expanded="true">
 
-        <MudNavLink Href="dynamic-forms/GoalContribution/add-plan" Match="NavLinkMatch.Prefix"
+        <MudNavLink Href="@MetaDetailsOptions.Value.InternalURLs.GoalEntryAdd" Match="NavLinkMatch.Prefix"
                     Icon="material-symbols-outlined/trophy"
                     IconColor="Color.Success">
             Add Plans
         </MudNavLink>
 
-        <MudNavLink Href="dynamic-forms/GoalContribution/List" Match="NavLinkMatch.Prefix"
+        <MudNavLink Href="@MetaDetailsOptions.Value.InternalURLs.GoalEntryList" Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.ListAlt"
                     IconColor="Color.Info">
             Plan List

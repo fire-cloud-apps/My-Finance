@@ -1,13 +1,17 @@
 ﻿@page "/goals"
 @using Microsoft.JSInterop
+@using MyFinace.Modules.Component
 @using MyFinace.Modules.Goals
 @using MyFinance.Utility
+
 @inject SupabaseService SupabaseService
 @inject ISnackbar Snackbar
 @inject NavigationManager NavigationManager
 @implements IAsyncDisposable
 @inject IJSRuntime JSRuntime
 @inject IDialogService DialogService
+
+
 
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="py-8 px-4 sm:px-6 md:px-8">
@@ -61,67 +65,13 @@
             @foreach (var goal in FilteredGoals.Skip((CurrentPage - 1) * PageSize).Take(PageSize))
             {
                 <MudItem xs="12" sm="6" md="4" lg="3">
-                    <MudCard Elevation="8" Class="rounded-lg pa-4 d-flex flex-column" Style="height: 100%;">
-                        <MudCardHeader Class="pb-2">
-                            <CardHeaderContent>
-                                <div class="d-flex align-center">
-                                    @if (!string.IsNullOrEmpty(goal.ImageSVG))
-                                    {
-                                        <div style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; margin-right: 8px; flex-shrink: 0;">
-                                            @((MarkupString)goal.ImageSVG)
-                                        </div>
-                                    }
-                                    <div class="flex-grow-1">
-                                        <MudText Typo="Typo.h6" Class="font-weight-bold mud-text-primary mud-text-truncate">@goal.Name</MudText>
-                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@goal.InvestmentCategory.ToString()</MudText>
-                                    </div>
-                                </div>
-                            </CardHeaderContent>
-                        </MudCardHeader>
-                        <MudCardContent Class="flex-grow-1">
-                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3 mud-text-truncate-2-lines">@(string.IsNullOrWhiteSpace(goal.Description) ? "No description provided." : goal.Description)</MudText>
-
-                            <MudList T="string" Dense="true">
-                                <MudListItem Icon="@Icons.Material.Filled.AttachMoney" IconColor="Color.Success">
-                                    <MudText Typo="Typo.body2">Target: <span class="font-weight-bold">@goal.TargetAmount.ToString("C", CultureInfo_IN)</span></MudText>
-                                </MudListItem>
-                                <MudListItem Icon="@Icons.Material.Filled.MonetizationOn" IconColor="Color.Warning">
-                                    <MudText Typo="Typo.body2">Invested: <span class="font-weight-bold">@goal.TotalAmountInvested.ToString("C", CultureInfo_IN)</span></MudText>
-                                </MudListItem>
-                                <MudListItem Icon="@Icons.Material.Filled.DateRange" IconColor="Color.Tertiary">
-                                    <MudText Typo="Typo.body2">Target Year: <span class="font-weight-bold">@(goal.TargetYear?.Year.ToString() ?? "N/A")</span></MudText>
-                                </MudListItem>
-                            </MudList>
-
-                            @* Progress Bar on Amount *@
-                            <MudText Typo="Typo.caption" Class="mt-3 mb-1">Investment Progress:</MudText>
-                            <MudProgressLinear Value="@(CalculateProgressPercentage(goal.TotalAmountInvested, goal.TargetAmount))"
-                                               Color="Color.Success" Size="Size.Large" Class="rounded-pill">
-                                <MudText Typo="Typo.caption"  Class="font-weight-bold">@CalculateProgressPercentage(goal.TotalAmountInvested, goal.TargetAmount).ToString("F0")%</MudText>
-                            </MudProgressLinear>
-
-                            @* Progress Bar on Years Remaining *@
-                            @if (CalculateYearsRemaining(goal.TargetYear) > 0 && goal.TargetYear.HasValue)
-                            {
-                                <MudText Typo="Typo.caption" Class="mt-2 mb-1">Time Remaining:</MudText>
-                                <MudProgressLinear Value="@(CalculateTimeProgressPercentage(goal.StartedYear, goal.TargetYear))"
-                                                   Color="Color.Info" Size="Size.Large" Class="rounded-pill">
-                                    <MudText Typo="Typo.caption" Class="font-weight-bold">@CalculateYearsRemaining(goal.TargetYear) Years Left</MudText>
-                                </MudProgressLinear>
-                            }
-                            else if (CalculateYearsRemaining(goal.TargetYear) == 0 && goal.TargetYear.HasValue && goal.TargetYear.Value.Year <= DateTime.Now.Year)
-                            {
-                                <MudText Typo="Typo.caption" Class="mt-2 mb-1" Color="Color.Warning">Target year reached or passed!</MudText>
-                            }
-
-
-                        </MudCardContent>
-                        <MudCardActions Class="d-flex justify-space-between pt-0">
-                            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Visibility" Size="Size.Small" OnClick="(() => NavigateToViewGoal(goal.Id))">View</MudButton>
-                            <MudButton Variant="Variant.Text" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="(() => NavigateToEditGoal(goal.Id))">Edit</MudButton>
-                            <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Size="Size.Small" OnClick="(() => ConfirmDelete(goal.Id, goal.Name))">Delete</MudButton>
-                        </MudCardActions>
-                    </MudCard>
+                    <GoalAsCard Goal="goal"
+                              OnEditGoal="NavigateToEditGoal"
+                              OnViewGoal="NavigateToViewGoal"
+                              OnConfirmDelete="ConfirmDelete"
+                              CalculateProgressPercentageFunc="CalculateProgressPercentage"
+                              CalculateYearsRemainingFunc="CalculateYearsRemaining"
+								CalculateTimeProgressPercentageFunc="CalculateTimeProgressPercentage" />
                 </MudItem>
             }
         </MudGrid>
@@ -309,20 +259,21 @@
 
     private void NavigateToEditGoal(Guid id)
     {
-        NavigationManager.NavigateTo($"/editgoals/{id}");
+        NavigationManager.NavigateTo($"editgoals/{id}");
     }
 
     private void NavigateToViewGoal(Guid id)
     {
-        NavigationManager.NavigateTo($"/viewgoal/{id}");
+        NavigationManager.NavigateTo($"viewgoal/{id}");
     }
 
     // New method to confirm deletion
-    private async Task ConfirmDelete(Guid id, string goalName)
+    //private async Task ConfirmDelete(Guid id, string goalName)
+    private async Task ConfirmDelete((Guid id, string goalName) goalInfo)
     {
         var parameters = new DialogParameters
         {
-            { "ContentText", $"Are you sure you want to delete the goal '{goalName}'?" },
+            { "ContentText", $"Are you sure you want to delete the goal '{goalInfo.goalName}'?" },
             { "ButtonText", "Delete" },
             { "Color", Color.Error }
         };
@@ -334,7 +285,7 @@
 
         if (!result.Canceled) // If dialog was not canceled (i.e., "Delete" was clicked)
         {
-            await PerformDelete(id);
+            await PerformDelete(goalInfo.id);
         }
     }
 
@@ -376,3 +327,5 @@
         }
     }
 }
+
+

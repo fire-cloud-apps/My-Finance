@@ -1,90 +1,128 @@
 ﻿@page "/handle-success"
+@page "/"
+@page "/handle-oauth"
 @using MyFinance.Layout
 @using System.Text.Json
 
+@layout EmptyLayout
+
+@if (_isInitializing)
+{
+    <MudCard>
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="200px" />
+        <MudCardContent>
+            <MudSkeleton Width="30%" Height="42px;" />
+            <MudSkeleton Width="80%" />
+            <MudSkeleton Width="100%" />
+        </MudCardContent>
+        <MudCardActions>
+            <MudSkeleton Width="64px" Height="40px" Class="ml-2" />
+            <MudSkeleton Width="105px" Height="40px" Class="ml-3" />
+        </MudCardActions>
+    </MudCard>
+    
+}
 
 @code {
-
+    private bool _isInitializing = true;
     protected override async Task OnInitializedAsync()
     {
-        // Initialize the SupabaseService to set up JS Interop callbacks.
-        // This should ideally be called once, perhaps in App.razor or Program.cs,
-        // but if it handles component-specific initialization, keep it here.
-        await SupabaseService.InitializeAsync();
 
-        // Subscribe to auth state changes to update the UI.
-        // This ensures the UI reacts to login/logout.
-        SupabaseService.OnAuthStateChanged += OnAuthStateChangedHandler;
+        try
+        {
+            _isInitializing = true;
+            // Initialize the SupabaseService to set up JS Interop callbacks.
+            // This should ideally be called once, perhaps in App.razor or Program.cs,
+            // but if it handles component-specific initialization, keep it here.
+            await SupabaseService.InitializeAsync();
 
-        if (SupabaseService.CurrentSession != null)
-        {
-            GlobalServices.JsSession = SupabaseService.CurrentSession;
-            var user = SupabaseService.CurrentSession.User;
-            GlobalServices.AuthToken = SupabaseService.CurrentSession.AccessToken;
-            GlobalServices.UserInfo = new UserInfo()
-                {
-                    Id = SupabaseService.CurrentSession.User.Id,
-                    Name = SupabaseService.CurrentSession.GetUserMetadataString("name"),
-                    Email = SupabaseService.CurrentSession.GetUserMetadataString("email")
-                };           
+            // Subscribe to auth state changes to update the UI.
+            // This ensures the UI reacts to login/logout.
+            SupabaseService.OnAuthStateChanged += OnAuthStateChangedHandler;
+
+            if (SupabaseService.CurrentSession != null)
+            {
+                GlobalServices.JsSession = SupabaseService.CurrentSession;
+                var user = SupabaseService.CurrentSession.User;
+                GlobalServices.AuthToken = SupabaseService.CurrentSession.AccessToken;
+                GlobalServices.UserInfo = new UserInfo()
+                    {
+                        Id = SupabaseService.CurrentSession.User.Id,
+                        Name = SupabaseService.CurrentSession.GetUserMetadataString("name"),
+                        Email = SupabaseService.CurrentSession.GetUserMetadataString("email")
+                    };
+            }
+            else
+            {
+                Console.WriteLine($"Handle-Success::JsSession Failed!");
+            }
         }
-        else
+        finally
         {
-            Console.WriteLine($"Handle-Success::JsSession Failed!");
+            _isInitializing = false;
         }
+
     }
 
 
     private void OnAuthStateChangedHandler(JsSession? session)
     {
-        // This method is called when the auth state changes.
-        // It triggers a re-render of this component (MainLayout)
-        // so the AppBar buttons and user info can be updated.
-        // We only call StateHasChanged if the session status has actually changed
-        // from what the UI is currently displaying, to avoid unnecessary re-renders.
-
-        // Get the current session state from the service for comparison
-        bool isAuthenticated = SupabaseService.CurrentSession != null && SupabaseService.CurrentSession.User?.Id != null;
-        bool newSessionAuthenticated = session != null && session.User?.Id != null;
-
-        // Only re-render if the authentication status changes
-        if (isAuthenticated != newSessionAuthenticated)
+        try
         {
-            StateHasChanged(); // Re-render this component
-        }
+            _isInitializing = true;
+            // This method is called when the auth state changes.
+            // It triggers a re-render of this component (MainLayout)
+            // so the AppBar buttons and user info can be updated.
+            // We only call StateHasChanged if the session status has actually changed
+            // from what the UI is currently displaying, to avoid unnecessary re-renders.
 
-        // Navigate to login if session is null/invalid.
-        // This should be done only if the user is truly unauthenticated.
-        if (newSessionAuthenticated)
-        {
-            UserInfo userInfo = new UserInfo()
+            // Get the current session state from the service for comparison
+            bool isAuthenticated = SupabaseService.CurrentSession != null && SupabaseService.CurrentSession.User?.Id != null;
+            bool newSessionAuthenticated = session != null && session.User?.Id != null;
+
+            // Only re-render if the authentication status changes
+            if (isAuthenticated != newSessionAuthenticated)
             {
-                Id = session.User.Id,
-                Name = session.GetUserMetadataString("name"),
-                Email = session.GetUserMetadataString("email")
-
-            };
-            LocalStorage.SetItemAsStringAsync("accessToken", session.AccessToken);
-            LocalStorage.SetItemAsync<UserInfo>("userInfo", userInfo);
-
-            GlobalServices.JsSession = session; // Update the global JS session
-            GlobalServices.UserInfo = userInfo; // Update the global user info
-            GlobalServices.AuthToken = session.AccessToken; // Update the global auth token
-
-            Console.WriteLine($"Handle-Success::JsSession Success! {JsonSerializer.Serialize(GlobalServices.JsSession)} ");
-            NavigationManager.NavigateTo("/", false);
-
-        }
-        else
-        {
-            // Only navigate if not already on the login page to prevent looping
-            if (!NavigationManager.Uri.Contains("/login"))
-            {
-                NavigationManager.NavigateTo("/login");
+                StateHasChanged(); // Re-render this component
             }
-            
+
+            // Navigate to login if session is null/invalid.
+            // This should be done only if the user is truly unauthenticated.
+            if (newSessionAuthenticated)
+            {
+                UserInfo userInfo = new UserInfo()
+                    {
+                        Id = session.User.Id,
+                        Name = session.GetUserMetadataString("name"),
+                        Email = session.GetUserMetadataString("email")
+
+                    };
+                LocalStorage.SetItemAsStringAsync("accessToken", session.AccessToken);
+                LocalStorage.SetItemAsync<UserInfo>("userInfo", userInfo);
+
+                GlobalServices.JsSession = session; // Update the global JS session
+                GlobalServices.UserInfo = userInfo; // Update the global user info
+                GlobalServices.AuthToken = session.AccessToken; // Update the global auth token
+
+                Console.WriteLine($"Handle-Success::JsSession Success! {JsonSerializer.Serialize(GlobalServices.JsSession)} ");
+                NavigationManager.NavigateTo("home", false);
+
+            }
+            else
+            {
+                // Only navigate if not already on the login page to prevent looping
+                if (!NavigationManager.Uri.Contains("/login"))
+                {
+                    NavigationManager.NavigateTo("login");
+                }
+
+            }
+            Console.WriteLine("Handle-Success: OnAuthStateChangedHandler - Triggered.");
         }
-        Console.WriteLine("Handle-Success: OnAuthStateChangedHandler - Triggered.");
+        finally
+        {
+            _isInitializing = false;
+        }
     }
 
     

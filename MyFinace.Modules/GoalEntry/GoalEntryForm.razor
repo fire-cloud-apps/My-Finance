@@ -1,10 +1,12 @@
-﻿@using MyFinance.Model
+﻿@using Microsoft.Extensions.Logging
+@using MyFinance.Model
 @using MudBlazor
 @using MyFinance.Utility.Helper
 @using Supabase.RestAPI
 @using System.Text.Json
 @inject ISnackbar Snackbar
 
+@inject NavigationManager NavigationManager
 
 @if (_isInitializing)
 {
@@ -59,7 +61,7 @@ else
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudCheckBox @bind-Checked="goalEntry.IsActive" Label="Is Active" Color="Color.Primary" Class="mt-4" T="bool"></MudCheckBox>
+                        <MudCheckBox @bind-Value="goalEntry.IsActive" Label="Is Active" Color="Color.Primary" Class="mt-4" T="bool"></MudCheckBox>
                     </MudItem>
                     <MudItem xs="12" sm="6">
                         <MudTextField @bind-Value="goalEntry.FundName" Label="Fund Name"
@@ -107,8 +109,6 @@ else
         </MudPaper>
     </MudContainer>
 }
-
-
 
 @* Variable Declarations *@
 @code{
@@ -167,12 +167,15 @@ else
 				goalEntry = toEdit.Data; 
 				SelectedGoalFromChild.Id = goalEntry.ParentId.ToString(); // Set the initial selected goal ID
 				SelectedGoalFromChild.Name = goalEntry.Name; // Set the initial selected goal name
-				InitialGoalForChild = SelectedGoalFromChild; // Pass the initial
-                
-                Console.WriteLine($"Creating Goal Entry: {JsonSerializer.Serialize<GoalEntry>(goalEntry)}");
-                
+				InitialGoalForChild = SelectedGoalFromChild; // Pass the initial                 
             }
             _model = _isCreate ? "Created" : "Updated";
+            LogHelper.LogMessage(
+                source:"GoalEntryForm",
+                method: "OnInitializedAsync",
+                level: LogLevel.Information,
+                message:  $" Goal Entry: {JsonSerializer.Serialize<GoalEntry>(goalEntry)}");
+            
             // Optionally, you can fetch initial data or perform other setup tasks here
             await Task.Delay(500); // Simulate some delay for initialization"
         }
@@ -250,6 +253,8 @@ else
 
             await CalculateParentGoals();
             ResetForm();
+
+			NavigationManager.NavigateTo("dynamic-forms/GoalContribution/List"); 
         }
         else
         {

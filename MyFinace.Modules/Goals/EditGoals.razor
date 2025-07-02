@@ -295,7 +295,7 @@
             if (result.Success)
             {
                 Snackbar.Add($"Goal '{Goal.Name}' updated successfully!", Severity.Success);
-                NavigationManager.NavigateTo("/goals"); // Navigate back to goals list or detail page
+                NavigationManager.NavigateTo("goals"); // Navigate back to goals list or detail page
             }
             else
             {
@@ -310,7 +310,7 @@
 
     private void Cancel()
     {
-        NavigationManager.NavigateTo("/goals"); // Navigate back without saving changes
+        NavigationManager.NavigateTo("goals"); // Navigate back without saving changes
     }
 
     // This is the implementation of IAsyncDisposable

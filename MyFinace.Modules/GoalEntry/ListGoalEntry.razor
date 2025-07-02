@@ -8,7 +8,7 @@
 @inject IDialogService DialogService
 @inject NavigationManager NavigationManager
 
-<MudText Typo="Typo.h4" Class="mb-4 mud-text-secondary">Your Financial Goals</MudText>
+
 
 @if (isLoading && GoalEntries.Count == 0 && totalGoalsCount == 0)
 {
@@ -21,10 +21,24 @@ else if (GoalEntries.Count == 0 && totalGoalsCount == 0)
 else
 {
     <MudGrid Spacing="3">
+       
+        <MudItem xs="12" sm="12" md="12" lg="12">
+            <MudPaper Class="ma-2 pa-2 d-flex" Elevation="6"> 
+                <MudStack Spacing="2" Row="true" AlignItems="AlignItems.Center"> 
+                    <MudIcon Color="Color.Warning" Icon="material-symbols-outlined/arrow_upload_ready" Size="Size.Large" />
+                    <MudText Typo="Typo.h4" Class="mb-0 mud-text-secondary">Your Financial Goals</MudText> 
+                </MudStack>
+                <MudSpacer /> 
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Medium" StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="@(() => NavigationManager.NavigateTo("dynamic-forms/GoalContribution/add-plan"))">
+                    Add New Goal
+                </MudButton>
+            </MudPaper>
+        </MudItem>
         @foreach (var goal in GoalEntries)
         {
             <MudItem xs="12" sm="6" md="4" lg="3">
-                <MudCard Elevation="8" Class="rounded-xl d-flex flex-column mud-background-alt" Style="height: 100%; border: 1px solid var(--mud-palette-lines-default);">
+                <MudCard Elevation="8" Class="@(goal.IsActive ? _cardClass[0] : _cardClass[1])" Style="height: 100%; border: 1px solid var(--mud-palette-lines-default);">
                     <MudCardHeader Class="pb-0">
                         <CardHeaderAvatar>
                             @if (!string.IsNullOrEmpty(goal.ImageSVG))
@@ -145,6 +159,8 @@ else
     private bool isLoading = false;
     private int totalGoalsCount = 0; // To store the total count of goals
     private int totalPages = 0;
+
+    private string[] _cardClass = { "rounded-xl d-flex flex-column mud-background-alt", "rounded-xl d-flex flex-column mud-background-alt mud-border-secondary" };
 
     protected override async Task OnInitializedAsync()
     {
@@ -341,6 +357,6 @@ else
     {
         Console.WriteLine($"EditGoal: Navigating to /dynamic-forms/GoalContribution/edit-plan/{goalId}");
         //dynamic-forms/GoalContribution/edit-plan
-        NavigationManager.NavigateTo($"/dynamic-forms/GoalContribution/edit-plan/{goalId}");
+        NavigationManager.NavigateTo($"dynamic-forms/GoalContribution/edit-plan/{goalId}");
     }
 }

@@ -1,5 +1,5 @@
 ﻿@page "/home"
-@page "/"
+@page "/dashboard"
 
 @using MyFinace.Modules.GoalEntry
 @using MyFinance.Model
@@ -46,11 +46,15 @@ else
         _isInitializing = true;
         try
         {
-            GlobalServices.AuthToken = await LocalStorage.GetItemAsync<string>("accessToken");
-            Console.WriteLine($"Dynamic Form:: Token exists? {!string.IsNullOrEmpty(GlobalServices.AuthToken)}.");
+            GlobalServices.AuthToken = await LocalStorage.GetItemAsync<string>("accessToken");            
+            LogHelper.LogMessage(
+                source: "Home.razor",
+                method: nameof(OnInitializedAsync),
+                message: $"Dynamic Form:: Token exists? {!string.IsNullOrEmpty(GlobalServices.AuthToken)}.",
+                level: LogLevel.Information);
             GoalService.AccessToken = GlobalServices.AuthToken;
             GoalEntryService.AccessToken = GlobalServices.AuthToken;
-
+			
             await Task.Delay(500);
 
             StateHasChanged();

@@ -30,7 +30,7 @@ namespace MyFinance.Utility
             else
             {
                 _snackbar.Add("Logged out successfully!", Severity.Info);
-                _navigationManager.NavigateTo("/login");
+                _navigationManager.NavigateTo("login");
             }
         }
 
@@ -45,8 +45,27 @@ namespace MyFinance.Utility
         {
             _snackbar.Add("Initiating Google sign-in...", Severity.Info);
             //var redirectUrl = _navigationManager.ToAbsoluteUri("/").ToString();
-            var redirectUrl = _navigationManager.ToAbsoluteUri("/handle-success").ToString();
-            ///
+            //var redirectUrl = _navigationManager.ToAbsoluteUri("handle-success").ToString(); // Does not works
+            var currentUri = new Uri(_navigationManager.Uri);
+            var segments = currentUri.AbsolutePath.Trim('/').Split('/');
+
+            // Remove the last segment (login) to get the parent path
+            var parentSegments = segments.Take(segments.Length - 1);
+            var parentPath = "/" + string.Join("/", parentSegments) + "/";
+            string redirectUrl = "/";
+            if (currentUri.Host.Equals("localhost"))
+            {
+                redirectUrl = "/";
+            }
+            else
+            {
+                redirectUrl = $"{currentUri.Scheme}://{currentUri.Host}{parentPath}";
+            }
+
+                
+            Console.WriteLine($"SupabaseService.Auth::Redirection URL {redirectUrl}");
+            //var redirectUrl = _navigationManager.ToAbsoluteUri("../").ToString();
+            
             await _jsRuntime.InvokeVoidAsync("supabaseInterop.signInWithGoogleRedirect", redirectUrl);
         }
 

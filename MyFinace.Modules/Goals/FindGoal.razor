@@ -50,7 +50,7 @@
         {
             Snackbar.Add($"Navigating to goal: {selectedGoal.Name}", Severity.Success);
             // Navigate to the ViewGoal page with the selected goal's ID
-            NavigationManager.NavigateTo($"/viewgoal/{selectedGoal.Id}");
+            NavigationManager.NavigateTo($"viewgoal/{selectedGoal.Id}");
         }
     }
 }

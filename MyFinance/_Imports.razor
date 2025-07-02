@@ -6,11 +6,12 @@
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.AspNetCore.Components.Web.Virtualization
 @using Microsoft.AspNetCore.Components.WebAssembly.Http
+@using Microsoft.Extensions.Options
 @using Microsoft.JSInterop
 
 @using MyFinance
+@using MyFinance.Helpers
 @using MyFinance.Layout
-@* @using MyFinance.Services *@
 @using MyFinance.Utility
 @using MyFinance.Utility.Helper
 @using MudBlazor
@@ -19,3 +20,15 @@
 @inject SupabaseService SupabaseService
 @inject ILocalStorageService LocalStorage
 
+ @* 
+	 TODO: To be optimized for Blazor WebAssembly, consider using the following namespaces only when needed 
+
+ 
+ *@
+@inject IOptions<MetaDetails> MetaDetailsOptions
+
+	@* 
+		Issue-Fix: ttle: "Optimize Imports for Blazor WebAssembly"
+	*@
+@*
+ Optimize: Remove unused namespaces to reduce the size of the Blazor WebAssembly application.*@

@@ -1,0 +1,106 @@
+﻿@using MyFinace.Modules.Goals
+@using MyFinance.Utility.Helper
+
+<MudCard Elevation="8" Class="rounded-lg pa-4 d-flex flex-column" Style="height: 100%;">
+    <MudCardHeader Class="pb-2">
+        <CardHeaderContent>
+            <div class="d-flex align-center">
+                @if (!string.IsNullOrEmpty(Goal.ImageSVG))
+                {
+                    <div style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; margin-right: 8px; flex-shrink: 0;">
+                        @((MarkupString)Goal.ImageSVG)
+                    </div>
+                }
+                <div class="flex-grow-1">
+                    <MudText Typo="Typo.h6" Class="font-weight-bold mud-text-primary mud-text-truncate">@Goal.Name</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@Goal.InvestmentCategory.ToString()</MudText>
+                </div>
+            </div>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent Class="flex-grow-1">
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3 mud-text-truncate-2-lines">@(string.IsNullOrWhiteSpace(Goal.Description) ? "No description provided." : Goal.Description)</MudText>
+
+        <MudList T="string" Dense="true">
+            <MudListItem Icon="@Icons.Material.Filled.AttachMoney" IconColor="Color.Success">
+                <MudText Typo="Typo.body2">Target: <span class="font-weight-bold">@Goal.TargetAmount.ToString("C", Utils.CultureInfo_IN)</span></MudText>
+            </MudListItem>
+            <MudListItem Icon="@Icons.Material.Filled.MonetizationOn" IconColor="Color.Warning">
+                <MudText Typo="Typo.body2">Invested: <span class="font-weight-bold">@Goal.TotalAmountInvested.ToString("C", Utils.CultureInfo_IN)</span></MudText>
+            </MudListItem>
+            <MudListItem Icon="@Icons.Material.Filled.DateRange" IconColor="Color.Tertiary">
+                <MudText Typo="Typo.body2">Target Year: <span class="font-weight-bold">@(Goal.TargetYear?.Year.ToString() ?? "N/A")</span></MudText>
+            </MudListItem>
+        </MudList>
+
+        @* Progress Bar on Amount *@
+        <MudText Typo="Typo.caption" Class="mt-3 mb-1">Investment Progress:</MudText>
+        <MudProgressLinear Value="@(CalculateProgressPercentageFunc.Invoke(Goal.TotalAmountInvested, Goal.TargetAmount))"
+                           Color="Color.Success" Size="Size.Large" Class="rounded-pill">
+            <MudText Typo="Typo.caption" Class="font-weight-bold">@(CalculateProgressPercentageFunc.Invoke(Goal.TotalAmountInvested, Goal.TargetAmount).ToString("F0"))%</MudText>
+        </MudProgressLinear>
+
+        @* Progress Bar on Years Remaining *@
+        @if (CalculateYearsRemainingFunc.Invoke(Goal.TargetYear) > 0 && Goal.TargetYear.HasValue)
+        {
+            <MudText Typo="Typo.caption" Class="mt-2 mb-1">Time Remaining:</MudText>
+            <MudProgressLinear Value="@(CalculateTimeProgressPercentageFunc.Invoke(Goal.StartedYear, Goal.TargetYear))"
+                               Color="Color.Info" Size="Size.Large" Class="rounded-pill">
+                <MudText Typo="Typo.caption" Class="font-weight-bold">@CalculateYearsRemainingFunc.Invoke(Goal.TargetYear) Years Left</MudText>
+            </MudProgressLinear>
+        }
+        else if (CalculateYearsRemainingFunc.Invoke(Goal.TargetYear) == 0 && Goal.TargetYear.HasValue && Goal.TargetYear.Value.Year <= DateTime.Now.Year)
+        {
+            <MudText Typo="Typo.caption" Class="mt-2 mb-1" Color="Color.Warning">Target year reached or passed!</MudText>
+        }
+    </MudCardContent>
+    <MudCardActions Class="d-flex justify-space-between pt-0">
+        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Visibility" Size="Size.Small" OnClick="(() => OnViewGoal.InvokeAsync(Goal.Id))">View</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="(() => OnEditGoal.InvokeAsync(Goal.Id))">Edit</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Size="Size.Small" OnClick="(() => OnConfirmDelete.InvokeAsync((Goal.Id, Goal.Name)))">Delete</MudButton>
+    </MudCardActions>
+</MudCard>
+
+@code {
+    [Parameter]
+    public GoalEntity Goal { get; set; }
+
+    // Parameters for passing functions from the parent
+    [Parameter]
+    public Func<decimal, decimal, double> CalculateProgressPercentageFunc { get; set; }
+
+    [Parameter]
+    public Func<DateTime?, DateTime?, double> CalculateTimeProgressPercentageFunc { get; set; }
+
+    [Parameter]
+    public Func<DateTime?, int> CalculateYearsRemainingFunc { get; set; }
+
+    // EventCallbacks for actions
+    [Parameter]
+    public EventCallback<Guid> OnViewGoal { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid> OnEditGoal { get; set; }
+
+    [Parameter]
+    public EventCallback<(Guid Id, string Name)> OnConfirmDelete { get; set; }
+
+    protected override void OnInitialized()
+    {
+        // Add null checks for the Funcs if they are mandatory,
+        // or provide default empty implementations if they are optional.
+        // For example:
+        if (CalculateProgressPercentageFunc == null)
+        {
+            CalculateProgressPercentageFunc = (invested, target) => 0; // Default or throw exception
+        }
+        if (CalculateTimeProgressPercentageFunc == null)
+        {
+            CalculateTimeProgressPercentageFunc = (start, target) => 0; // Default or throw exception
+        }
+        if (CalculateYearsRemainingFunc == null)
+        {
+            CalculateYearsRemainingFunc = (target) => 0; // Default or throw exception
+        }
+    }
+}
