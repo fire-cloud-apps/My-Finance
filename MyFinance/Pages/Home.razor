@@ -2,14 +2,15 @@
 @page "/dashboard"
 
 @using MyFinace.Modules.GoalEntry
+@using MyFinance.Component
 @using MyFinance.Model
 @using Supabase.RestAPI
+@using static MyFinance.Component.DeviceDetect
 
 @inject SupabaseApiService<Goal> GoalService
 @inject SupabaseApiService<GoalEntry> GoalEntryService
 @inject IAuthTokenProvider AuthTokenProvider
 
-<PageTitle>Home</PageTitle>
 
 
 @* @if (!string.IsNullOrEmpty(GlobalServices.AuthToken)) *@

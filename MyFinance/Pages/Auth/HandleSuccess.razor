@@ -1,5 +1,4 @@
 ﻿@page "/handle-success"
-@page "/"
 @page "/handle-oauth"
 @using MyFinance.Layout
 @using System.Text.Json
@@ -55,17 +54,21 @@
             else
             {
                 Console.WriteLine($"Handle-Success::JsSession Failed!");
+                await Task.Delay(500).ContinueWith(_ =>
+                {
+                    NavigationManager.NavigateTo("login", true);
+                });
             }
         }
         finally
         {
-            _isInitializing = false;
+            _isInitializing = false;           
         }
 
     }
 
 
-    private void OnAuthStateChangedHandler(JsSession? session)
+    private void OnAuthStateChangedHandler(JsSession? session, string source = "HandleSuccess")
     {
         try
         {

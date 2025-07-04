@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using MudBlazor;
 using MyFinance.Utility.Helper;
@@ -7,6 +8,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using static System.Collections.Specialized.BitVector32;
 
 
 namespace MyFinance.Utility
@@ -15,17 +17,25 @@ namespace MyFinance.Utility
     {
         
         [JSInvokable]
-        public void OnJsAuthStateChanged(JsSession? session)
+        public void OnJsAuthStateChanged(JsSession? session, string source)
         {
-            Console.WriteLine($"C#: Auth state changed received from JS. Session present: {session != null}");
+            LogHelper.LogMessage(
+                source: source,
+                method: "OnJsAuthStateChanged",
+                level: LogLevel.Information,
+                message: $" C#: Auth state changed received from JS. Session present: {session != null} Source: {source}");
+            
             CurrentSession = session;
-            OnAuthStateChanged?.Invoke(session);
+            OnAuthStateChanged?.Invoke(session, source);
 
             if (session?.User?.Id != null)
             {
-                Console.WriteLine($"C#: OnJsAuthStateChanged -> User ID from session: {session.User.Id}");
-                //_snackbar.Add("Logged in successfully!", Severity.Success);
-                //_navigationManager.NavigateTo("/");
+                LogHelper.LogMessage(
+                    source: source,
+                    method: "OnJsAuthStateChanged",
+                    level: LogLevel.Information,
+                    message: $"C#: OnJsAuthStateChanged -> User ID from session: {session.User.Id}"
+                    );
             }
             else
             {
@@ -38,7 +48,12 @@ namespace MyFinance.Utility
         public void HandleJsError(string errorMessage)
         {
             _snackbar.Add($"JS Error: {errorMessage}", Severity.Error);
-            Console.Error.WriteLine($"Error from JS Interop: {errorMessage}");
+            LogHelper.LogMessage(
+                    source: "SupabaseService.Auth",
+                    method: "HandleJsError",
+                    level: LogLevel.Information,
+                    message: $"Error from JS Interop: {errorMessage}"
+                    );
         }
 
         public async Task SignInWithGoogle()

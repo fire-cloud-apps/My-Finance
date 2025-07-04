@@ -1,7 +1,7 @@
 ﻿@using MyFinace.Modules.Goals
 @using MyFinance.Utility.Helper
 
-<MudCard Elevation="8" Class="rounded-lg pa-4 d-flex flex-column" Style="height: 100%;">
+<MudCard Elevation="8" Class="rounded-lg pa-4 d-flex flex-column" Style=" height: 100%; border: 1px solid var(--mud-palette-lines-default);">
     <MudCardHeader Class="pb-2">
         <CardHeaderContent>
             <div class="d-flex align-center">
@@ -19,7 +19,7 @@
         </CardHeaderContent>
     </MudCardHeader>
     <MudCardContent Class="flex-grow-1">
-        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3 mud-text-truncate-2-lines">@(string.IsNullOrWhiteSpace(Goal.Description) ? "No description provided." : Goal.Description)</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Default" Class="mb-3 mud-text-truncate-2-lines">@(string.IsNullOrWhiteSpace(Goal.Description) ? "No description provided." : Goal.Description)</MudText>
 
         <MudList T="string" Dense="true">
             <MudListItem Icon="@Icons.Material.Filled.AttachMoney" IconColor="Color.Success">

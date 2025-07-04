@@ -1,5 +1,7 @@
-﻿@using Supabase.RestAPI
+﻿@using MyFinance.Component
+@using Supabase.RestAPI
 @using System.Text.Json
+@using static MyFinance.Component.DeviceDetect
 @inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
 @inject SupabaseService SupabaseService
@@ -15,6 +17,22 @@
 @* Needed for snackbars *@
 <MudSnackbarProvider />
 
+<PageTitle>Home</PageTitle>
+
+<DeviceDetect @ref="DeviceDetect" OnDeviceTypeChanged="OnDeviceTypeChanged"></DeviceDetect>
+
+@code {
+    private DeviceDetect DeviceDetect;
+    private DeviceType _currentDeviceType = DeviceType.Desktop; // Default to Desktop
+
+    private async Task OnDeviceTypeChanged(DeviceType deviceType)
+    {
+        _currentDeviceType = deviceType;
+        Console.WriteLine($"Device type changed to {deviceType}");
+        // Update your layout based on the device type
+    }
+}
+
 <MudLayout>
     @if (!_isInitialized)
     {
@@ -24,22 +42,44 @@
     {
         <MudAppBar Elevation="1">
 
-        <MudIconButton Icon="@Icons.Material.Filled.Menu"
-                       Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+            @if(_currentDeviceType == DeviceType.Desktop || _currentDeviceType == DeviceType.Tablet)
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+            }
+            else
+            {
+                <LogoMobile />
+            }
+            
         <MudSpacer />
-
 
         <MudToggleIconButton @bind-Toggled="isDarkMode"
                              Icon="@Icons.Material.Filled.LightMode"
                              Color="@Color.Error"
                              ToggledIcon="@Icons.Material.Filled.DarkMode"
                              ToggledColor="@Color.Success"
-                             title="@(isDarkMode ? "On" : "Off")" />
+                             Title="@(isDarkMode ? "On" : "Off")" />
 
         <MudIconButton Icon="@Icons.Material.Filled.Refresh"
                        Color="Color.Info" Edge="Edge.Start"
                        OnClick="RefreshSession" />
 
+        @switch(_currentDeviceType)
+        {
+            case DeviceType.Mobile:
+                <MudIconButton Icon="@Icons.Material.Filled.PhoneAndroid"
+                       Color="Color.Tertiary" Edge="Edge.Start" />
+                break;
+            case DeviceType.Tablet:
+                <MudIconButton Icon="@Icons.Material.Filled.TabletMac"
+                       Color="Color.Surface" Edge="Edge.Start" />
+                break;
+            case DeviceType.Desktop:
+                <MudIconButton Icon="@Icons.Material.Filled.Laptop"
+                       Color="Color.Default" Edge="Edge.Start" />
+                break;
+        }
 
         @* Only render the MudMenu if the user is authenticated *@
         @if (SupabaseService.CurrentSession != null && SupabaseService.CurrentSession.User?.Id != null)
@@ -67,13 +107,25 @@
 
     </MudAppBar>
 
+        @if(_currentDeviceType == DeviceType.Mobile)
+        {
+            <MudAppBar Bottom="true" Class="align-content-center">
+                <MudIconButton Icon="@Icons.Material.Filled.ListAlt"
+                               Color="Color.Tertiary" Edge="Edge.Start"
+                               OnClick="@((e) =>  NavigationManager.NavigateTo("dynamic-forms/Goals/List"))" />
+
+                <MudIconButton Icon="@Icons.Material.Filled.List"
+                               Color="Color.Tertiary" Edge="Edge.Start"
+                               OnClick="@((e) => NavigationManager.NavigateTo(@MetaDetailsOptions.Value.InternalURLs.GoalEntryList))" />
+                
+            </MudAppBar>
+        }
+
     <MudDrawer @bind-Open="_drawerOpen">
         <NavMenu />
     </MudDrawer>
-    <MudMainContent>
-        <MudContainer>
-            @Body
-        </MudContainer>
+    <MudMainContent>        
+        @Body        
     </MudMainContent>
     }
 
@@ -95,7 +147,8 @@
             // Initialize the SupabaseService to set up JS Interop callbacks.
             // This should ideally be called once, perhaps in App.razor or Program.cs,
             // but if it handles component-specific initialization, keep it here.
-            await SupabaseService.InitializeAsync();
+            //await SupabaseService.InitializeAsync();
+
             // Subscribe to auth state changes to update the UI.
             // This ensures the UI reacts to login/logout.
             // SupabaseService.OnAuthStateChanged += OnAuthStateChangedHandler;

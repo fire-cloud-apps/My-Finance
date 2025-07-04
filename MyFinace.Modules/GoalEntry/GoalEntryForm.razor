@@ -149,7 +149,7 @@ else
                 throw new ArgumentNullException(nameof(GoalEntryService), "GoalEntryService cannot be null.");
             }
             else if(string.IsNullOrEmpty (GoalEntryService.AccessToken))
-            {
+            {				
                 throw new ArgumentException("AccessToken cannot be null or empty.", nameof(GoalEntryService.AccessToken));
             }
 

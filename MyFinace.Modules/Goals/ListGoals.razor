@@ -11,9 +11,6 @@
 @inject IJSRuntime JSRuntime
 @inject IDialogService DialogService
 
-
-
-
 <MudContainer MaxWidth="MaxWidth.Large" Class="py-8 px-4 sm:px-6 md:px-8">
     <MudText Typo="Typo.h4" Align="Align.Center" Color="Color.Primary" Class="mb-6 font-weight-bold">
         <MudIcon Icon="@Icons.Material.Filled.FormatListBulleted" Size="Size.Large" Class="mr-2" /> Your Financial Goals
@@ -22,7 +19,7 @@
         A comprehensive list of all your financial aspirations.
     </MudText>
 
-    <MudPaper Elevation="6" Class="pa-6 rounded-xl animate__animated animate__fadeInUp mb-8">
+    <MudPaper Elevation="6"  Class="pa-6 rounded-xl animate__animated animate__fadeInUp mb-8">
         <MudTextField @bind-Value="SearchTerm"
                       Label="Search Goals by Name"
                       Variant="Variant.Outlined"
@@ -62,18 +59,18 @@
     else
     {
         <MudGrid Spacing="4">
-            @foreach (var goal in FilteredGoals.Skip((CurrentPage - 1) * PageSize).Take(PageSize))
+                @foreach (var goal in FilteredGoals.Skip((CurrentPage - 1) * PageSize).Take(PageSize))
             {
-                <MudItem xs="12" sm="6" md="4" lg="3">
-                    <GoalAsCard Goal="goal"
-                              OnEditGoal="NavigateToEditGoal"
-                              OnViewGoal="NavigateToViewGoal"
-                              OnConfirmDelete="ConfirmDelete"
-                              CalculateProgressPercentageFunc="CalculateProgressPercentage"
-                              CalculateYearsRemainingFunc="CalculateYearsRemaining"
-								CalculateTimeProgressPercentageFunc="CalculateTimeProgressPercentage" />
+                <MudItem xs="12" sm="6" md="4" lg="3"> 
+                  <GoalAsCard Goal="goal"
+                    OnEditGoal="NavigateToEditGoal"
+                    OnViewGoal="NavigateToViewGoal"
+                    OnConfirmDelete="ConfirmDelete"
+                    CalculateProgressPercentageFunc="CalculateProgressPercentage"
+                    CalculateYearsRemainingFunc="CalculateYearsRemaining"
+                    CalculateTimeProgressPercentageFunc="CalculateTimeProgressPercentage" />
                 </MudItem>
-            }
+            }            
         </MudGrid>
 
         @if (FilteredGoals.Count > PageSize)

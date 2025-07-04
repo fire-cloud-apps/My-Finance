@@ -1,0 +1,61 @@
+﻿@inject IJSRuntime JSRuntime
+
+@code {
+    [Parameter]
+    public EventCallback<DeviceType> OnDeviceTypeChanged { get; set; }
+
+    private DeviceType currentDeviceType;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await GetDeviceType();
+            await JSRuntime.InvokeVoidAsync("addWindowResizeListener", DotNetObjectReference.Create(this));
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnWindowResize(int width)
+    {
+        var deviceType = GetDeviceType(width);
+        if (deviceType != currentDeviceType)
+        {
+            currentDeviceType = deviceType;
+            await OnDeviceTypeChanged.InvokeAsync(deviceType);
+        }
+    }
+
+    private async Task GetDeviceType()
+    {
+        var width = await JSRuntime.InvokeAsync<int>("getWindowWidth");
+        currentDeviceType = GetDeviceType(width);
+        await OnDeviceTypeChanged.InvokeAsync(currentDeviceType);
+    }
+
+    private DeviceType GetDeviceType(int width)
+    {
+        if (width < 768)
+        {
+            return DeviceType.Mobile;
+        }
+        else if (width < 1200)
+        {
+            return DeviceType.Tablet;
+        }
+        else
+        {
+            return DeviceType.Desktop;
+        }
+    }
+
+
+    public enum DeviceType
+    {
+        Mobile,
+        Tablet,
+        Desktop
+    }
+    
+}
+

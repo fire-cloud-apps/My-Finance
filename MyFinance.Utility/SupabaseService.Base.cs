@@ -18,7 +18,7 @@ namespace MyFinance.Utility
         private readonly NavigationManager _navigationManager;
         private DotNetObjectReference<SupabaseService>? _dotNetRef;
 
-        public event Action<JsSession?>? OnAuthStateChanged;
+        public event Action<JsSession?, string?>? OnAuthStateChanged;
         public JsSession? CurrentSession { get; private set; }
 
         public SupabaseService(IJSRuntime jsRuntime, ISnackbar snackbar, IDialogService dialogService, NavigationManager navigationManager)
