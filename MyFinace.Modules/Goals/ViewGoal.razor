@@ -1,6 +1,9 @@
 ﻿@page "/viewgoal/{GoalId:guid}"
+@using MyFinance.Model
 @using MyFinance.Utility
-@inject SupabaseService SupabaseService
+@using MyFinance.Utility.Helper
+@using Supabase.RestAPI
+@* @inject SupabaseService SupabaseService *@
 @inject ISnackbar Snackbar
 @inject NavigationManager NavigationManager
 
@@ -146,16 +149,20 @@
     }
 </MudContainer>
 
-@code {
+@* Global Variable  *@
+@code{
+    [Parameter]
+    public SupabaseApiService<Goal> Supabase_GoalService { get; set; }
+    [Parameter]
+    public GlobalServices Global { get; set; }
     [Parameter]
     public Guid GoalId { get; set; }
 
-    private GoalEntity? Goal { get; set; }
+    private Goal? Goal { get; set; }
     private bool IsLoading { get; set; } = true;
 
     // CultureInfo for Indian Rupees
     private System.Globalization.CultureInfo CultureInfo_IN = new System.Globalization.CultureInfo("en-IN");
-
     // Calculated properties for display
     private double ProgressPercentage => Goal != null && Goal.TargetAmount > 0 ?
         Math.Min(100, (double)(Goal.TotalAmountInvested / Goal.TargetAmount * 100)) : 0;
@@ -165,6 +172,9 @@
 
     private decimal AmountNeeded => Goal != null ?
         Math.Max(0, Goal.TargetAmount - Goal.TotalAmountInvested) : 0;
+}
+
+@code {
 
     private int EstimatedMonthsToReachGoal
     {
@@ -189,18 +199,33 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (Supabase_GoalService == null)
+        {
+            Snackbar.Add("Supabase_GoalService is not provided. Cannot load goals.", Severity.Error);
+            return;
+        }
         await LoadGoalDetails();
     }
 
     private async Task LoadGoalDetails()
     {
         IsLoading = true;
-        // Assuming your table name is "Goal" (singular) based on your feedback
-        Goal = await SupabaseService.SearchEntityByIdAsync<GoalEntity>("Goal", GoalId);
-        if (Goal == null)
+        var result = await Supabase_GoalService.GetById(GoalId);
+        if (result.IsSuccess)
         {
-            Snackbar.Add($"Could not find goal with ID: {GoalId}", Severity.Error);
+            Goal = result.Data;
+            if (Goal == null)
+            {
+                Snackbar.Add($"Could not find goal with ID: {GoalId}", Severity.Error);
+            }
         }
+        else
+        {
+            Snackbar.Add($"Error loading goal: {result.ErrorMessage}", Severity.Error);
+        }
+        // Assuming your table name is "Goal" (singular) based on your feedback
+        //Goal = await SupabaseService.SearchEntityByIdAsync<GoalEntity>("Goal", GoalId);
+        
         IsLoading = false;
     }
 }

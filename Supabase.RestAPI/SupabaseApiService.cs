@@ -71,6 +71,11 @@ namespace Supabase.RestAPI
                 // Dynamically set the Authorization header using the token provider
                 var token = AccessToken; //_authTokenProvider.GetAuthToken();
 
+                if (token == null)
+                {
+                    throw new ArgumentNullException(nameof(token), "AccessToken is null or empty!. Login again.");
+                }
+
                 //Console.WriteLine("SupabaseAPIService -> SendRequest:Token Exists?: " + !string.IsNullOrEmpty(token)); // For debugging purposes, can be removed in production   
                 if (!string.IsNullOrEmpty(token))
                 {
@@ -231,7 +236,8 @@ namespace Supabase.RestAPI
             Console.WriteLine("SupabaseAPIService.GetAll called for table: " + _tableName); // For debugging purposes, can be removed in production
             try
             {
-                var response = await SendRequest(HttpMethod.Get, _tableName);
+                var response = await SendRequest(HttpMethod.Get, _tableName,
+                    preferHeader: "count=exact");
 
                 if (response.IsSuccessStatusCode)
                 {

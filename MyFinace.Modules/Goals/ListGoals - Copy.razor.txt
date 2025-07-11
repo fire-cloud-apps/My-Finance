@@ -16,35 +16,12 @@
 @inject IDialogService DialogService
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="py-8 px-4 sm:px-6 md:px-8">
-   
-    <div class="ma-2 pa-2 d-flex" elevation="0">
-        <MudStack Spacing="2" Row="true" AlignItems="AlignItems.Center">
-            <MudIcon Color="Color.Primary" Icon="@Icons.Material.Filled.FormatListBulleted" Size="Size.Large" />
-            <MudText Typo="Typo.h4" Class="mb-0 mud-text-secondary">Financial Goals</MudText>            
-        </MudStack>
-        <MudSpacer />
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-            <MudText Typo="Typo.body2" Class="mud-text-secondary">View: @(selectedViewMode)</MudText>
-
-            <MudToggleGroup T="string" @bind-Value="selectedViewMode" SelectionMode="SelectionMode.SingleSelection" Class="ml-2">
-                <MudToggleItem Value="@("card")" Text="card" Title="Card View">
-                    <MudIcon Icon="@Icons.Material.Filled.ViewModule" />
-                </MudToggleItem>
-                <MudToggleItem Value="@("list")" Text="list" Title="List View">
-                    <MudIcon Icon="@Icons.Material.Filled.ViewList" />
-                </MudToggleItem>
-                <MudToggleItem Value="@("table")" Text="table" Title="Table View">
-                    <MudIcon Icon="@Icons.Material.Filled.TableChart" />
-                </MudToggleItem>
-            </MudToggleGroup>
-
-            <MudDivider Vertical="true" FlexItem="true" Class="mx-2" />
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Medium" StartIcon="@Icons.Material.Filled.Add"
-                       OnClick="@(() => NavigationManager.NavigateTo("dynamic-forms/Goals/Add-Goals"))">
-                Add New Goal
-            </MudButton>
-        </MudStack>
-    </div>
+    <MudText Typo="Typo.h4" Align="Align.Center" Color="Color.Primary" Class="mb-6 font-weight-bold">
+        <MudIcon Icon="@Icons.Material.Filled.FormatListBulleted" Size="Size.Large" Class="mr-2" /> Your Financial Goals
+    </MudText>
+    <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-8 ">
+        A comprehensive list of all your financial aspirations.
+    </MudText>
 
     <MudPaper Elevation="6"  Class="pa-6 rounded-xl animate__animated animate__fadeInUp mb-8">
         <MudTextField @bind-Value="SearchTerm"
@@ -71,7 +48,12 @@
     {
         <MudAlert Severity="Severity.Info" Class="my-4" Dense="true" Outlined="true" Icon="@Icons.Material.Filled.Info">
             No financial goals found. Start by adding a new goal!
-        </MudAlert>       
+        </MudAlert>
+        <div class="d-flex justify-center">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" EndIcon="@Icons.Material.Filled.Add" Class="mt-4 mud-elevation-2" >
+                Add New Goal
+            </MudButton>
+        </div>
     }
     else if (!FilteredGoals.Any() && !string.IsNullOrEmpty(SearchTerm))
     {
@@ -96,18 +78,19 @@
             }            
         </MudGrid>
        
-        
-        <div class="d-flex justify-center mt-8">
-            <MudPagination
-                Count="@TotalPages"
-                Selected="@CurrentPage"
-                SelectedChanged="OnPageChanged"
-                Color="Color.Primary"
-                Size="Size.Large"
-                ShowFirstLastButton="true"
-                ShowQuickJumper="true" />
-        </div>
-        
+        //@if (FilteredGoals.Count > PageSize)
+        {
+            <div class="d-flex justify-center mt-8">
+                <MudPagination
+                    Count="@TotalPages"
+                    Selected="@CurrentPage"
+                    SelectedChanged="OnPageChanged"
+                    Color="Color.Primary"
+                    Size="Size.Large"
+                    ShowFirstLastButton="true"
+                    ShowQuickJumper="true" />
+            </div>
+        }
 
         @if (isLoadingMore)
         {
@@ -130,8 +113,6 @@
 	private int _totalRecords = 0;
 	private int TotalPages { get; set; } = 1;
 	private List<Goal> Goals { get; set; } = new List<Goal>();
-    // View mode selection
-    private string selectedViewMode = "card";
 }
 
 @* Original Variables *@

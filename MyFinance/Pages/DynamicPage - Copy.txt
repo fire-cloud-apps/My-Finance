@@ -8,10 +8,8 @@
 
 @inject SupabaseApiService<Goal> GoalService
 @inject SupabaseApiService<GoalEntry> GoalEntryService
-@inject MyFinance.Utility.SupabaseService SupabaseService  
 
-
-@* Paramer and Variable Decleration *@
+@* Paramer and Variable Decleration *@ 
 @code {
 	[Parameter]
 	public string Module { get; set; }
@@ -21,39 +19,7 @@
 	public Guid? Id { get; set; }
 
 	private bool _isInitializing = true;
-    private GlobalServices _globalServices; // Initialize this
-
-    protected override async Task OnInitializedAsync()
-    {
-        _isInitializing = true;
-        try
-        {
-            Console.WriteLine($"Is Goal Service {GoalService == null}");
-            Console.WriteLine($"Is Goal Entry Service {GoalEntryService == null}");
-
-            var session = await LocalStorage.GetItemAsync<JsSession>("sessionInfo");
-            _globalServices = new GlobalServices(session);
-            GlobalServices.AuthToken = await LocalStorage.GetItemAsync<string>("accessToken");
-            LogHelper.LogMessage(
-                source:"DynamicPage",
-                level: LogLevel.Information,
-                method: "OnInitializedAsync",
-                message: $"Dynamic Form:Token: {!string.IsNullOrEmpty( GlobalServices.AuthToken)}."
-            );
-
-            // Assign access token to the injected services
-            GoalService.AccessToken = GlobalServices.AuthToken;
-            GoalEntryService.AccessToken = GlobalServices.AuthToken;
-            
-
-            await Task.Delay(500); // Give some time for services to be ready, though not strictly necessary if injection works synchronously
-        }
-        finally
-        {
-            _isInitializing = false;
-            StateHasChanged();
-        }		
-    }
+	GlobalServices _globalServices ;
 }
 
 @if(string.IsNullOrEmpty(Module) || string.IsNullOrEmpty(Component))
@@ -80,38 +46,36 @@ else
 			</MudCardActions>
 		</MudCard>
 	}
-	else // Only render components when initialization is complete
+	else
 	{
 		@switch (Module)
 		{
 			case "Goals":
 				@switch (Component)
 				{
+					//GlobalServices
 					case "Add":
 					case "Add-Goals":
 					case "addgoals":
-						<AddGoals GoalService="@GoalService"
+						<AddGoals GoalService="@GoalService" 
 							Global="@_globalServices"
 									SupabaseService="@SupabaseService" />
 						break;
 					case "Edit":
 					case "Edit-Goals":
-						@* <EditGoals Id="@Id.Value" GoalService="@GoalService"
-								Global="@_globalServices"  />  *@
-							<GoalAction Global="@_globalServices"  GoalID="@Id"
-									GoalService="@GoalService" />
+						<EditGoals Id="@Id.Value" GoalService="@GoalService"  Global="_globalServices"/>
 						break;
 					case "Find":
-						<FindGoal SupabaseService="@SupabaseService"  />
+						<FindGoal SupabaseService="@SupabaseService" />
 						break;
 					case "List":
-					case "ListGoals":
+					case "ListGoals": 
 						<ListGoals Supabase_GoalService="@GoalService" Global="@_globalServices" />
 						break;
 					default:
-						<MudText Typo="Typo.h6"
+						<MudText Typo="Typo.h6" 
 							Class="text-warning">Unknown Goal Component: @Component</MudText>
-
+						
 						break;
 				}
 				break;
@@ -143,6 +107,41 @@ else
 				Console.WriteLine($"Module {Module} & Component {Component} not recognized.");
 				break;
 		}
-	}
+	}	
 	</MudContainer>
+}
+
+
+@code {
+	protected override async Task OnInitializedAsync()
+	{
+		_isInitializing = true;
+		try
+		{
+			Console.WriteLine($"Is Goal Service  {GoalService == null}");
+			Console.WriteLine($"Is Goal Entry Service  {GoalEntryService == null}");
+
+			var session = await LocalStorage.GetItemAsync<JsSession>("sessionInfo");
+			_globalServices = new GlobalServices(session);
+
+			GlobalServices.AuthToken = await LocalStorage.GetItemAsync<string>("accessToken");
+			LogHelper.LogMessage(
+				source:"DynamicPage",
+				level: LogLevel.Information,
+				method: "OnInitializedAsync",
+				message: $"Dynamic Form:Token: {!string.IsNullOrEmpty( GlobalServices.AuthToken)}."
+			);
+			
+
+			GoalService.AccessToken = GlobalServices.AuthToken;
+			GoalEntryService.AccessToken = GlobalServices.AuthToken;
+
+			await Task.Delay(500);
+		}
+		finally
+		{
+			_isInitializing = false;
+			StateHasChanged();
+		}
+	}
 }

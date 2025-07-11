@@ -69,9 +69,7 @@ public class AuthTokenProvider : IAuthTokenProvider
     public void SetAuthToken(string token)
     {
         _currentToken = token;
-        _localStorage.SetItemAsync("accessToken", token); // Save to local storage
-                                                          // In a real app, you would save this to local storage using JavaScript interop:
-                                                          // JSRuntime.InvokeVoidAsync("localStorage.setItem", "authToken", token);
+        _localStorage.SetItemAsync("accessToken", token); 
     }
 }
 

@@ -11,6 +11,8 @@ using MyFinance.Utility.Helper;
 using Supabase.RestAPI;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Microsoft.Extensions.Logging;
+
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -37,8 +39,11 @@ builder.Services.AddHttpClient("SupabaseApi", client =>
     // DO NOT set Authorization header here, it will be handled dynamically by SupabaseApiService.
 });
 
+#endregion
+
 // This automatically loads appsettings.json
 var configuration = builder.Configuration;
+
 // Bind MetaDetails section to the model
 builder.Services.Configure<MetaDetails>(configuration.GetSection("MetaDetails"));
 
@@ -53,10 +58,13 @@ builder.Services.AddScoped<IAuthTokenProvider, AuthTokenProvider>();
 // The DI container will automatically resolve IHttpClientFactory and IAuthTokenProvider
 builder.Services.AddScoped(typeof(SupabaseApiService<>));
 
+builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
 
-#endregion
+var host = builder.Build();
 
+var logger = host.Services.GetRequiredService<ILogger<Program>>();
+logger.LogInformation("Blazor WASM application starting up. Logging levels controlled by appsettings.json.");
+await host.RunAsync();
 
-await builder.Build().RunAsync();
 
 

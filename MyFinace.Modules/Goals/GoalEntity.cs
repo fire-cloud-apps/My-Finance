@@ -86,6 +86,7 @@ public class GoalEntity : SupabaseModel
 
 }
 
+/*
 public enum GoalStatus
 {
     /// <summary>
@@ -151,4 +152,4 @@ public enum InvestmentCategory
 
 }
 
-
+*/

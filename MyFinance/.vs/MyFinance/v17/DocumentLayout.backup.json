@@ -3,15 +3,7 @@
   "WorkspaceRootPath": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinance\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{8B2536E8-14E1-46C6-B058-8ABA163005EC}|MyFinance.csproj|d:\\github\\git.hotmail\\my-finance\\myfinance\\layout\\mainlayout.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{8B2536E8-14E1-46C6-B058-8ABA163005EC}|MyFinance.csproj|solutionrelative:layout\\mainlayout.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{8B2536E8-14E1-46C6-B058-8ABA163005EC}|MyFinance.csproj|d:\\github\\git.hotmail\\my-finance\\myfinance\\layout\\navmenu.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{8B2536E8-14E1-46C6-B058-8ABA163005EC}|MyFinance.csproj|solutionrelative:layout\\navmenu.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{6CDF67F2-189B-4ABC-B507-EB4FFA0DF97F}|..\\MyFinace.Modules\\MyFinace.Modules.csproj|d:\\github\\git.hotmail\\my-finance\\myfinace.modules\\component\\goalascard.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{6CDF67F2-189B-4ABC-B507-EB4FFA0DF97F}|..\\MyFinace.Modules\\MyFinace.Modules.csproj|d:\\github\\git.hotmail\\my-finance\\myfinace.modules\\goals\\viewgoal.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{6CDF67F2-189B-4ABC-B507-EB4FFA0DF97F}|..\\MyFinace.Modules\\MyFinace.Modules.csproj|d:\\github\\git.hotmail\\my-finance\\myfinace.modules\\goalentry\\listgoalentry.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
@@ -20,8 +12,8 @@
       "AbsoluteMoniker": "D:0:0:{6CDF67F2-189B-4ABC-B507-EB4FFA0DF97F}|..\\MyFinace.Modules\\MyFinace.Modules.csproj|d:\\github\\git.hotmail\\my-finance\\myfinace.modules\\goals\\listgoals.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{8B2536E8-14E1-46C6-B058-8ABA163005EC}|MyFinance.csproj|d:\\github\\git.hotmail\\my-finance\\myfinance\\pages\\auth\\handlesuccess.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{8B2536E8-14E1-46C6-B058-8ABA163005EC}|MyFinance.csproj|solutionrelative:pages\\auth\\handlesuccess.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{8B2536E8-14E1-46C6-B058-8ABA163005EC}|MyFinance.csproj|d:\\github\\git.hotmail\\my-finance\\myfinance\\pages\\dynamicpage.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{8B2536E8-14E1-46C6-B058-8ABA163005EC}|MyFinance.csproj|solutionrelative:pages\\dynamicpage.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     }
   ],
   "DocumentGroupContainers": [
@@ -34,85 +26,59 @@
           "SelectedChildIndex": 1,
           "Children": [
             {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "NavMenu.razor",
-              "DocumentMoniker": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinance\\Layout\\NavMenu.razor",
-              "RelativeDocumentMoniker": "Layout\\NavMenu.razor",
-              "ToolTip": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinance\\Layout\\NavMenu.razor",
-              "RelativeToolTip": "Layout\\NavMenu.razor",
-              "ViewState": "AgIAAAYAAAAAAAAAAAAAACgAAAA4AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-07-04T15:52:24.054Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "MainLayout.razor",
-              "DocumentMoniker": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinance\\Layout\\MainLayout.razor",
-              "RelativeDocumentMoniker": "Layout\\MainLayout.razor",
-              "ToolTip": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinance\\Layout\\MainLayout.razor",
-              "RelativeToolTip": "Layout\\MainLayout.razor",
-              "ViewState": "AgIAAE8AAAAAAAAAAAAAAHIAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-07-04T15:45:40.316Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "GoalAsCard.razor",
-              "DocumentMoniker": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\Component\\GoalAsCard.razor",
-              "RelativeDocumentMoniker": "..\\MyFinace.Modules\\Component\\GoalAsCard.razor",
-              "ToolTip": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\Component\\GoalAsCard.razor",
-              "RelativeToolTip": "..\\MyFinace.Modules\\Component\\GoalAsCard.razor",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAoAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-07-04T15:14:23.893Z",
-              "EditorCaption": ""
-            },
-            {
               "$type": "Bookmark",
               "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 0,
+              "Title": "ViewGoal.razor",
+              "DocumentMoniker": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\Goals\\ViewGoal.razor",
+              "RelativeDocumentMoniker": "..\\MyFinace.Modules\\Goals\\ViewGoal.razor",
+              "ToolTip": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\Goals\\ViewGoal.razor",
+              "RelativeToolTip": "..\\MyFinace.Modules\\Goals\\ViewGoal.razor",
+              "ViewState": "AgIAAKwAAAAAAAAAAAAkwMoAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-07-11T13:06:01.558Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": "ListGoalEntry.razor",
               "DocumentMoniker": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\GoalEntry\\ListGoalEntry.razor",
               "RelativeDocumentMoniker": "..\\MyFinace.Modules\\GoalEntry\\ListGoalEntry.razor",
               "ToolTip": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\GoalEntry\\ListGoalEntry.razor",
               "RelativeToolTip": "..\\MyFinace.Modules\\GoalEntry\\ListGoalEntry.razor",
-              "ViewState": "AgIAABsAAAAAAAAAAAAAACgAAACpAAAAAAAAAA==",
+              "ViewState": "AgIAAG0BAAAAAAAAAAAkwJYBAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-07-04T15:09:51.933Z",
+              "WhenOpened": "2025-07-11T12:27:13.303Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 2,
               "Title": "ListGoals.razor",
               "DocumentMoniker": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\Goals\\ListGoals.razor",
               "RelativeDocumentMoniker": "..\\MyFinace.Modules\\Goals\\ListGoals.razor",
               "ToolTip": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\Goals\\ListGoals.razor",
               "RelativeToolTip": "..\\MyFinace.Modules\\Goals\\ListGoals.razor",
-              "ViewState": "AgIAADYAAAAAAAAAAAAAAEAAAAAdAAAAAAAAAA==",
+              "ViewState": "AgIAAA8AAAAAAAAAAAAAAIAAAAAuAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-07-04T15:09:48.633Z",
+              "WhenOpened": "2025-07-11T10:07:42.852Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "HandleSuccess.razor",
-              "DocumentMoniker": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinance\\Pages\\Auth\\HandleSuccess.razor",
-              "RelativeDocumentMoniker": "Pages\\Auth\\HandleSuccess.razor",
-              "ToolTip": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinance\\Pages\\Auth\\HandleSuccess.razor",
-              "RelativeToolTip": "Pages\\Auth\\HandleSuccess.razor",
-              "ViewState": "AgIAADIAAAAAAAAAAAAAADgAAAA3AAAAAAAAAA==",
+              "DocumentIndex": 3,
+              "Title": "DynamicPage.razor",
+              "DocumentMoniker": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinance\\Pages\\DynamicPage.razor",
+              "RelativeDocumentMoniker": "Pages\\DynamicPage.razor",
+              "ToolTip": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinance\\Pages\\DynamicPage.razor",
+              "RelativeToolTip": "Pages\\DynamicPage.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAMAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-07-04T15:08:26.625Z",
+              "WhenOpened": "2025-07-09T05:46:39.168Z",
               "EditorCaption": ""
             }
           ]

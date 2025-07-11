@@ -1,16 +1,21 @@
 ﻿@page "/editgoals/{Id:guid}"
+@using Microsoft.Extensions.Logging
 @using MyFinace.Modules.Goals
 @using System.ComponentModel.DataAnnotations
 @using System.Globalization
 @using FluentValidation;
 @using MudBlazor;
+@using MyFinance.Model
+@using MyFinance.Utility.Helper
+@using Blazored.LocalStorage
 @using Severity = MudBlazor.Severity
+@using Supabase.RestAPI
 
 @implements IAsyncDisposable
-
 @inject ISnackbar Snackbar
-@inject MyFinance.Utility.SupabaseService SupabaseService
 @inject NavigationManager NavigationManager
+@inject SupabaseApiService<Goal> GoalService
+
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="py-8 px-4 sm:px-6 md:px-8">
     <MudText Typo="Typo.h4" Align="Align.Center" Color="Color.Primary" Class="mb-6 font-weight-bold">
@@ -215,26 +220,55 @@
     }
 </MudContainer>
 
-@code {
+@* Code Variable declertions  *@
+@code{
     [Parameter]
     public Guid Id { get; set; } // Parameter to receive the Goal ID from the URL
+    //[Parameter]
+    //public SupabaseApiService<Goal> GoalService { get; set; }
+    [Parameter]
+    public GlobalServices Global { get; set; }
 
-    private GoalEntity? Goal;
+    private Goal? Goal;
     private MudForm? form;
     private bool isLoading = true;
+}
 
+
+@* Page Initialization Actions *@
+@code {
     protected override async Task OnInitializedAsync()
     {
-        // Ensure SupabaseService is initialized and authenticated before fetching data
-        if (SupabaseService.CurrentSession == null)
+        isLoading = true;
+        try
         {
-            Snackbar.Add("You must be logged in to view or edit goals.", Severity.Error);
-            isLoading = false;
-            return;
-        }
+            #region Session Check using Goal Service
+            if (GoalService == null)
+            {
+                throw new ArgumentNullException(nameof(GoalService), "GoalService cannot be null.");
+            }
+            else if (string.IsNullOrEmpty(GoalService.AccessToken))
+            {
+				var token = Global.GetAuthToken() ?? string.Empty;
+                
+            }
+            #endregion
+            #region Old way
+            // Ensure SupabaseService is initialized and authenticated before fetching data
+            // if (SupabaseService.CurrentSession == null)
+            // {
+            //     Snackbar.Add("You must be logged in to view or edit goals.", Severity.Error);                
+            //     return;
+            // }
+            #endregion
 
-        // Fetch the goal data based on the Id
-        await LoadGoalData();
+            // Fetch the goal data based on the Id
+            await LoadGoalData();
+        }
+        finally
+        {
+            isLoading = false; // Ensure loading state is reset
+        }
     }
 
     private async Task LoadGoalData()
@@ -242,8 +276,31 @@
         isLoading = true;
         try
         {
+			var fetchedGoal = await GoalService.GetById(Id);
+			
+
+            if (fetchedGoal.Data != null)
+            {
+                Goal = fetchedGoal.Data;
+                LogHelper.LogMessage(
+                    source: "EditGoals",
+                    method: "LoadGoalData",
+                    level: LogLevel.Information,
+                    message: $"C#: Successfully loaded goal with ID: {Id}");
+                
+            }
+            else
+            {
+                Snackbar.Add($"Goal with ID {Id} not found or error occurred.", Severity.Error);
+                LogHelper.LogMessage(
+                    source: "EditGoals",
+                    method: "LoadGoalData",
+                    level: LogLevel.Information,
+                    message: $"C#: Goal with ID {Id} not found or an error occurred during fetch.");
+            }
+            /*
             // Use the provided SearchEntityByIdAsync method
-            var fetchedGoal = await SupabaseService.SearchEntityByIdAsync<GoalEntity>("Goal", Id);
+            var fetchedGoal = await SupabaseService.SearchEntityByIdAsync<Goal>("Goal", Id);
 
             if (fetchedGoal != null)
             {
@@ -255,6 +312,7 @@
                 Snackbar.Add($"Goal with ID {Id} not found or error occurred.", Severity.Error);
                 Console.Error.WriteLine($"C#: Goal with ID {Id} not found or an error occurred during fetch.");
             }
+            */
         }
         catch (Exception ex)
         {
@@ -265,52 +323,6 @@
         {
             isLoading = false;
         }
-    }
-
-
-    private async Task Submit()
-    {
-        if (Goal == null)
-        {
-            Snackbar.Add("No goal data to update.", Severity.Error);
-            return;
-        }
-
-        if (SupabaseService.CurrentSession == null)
-        {
-            Snackbar.Add("You must be logged in to update a goal.", Severity.Error);
-            return;
-        }
-
-        await form!.Validate();
-
-        if (form.IsValid)
-        {
-            // The OwnedBy field should ideally not be editable by the user but set automatically.
-            // If it's editable, ensure proper authorization checks on the backend.
-            Goal.OwnedBy = SupabaseService?.CurrentSession?.User?.Email ?? "UpdatedUser"; // Ensure this is set correctly from auth
-
-            var result = await SupabaseService.Edit<GoalEntity>("Goal", Goal);
-
-            if (result.Success)
-            {
-                Snackbar.Add($"Goal '{Goal.Name}' updated successfully!", Severity.Success);
-                NavigationManager.NavigateTo("goals"); // Navigate back to goals list or detail page
-            }
-            else
-            {
-                Snackbar.Add($"Failed to update goal '{Goal.Name}': {result.ErrorMessage}", Severity.Error);
-            }
-        }
-        else
-        {
-            Snackbar.Add("Please correct the errors in the form.", Severity.Error);
-        }
-    }
-
-    private void Cancel()
-    {
-        NavigationManager.NavigateTo("goals"); // Navigate back without saving changes
     }
 
     // This is the implementation of IAsyncDisposable
@@ -324,8 +336,62 @@
         await Task.CompletedTask;
     }
 
+    
+}
+
+@* Button Actions 'Save' & 'Cancel' *@
+@code{
+    private async Task Submit()
+    {
+        if (Goal == null)
+        {
+            Snackbar.Add("No goal data to update.", Severity.Error);
+            return;
+        }
+
+        await form!.Validate();
+
+        if (form.IsValid)
+        {
+            // The OwnedBy field should ideally not be editable by the user but set automatically.
+            // If it's editable, ensure proper authorization checks on the backend.
+            Goal.OwnedBy = Global.GetUserInfo().Email ?? string.Empty;
+            var result = await GoalService.Update(Id, Goal); 
+
+            if (result.IsSuccess)
+            {
+                var resultData = result.Data; 
+                Snackbar.Add($"Goal edited Successfully!", Severity.Success, config =>
+                {
+                    config.VisibleStateDuration = 3000;
+                    config.ShowCloseIcon = false;
+                });
+            }
+            else
+            {
+                Snackbar.Add($"Goal Entry edit Failed! - {result.ErrorMessage}", Severity.Error, config =>
+                {
+                    config.VisibleStateDuration = 3000;
+                    config.ShowCloseIcon = false;
+                });
+            }
+        }
+        else
+        {
+            Snackbar.Add("Please correct the errors in the form.", Severity.Error);
+        }
+    }
+
+    private void Cancel()
+    {
+        NavigationManager.NavigateTo("goals"); // Navigate back without saving changes
+    }
+}
+
+@* Validations Code *@
+@code{
     // Validation class for GoalEntity - Reused from AddGoals.razor.txt
-    public class GoalEntityValidator : AbstractValidator<GoalEntity>
+    public class GoalEntityValidator : AbstractValidator<Goal>
     {
         public GoalEntityValidator()
         {

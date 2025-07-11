@@ -63,7 +63,17 @@ public static class LogHelper
             logMessage.Append($"[User: {user}] ");
         }
 
-        Console.WriteLine(logMessage.ToString());
+        switch(level)
+        {
+            case LogLevel.Critical:
+            case LogLevel.Error:
+                Console.Error.WriteLine(logMessage.ToString());
+                break;
+            default:
+                Console.WriteLine(logMessage.ToString());
+                break;
+        }
+        
         LogId++;
         if (LogId > 1000000)
         {

@@ -1,0 +1,98 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using System.IO
+
+<MudFileUpload T="IBrowserFile" Accept=".png, .jpg, .svg" FilesChanged="UploadFiles2" MaximumFileCount="100">
+    <ActivatorContent>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Image">
+            Only image files
+        </MudButton>
+    </ActivatorContent>
+</MudFileUpload>
+
+@if (!string.IsNullOrEmpty(base64Image))
+{
+    <MudText Typo="Typo.subtitle1" Class="mt-4 font-weight-bold">Image Preview:</MudText>
+    
+        <MudImage Fluid="true" Src="@base64Image" Alt="Uploaded Image Preview" 
+            Elevation="25" Class="rounded-lg ma-4"
+            Width="200" Height="150" 
+            Style="max-width: 100%; height: auto; border-radius: 8px;" />
+    
+}
+
+@code {
+    private string base64Image = string.Empty;
+    private string errorMessage = string.Empty;
+
+    private async Task UploadFiles2(IBrowserFile file)
+    {
+        // Clear previous messages and errors
+        errorMessage = string.Empty;
+        base64Image = string.Empty;
+
+        if (file == null)
+        {
+            // No file selected, nothing to do
+            return;
+        }
+
+        // Define the maximum allowed file size (1 MB)
+        long maxFileSize = 1 * 1024 * 1024; // 1 MB in bytes
+
+        // Check if the file size exceeds the limit
+        if (file.Size > maxFileSize)
+        {
+            errorMessage = $"File is too large. Maximum allowed size is {maxFileSize / (1024 * 1024)} MB.";
+            StateHasChanged(); // Update UI to show error immediately
+            return;
+        }
+
+        // Validate file type (MIME type)
+        // Ensure only PNG, JPEG, or SVG are accepted
+        if (!(file.ContentType.Equals("image/png", StringComparison.OrdinalIgnoreCase) ||
+              file.ContentType.Equals("image/jpeg", StringComparison.OrdinalIgnoreCase) ||
+              file.ContentType.Equals("image/svg+xml", StringComparison.OrdinalIgnoreCase)))
+        {
+            errorMessage = "Invalid file type. Please upload a PNG, JPG, or SVG image.";
+            StateHasChanged();
+            return;
+        }
+        
+        try
+        {
+            // Open a read stream for the selected file.
+            // The maxFileSize parameter here acts as a client-side guard to prevent reading excessively large files into memory.
+            using (var stream = file.OpenReadStream(maxFileSize))
+            {
+                // Create a MemoryStream to hold the file's bytes
+                using (var memoryStream = new MemoryStream())
+                {
+                    // Asynchronously copy the contents of the file stream to the memory stream
+                    await stream.CopyToAsync(memoryStream);
+
+                    // Convert the MemoryStream to a byte array
+                    byte[] imageBytes = memoryStream.ToArray();
+
+                    // Construct the Base64 Data URL.
+                    // This format is "data:MIME_TYPE;base64,BASE64_STRING"
+                    // It allows the browser to display the image directly from the string.
+                    base64Image = $"data:{file.ContentType};base64,{Convert.ToBase64String(imageBytes)}";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Catch any exceptions during file processing (e.g., I/O errors)
+            errorMessage = $"Error processing file: {ex.Message}. Please try again.";
+            // Log the full exception for debugging purposes in the browser's console
+            Console.WriteLine($"Error reading file: {ex.Message}");
+        }
+        finally
+        {
+            // Ensure the UI updates after file processing, whether successful or not
+            StateHasChanged();
+        }
+    }
+}

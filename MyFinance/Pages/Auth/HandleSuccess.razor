@@ -1,9 +1,12 @@
 ﻿@page "/handle-success"
+@page "/"
 @page "/handle-oauth"
+@page "/refresh/{IsRefresh:bool?}"
 @using MyFinance.Layout
 @using System.Text.Json
 
 @layout EmptyLayout
+@inject ILogger<HandleSuccess> Logger
 
 @if (_isInitializing)
 {
@@ -24,9 +27,10 @@
 
 @code {
     private bool _isInitializing = true;
+    [Parameter]
+	public bool? IsRefresh { get; set; } = false;
     protected override async Task OnInitializedAsync()
     {
-
         try
         {
             _isInitializing = true;
@@ -45,26 +49,22 @@
                 var user = SupabaseService.CurrentSession.User;
                 GlobalServices.AuthToken = SupabaseService.CurrentSession.AccessToken;
                 GlobalServices.UserInfo = new UserInfo()
-                    {
-                        Id = SupabaseService.CurrentSession.User.Id,
-                        Name = SupabaseService.CurrentSession.GetUserMetadataString("name"),
-                        Email = SupabaseService.CurrentSession.GetUserMetadataString("email")
-                    };
+                {
+                    Id = SupabaseService.CurrentSession.User.Id,
+                    Name = SupabaseService.CurrentSession.GetUserMetadataString("name"),
+                    Email = SupabaseService.CurrentSession.GetUserMetadataString("email")
+                };
             }
             else
             {
-                Console.WriteLine($"Handle-Success::JsSession Failed!");
-                await Task.Delay(500).ContinueWith(_ =>
-                {
-                    NavigationManager.NavigateTo("login", true);
-                });
+                Logger.LogInformation($"Handle-Success::JsSession Failed!");
+                NavigationManager.NavigateTo("login");
             }
         }
         finally
         {
             _isInitializing = false;           
         }
-
     }
 
 
@@ -100,6 +100,7 @@
                         Email = session.GetUserMetadataString("email")
 
                     };
+				LocalStorage.SetItemAsync<JsSession>("sessionInfo",session);
                 LocalStorage.SetItemAsStringAsync("accessToken", session.AccessToken);
                 LocalStorage.SetItemAsync<UserInfo>("userInfo", userInfo);
 
@@ -107,20 +108,21 @@
                 GlobalServices.UserInfo = userInfo; // Update the global user info
                 GlobalServices.AuthToken = session.AccessToken; // Update the global auth token
 
-                Console.WriteLine($"Handle-Success::JsSession Success! {JsonSerializer.Serialize(GlobalServices.JsSession)} ");
+                Logger.LogInformation($"Handle-Success::JsSession Success! {JsonSerializer.Serialize(GlobalServices.JsSession)} ");
                 NavigationManager.NavigateTo("home", false);
-
             }
             else
             {
+                
+                Logger.LogWarning("Handle-Success: JsSession Failed!");
                 // Only navigate if not already on the login page to prevent looping
-                if (!NavigationManager.Uri.Contains("/login"))
-                {
+                //if (!NavigationManager.Uri.Contains("/login"))
+                //{
                     NavigationManager.NavigateTo("login");
-                }
+                //}
 
             }
-            Console.WriteLine("Handle-Success: OnAuthStateChangedHandler - Triggered.");
+            Logger.LogInformation("Handle-Success: OnAuthStateChangedHandler - Triggered.");
         }
         finally
         {

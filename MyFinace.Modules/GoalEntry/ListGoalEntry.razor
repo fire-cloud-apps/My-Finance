@@ -3,226 +3,442 @@
 @using MyFinance.Utility.Helper
 @using Supabase.RestAPI
 @using System.Globalization 
-@* SupabaseApiService is now a [Parameter] as requested *@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject NavigationManager NavigationManager
 
-
-
-@if (isLoading && GoalEntries.Count == 0 && totalGoalsCount == 0)
+@if (isLoading && DisplayedGoals.Count == 0 && totalGoalsCount == 0)
 {
     <MudProgressCircular Indeterminate="true" Class="d-flex justify-center mt-8" Color="Color.Primary" />
 }
-else if (GoalEntries.Count == 0 && totalGoalsCount == 0)
+else if (DisplayedGoals.Count == 0 && totalGoalsCount == 0)
 {
     <MudAlert Severity="Severity.Info" Class="rounded-lg shadow-sm">No goals found. Start by adding a new goal!</MudAlert>
 }
 else
 {
-    <MudGrid Spacing="3">
-       
-        <MudItem xs="12" sm="12" md="12" lg="12">
-            <MudPaper Class="ma-2 pa-2 d-flex" Elevation="6"> 
-                <MudStack Spacing="2" Row="true" AlignItems="AlignItems.Center"> 
-                    <MudIcon Color="Color.Warning" Icon="material-symbols-outlined/arrow_upload_ready" Size="Size.Large" />
-                    <MudText Typo="Typo.h4" Class="mb-0 mud-text-secondary">Your Financial Goals</MudText> 
-                </MudStack>
-                <MudSpacer /> 
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Medium" StartIcon="@Icons.Material.Filled.Add"
-                           OnClick="@(() => NavigationManager.NavigateTo("dynamic-forms/GoalContribution/add-plan"))">
-                    Add New Goal
-                </MudButton>
-            </MudPaper>
-        </MudItem>
-        @foreach (var goal in GoalEntries)
+    <div class="ma-2 pa-2 d-flex" elevation="0">
+        <MudStack Spacing="2" Row="true" AlignItems="AlignItems.Center">
+            <MudIcon Color="Color.Warning" Icon="@Icons.Material.Filled.Pin" Size="Size.Large" />
+            <MudText Typo="Typo.h4" Class="mb-0 mud-text-secondary">Your Financial Goals</MudText>
+        </MudStack>
+        <MudSpacer />
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">View: @(selectedViewMode)</MudText>
+
+            <MudToggleGroup T="string" @bind-Value="selectedViewMode"  SelectionMode="SelectionMode.SingleSelection" Class="ml-2">
+                <MudToggleItem Value="@("card")" Text="card" Title="Card View">
+                    <MudIcon Icon="@Icons.Material.Filled.ViewModule" />
+                </MudToggleItem>
+                <MudToggleItem Value="@("list")" Text="list" Title="List View">
+                    <MudIcon Icon="@Icons.Material.Filled.ViewList" />
+                </MudToggleItem>
+                <MudToggleItem Value="@("table")" Text="table" Title="Table View">
+                    <MudIcon Icon="@Icons.Material.Filled.TableChart" />
+                </MudToggleItem>
+            </MudToggleGroup> 
+
+            <MudDivider Vertical="true" FlexItem="true" Class="mx-2" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Medium" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="@(() => NavigationManager.NavigateTo("dynamic-forms/GoalContribution/add-plan"))">
+                Add New Goal
+            </MudButton>
+        </MudStack>
+    </div>
+
+    <MudPaper Elevation="6" Class="pa-6 rounded-xl animate__animated animate__fadeInUp mb-8">
+        <MudTextField @bind-Value="searchTerm"
+                      Label="Search Goals by Name"
+                      Variant="Variant.Outlined"
+                      Adornment="Adornment.End"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      AdornmentColor="Color.Primary"
+                      Clearable="true"
+                      OnAdornmentClick="PerformSearch"
+                      OnClearButtonClick="ClearSearch"
+                      @bind-Value:after="OnSearchChanged"
+                      DebounceInterval="300" />
+    </MudPaper>
+
+    @if (DisplayedGoals.Count == 0 && !string.IsNullOrWhiteSpace(searchTerm))
+    {
+        <MudAlert Severity="Severity.Info" Class="rounded-lg shadow-sm mb-4">
+            No goals found matching "@searchTerm". Try a different search term.
+        </MudAlert>
+    }
+    else if (DisplayedGoals.Count > 0)
+    {
+        @if (selectedViewMode == "table")
         {
-            <MudItem xs="12" sm="6" md="4" lg="3">
-                <MudCard Elevation="8" Class="@(goal.IsActive ? _cardClass[0] : _cardClass[1])" Style="height: 100%; border: 1px solid var(--mud-palette-lines-default);">
-                    <MudCardHeader Class="pb-0">
-                        <CardHeaderAvatar>
-                            @if (!string.IsNullOrEmpty(goal.ImageSVG))
+            <!-- Table View -->
+            <MudTable Items="@DisplayedGoals" Dense="true" Hover="true"  
+                      Class="rounded-lg" Elevation="4">
+                <HeaderContent>
+                    <MudTh>Goal</MudTh>
+                    <MudTh>Platform</MudTh>
+                    <MudTh>SIP Amount</MudTh>
+                    <MudTh>Invested</MudTh>
+                    <MudTh>Target</MudTh>
+                    <MudTh>Progress</MudTh>
+                    <MudTh>Tags</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Goal">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            @if (!string.IsNullOrEmpty(context.ImageSVG))
                             {
-                                <!-- Rendering SVG directly via MarkupString within a container for sizing -->
-                                <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
-                                    @((MarkupString)goal.ImageSVG)
+                                <div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                    @((MarkupString)context.ImageSVG)
                                 </div>
                             }
                             else
                             {
-                                <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Size="Size.Large" />
+                                <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Size="Size.Medium" />
                             }
-                        </CardHeaderAvatar>
-                        <CardHeaderContent>
-                            <MudText Typo="Typo.h6" Class="font-weight-bold mud-text-primary">
-                                @TextHelper.TruncateString(goal.Name, 20)
+                            <MudStack Spacing="0">
+                                <MudText Typo="Typo.body2" 
+                                 Color="@(context.IsActive? Color.Default: Color.Secondary)" 
+                                 Class="font-weight-bold">@TextHelper.TruncateString(context.Name, 25)</MudText>
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">@context.FundName</MudText>
+                            </MudStack>
+                        </MudStack>
+                    </MudTd>
+                    <MudTd DataLabel="Platform">
+                        <MudChip T="string" Size="Size.Small" 
+                            Color="@(context.IsActive ? Color.Dark : Color.Secondary)">
+                            @context.Platform</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="SIP Amount">
+                        <MudText Typo="Typo.body2" Class="font-weight-bold text-success">@context.SIPAmount.ToString("C", new CultureInfo("en-IN"))</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Invested">
+                        <MudText Typo="Typo.body2" Class="font-weight-bold text-info">@context.InvestedAmount.ToString("C", new CultureInfo("en-IN"))</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Target">
+                        <MudText Typo="Typo.body2" Class="font-weight-bold text-warning">@context.TargetAmount.ToString("C", new CultureInfo("en-IN"))</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Progress">
+                        <MudStack Spacing="1">
+                            <MudProgressLinear Color="@GetProgressColor(context.InvestedAmount, context.TargetAmount)" Size="Size.Medium" Rounded="true"
+                                               Value="@(context.TargetAmount > 0 ? (double)(context.InvestedAmount / context.TargetAmount * 100M) : 0)" />
+                            <MudText Typo="Typo.caption" Class="text-center">
+                                @(context.TargetAmount > 0 ? (context.InvestedAmount / context.TargetAmount).ToString("P0") : "0%")
+                            </MudText>
+                        </MudStack>
+                    </MudTd>
+                    <MudTd DataLabel="Tags">
+                        @if (!string.IsNullOrEmpty(context.Tag))
+                        {
+                            <MudStack Row="true" Spacing="1">
+                                @foreach (var tag in context.Tag.Split(',', StringSplitOptions.RemoveEmptyEntries).Take(2))
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Tertiary">@tag.Trim()</MudChip>
+                                }
+                                @if (context.Tag.Split(',', StringSplitOptions.RemoveEmptyEntries).Length > 2)
+                                {
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">+@(context.Tag.Split(',', StringSplitOptions.RemoveEmptyEntries).Length - 2)</MudText>
+                                }
+                            </MudStack>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Actions">
+                        <MudStack Row="true" Spacing="1">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small"
+                                           OnClick="@(() => EditGoal(context.Id))" Title="Edit Goal" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                                           OnClick="@(() => ConfirmDeleteGoal(context.Id, context.Name))" Title="Delete Goal" />
+                        </MudStack>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+        else if (selectedViewMode == "card")
+        {
+            <!-- Card View -->
+            <MudGrid Spacing="3">
+                @foreach (var goal in DisplayedGoals)
+                {
+                    <MudItem T="string" xs="12" sm="6" md="4" lg="3">
+                        <MudCard Elevation="8" Class="@(goal.IsActive ? cardClass[0] : cardClass[1])" Style="height: 100%; border: 1px solid var(--mud-palette-lines-default);">
+                            <MudCardHeader Class="pb-0">
+                                <CardHeaderAvatar>
+                                    @if (!string.IsNullOrEmpty(goal.ImageSVG))
+                                    {
+                                        <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                                            @((MarkupString)goal.ImageSVG)
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Size="Size.Large" />
+                                    }
+                                </CardHeaderAvatar>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6" Class="font-weight-bold mud-text-primary">
+                                        @TextHelper.TruncateString(goal.Name, 20)
+                                    </MudText>
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@goal.FundName</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent Class="flex-grow-1 pt-2 pb-0">
+                                <MudText Typo="Typo.body2" Class="mud-text-info mb-2">
+                                    <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" Class="mr-1" />
+                                    @TextHelper.TruncateString(goal.Description, 98)
                                 </MudText>
-                            <MudText Typo="Typo.caption" Class="mud-text-secondary">@goal.FundName</MudText>
-                        </CardHeaderContent>
-                    </MudCardHeader>
-                    <MudCardContent Class="flex-grow-1 pt-2 pb-0">
-                        <MudText Typo="Typo.body2" Class="mud-text-info mb-2">
-                            <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" Class="mr-1" />
-                            @TextHelper.TruncateString(goal.Description, 98)
-                        </MudText>
 
-                        <!-- Using MudList for improved layout of details -->
-                        <MudList T="string" DisablePadding="true" Class="my-2">
-                            <MudListItem Icon="@Icons.Material.Filled.AccountBalance" IconColor="Color.Secondary">
-                                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-grow-1">
-                                    <MudText Typo="Typo.subtitle2" Class="mud-text-tertiary">Platform:</MudText>
-                                    <MudChip T="string" Size="Size.Small" Color="Color.Dark" Class="font-weight-bold">@goal.Platform</MudChip>
+                                <MudList T="string" DisablePadding="true" Class="my-2">
+                                    <MudListItem Icon="@Icons.Material.Filled.AccountBalance" IconColor="Color.Secondary">
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-grow-1">
+                                            <MudText Typo="Typo.subtitle2" Class="mud-text-tertiary">Platform:</MudText>
+                                            <MudChip T="string" Size="Size.Small" Color="Color.Dark" Class="font-weight-bold">@goal.Platform</MudChip>
+                                        </MudStack>
+                                    </MudListItem>
+                                    <MudListItem Icon="@Icons.Material.Filled.Payments" IconColor="Color.Success">
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-grow-1">
+                                            <MudText Typo="Typo.subtitle2" Class="mud-text-tertiary">SIP Amount:</MudText>
+                                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Class="font-weight-bold">@goal.SIPAmount.ToString("C", new CultureInfo("en-IN"))</MudChip>
+                                        </MudStack>
+                                    </MudListItem>
+                                    <MudListItem Icon="@Icons.Material.Filled.AttachMoney" IconColor="Color.Info">
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-grow-1">
+                                            <MudText Typo="Typo.subtitle2" Class="mud-text-tertiary">Invested:</MudText>
+                                            <MudChip T="string" Size="Size.Small" Color="Color.Info" Class="font-weight-bold">@goal.InvestedAmount.ToString("C", new CultureInfo("en-IN"))</MudChip>
+                                        </MudStack>
+                                    </MudListItem>
+                                    <MudListItem Icon="@Icons.Material.Filled.MilitaryTech" IconColor="Color.Warning">
+                                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-grow-1">
+                                            <MudText Typo="Typo.subtitle2" Class="mud-text-tertiary">Target:</MudText>
+                                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Class="font-weight-bold">@goal.TargetAmount.ToString("C", new CultureInfo("en-IN"))</MudChip>
+                                        </MudStack>
+                                    </MudListItem>
+                                    @if (!string.IsNullOrEmpty(goal.Tag))
+                                    {
+                                        <MudListItem Icon="@Icons.Material.Filled.LocalOffer" IconColor="Color.Tertiary">
+                                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-grow-1">
+                                                <MudText Typo="Typo.subtitle2" Class="mud-text-tertiary">Tags:</MudText>
+                                                <MudStack Row="true" Spacing="0" Class="ml-2">
+                                                    @foreach (var tag in goal.Tag.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                                                    {
+                                                        <MudChip T="string" Size="Size.Small" Color="Color.Tertiary" Class="font-weight-bold mr-1">@tag.Trim()</MudChip>
+                                                    }
+                                                </MudStack>
+                                            </MudStack>
+                                        </MudListItem>
+                                    }
+                                </MudList>
+
+                                @if (goal.TargetAmount > 0)
+                                {
+                                    @* Color = "@(goal.IsActive? Color.Dark: Color.Secondary)" *@
+                                    <MudProgressLinear 
+                                        Color="@GetProgressColor(goal.InvestedAmount, goal.TargetAmount)" Size="Size.Large" Rounded="true"
+                                                       Value="@((double)(goal.InvestedAmount / goal.TargetAmount * 100M))" Class="my-3">
+                                        <MudText Typo="Typo.body2" Class="mud-text-white">@((goal.InvestedAmount / goal.TargetAmount).ToString("P0"))</MudText>
+                                    </MudProgressLinear>
+                                }
+                                else
+                                {
+                                    <MudProgressLinear Color="Color.Surface" Size="Size.Large" Rounded="true" Value="0" Class="my-3">
+                                        <MudText Typo="Typo.body2" Class="mud-text-white">0%</MudText>
+                                    </MudProgressLinear>
+                                }
+                            </MudCardContent>
+                            <MudCardActions Class="d-flex justify-end pa-3 pt-0">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Edit"
+                                           OnClick="@(() => EditGoal(goal.Id))" Class="mr-2 ">Edit</MudButton>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" StartIcon="@Icons.Material.Filled.Delete"
+                                           OnClick="@(() => ConfirmDeleteGoal(goal.Id, goal.Name))" Class="rounded-lg">Delete</MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+        else
+        {
+            <!-- List View -->
+            <MudPaper Elevation="4" Class="rounded-lg overflow-hidden">
+                @foreach (var goal in DisplayedGoals)
+                {
+                    <MudStack Row="true" AlignItems="AlignItems.Center" 
+                              Class="@(goal.IsActive ? "pa-4 hover:bg-surface" : "pa-4 hover:bg-surface opacity-75")" 
+                              Style="border-bottom: 1px solid var(--mud-palette-lines-default);">
+                        
+                        <!-- Goal Icon & Info -->
+                        <div style="min-width: 200px;">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+                                @if (!string.IsNullOrEmpty(goal.ImageSVG))
+                                {
+                                    <div style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                        @((MarkupString)goal.ImageSVG)
+                                    </div>
+                                }
+                                else
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Size="Size.Large" />
+                                }
+                                <MudStack Spacing="0">
+                                    <MudText Typo="Typo.subtitle1"
+                                             Color="@(goal.IsActive? Color.Default : Color.Secondary)"
+                                             Class="font-weight-bold mud-text-primary">
+                                        @TextHelper.TruncateString(goal.Name, 30)
+                                    </MudText>
+                                    <MudText Typo="Typo.caption"                                        
+                                        Class="mud-text-secondary">@goal.FundName</MudText>
                                 </MudStack>
-                            </MudListItem>
-                            <MudListItem Icon="@Icons.Material.Filled.Payments" IconColor="Color.Success">
-                                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-grow-1">
-                                    <MudText Typo="Typo.subtitle2" Class="mud-text-tertiary">SIP Amount:</MudText>
-                                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Class="font-weight-bold">@goal.SIPAmount.ToString("C", new CultureInfo("en-IN"))</MudChip>
+                            </MudStack>
+                        </div>
+
+                        <!-- Platform -->
+                        <div style="min-width: 120px;">
+                            <MudChip T="string" Size="Size.Small" 
+                                Color="@(goal.IsActive? Color.Dark: Color.Secondary)" 
+                                Class="font-weight-bold">@goal.Platform</MudChip>
+                        </div>
+
+                        <!-- Financial Info -->
+                        <div style="min-width: 300px;">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="4">
+                                <MudStack Spacing="0" AlignItems="AlignItems.Center">
+                                    <MudText Typo="Typo.caption" Class="mud-text-tertiary">SIP</MudText>
+                                    <MudText Typo="Typo.body2" Class="font-weight-bold text-success">@goal.SIPAmount.ToString("C0", new CultureInfo("en-IN"))</MudText>
                                 </MudStack>
-                            </MudListItem>
-                            <MudListItem Icon="@Icons.Material.Filled.AttachMoney" IconColor="Color.Info">
-                                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-grow-1">
-                                    <MudText Typo="Typo.subtitle2" Class="mud-text-tertiary">Invested:</MudText>
-                                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Class="font-weight-bold">@goal.InvestedAmount.ToString("C", new CultureInfo("en-IN"))</MudChip>
+                                <MudStack Spacing="0" AlignItems="AlignItems.Center">
+                                    <MudText Typo="Typo.caption" Class="mud-text-tertiary">Invested</MudText>
+                                    <MudText Typo="Typo.body2" Class="font-weight-bold text-info">@goal.InvestedAmount.ToString("C0", new CultureInfo("en-IN"))</MudText>
                                 </MudStack>
-                            </MudListItem>
-                            <MudListItem Icon="@Icons.Material.Filled.MilitaryTech" IconColor="Color.Warning">
-                                @* Changed icon to MilitaryTech *@
-                                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-grow-1">
-                                    <MudText Typo="Typo.subtitle2" Class="mud-text-tertiary">Target:</MudText>
-                                    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Class="font-weight-bold">@goal.TargetAmount.ToString("C", new CultureInfo("en-IN"))</MudChip>
+                                <MudStack Spacing="0" AlignItems="AlignItems.Center">
+                                    <MudText Typo="Typo.caption" Class="mud-text-tertiary">Target</MudText>
+                                    <MudText Typo="Typo.body2" Class="font-weight-bold text-warning">@goal.TargetAmount.ToString("C0", new CultureInfo("en-IN"))</MudText>
                                 </MudStack>
-                            </MudListItem>
+                            </MudStack>
+                        </div>
+
+                        <!-- Progress -->
+                        <div style="min-width: 200px;">
+                            <MudStack Spacing="1">
+                                <MudProgressLinear Color="@GetProgressColor(goal.InvestedAmount, goal.TargetAmount)" Size="Size.Medium" Rounded="true"
+                                                   Value="@(goal.TargetAmount > 0 ? (double)(goal.InvestedAmount / goal.TargetAmount * 100M) : 0)" />
+                                <MudText Typo="Typo.caption" Class="text-center">
+                                    @(goal.TargetAmount > 0 ? (goal.InvestedAmount / goal.TargetAmount).ToString("P0") : "0%")
+                                </MudText>
+                            </MudStack>
+                        </div>
+
+                        <!-- Tags -->
+                        <div style="min-width: 150px;">
                             @if (!string.IsNullOrEmpty(goal.Tag))
                             {
-                                <MudListItem Icon="@Icons.Material.Filled.LocalOffer" IconColor="Color.Tertiary">
-                                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-grow-1">
-                                        <MudText Typo="Typo.subtitle2" Class="mud-text-tertiary">Tags:</MudText>
-                                        <MudStack Row="true" Spacing="0" Class="ml-2">
-                                            @* Using MudStack here to align multiple chips horizontally *@
-                                            @foreach (var tag in goal.Tag.Split(',', StringSplitOptions.RemoveEmptyEntries))
-                                            {
-                                                <MudChip T="string" Size="Size.Small" Color="Color.Tertiary" Class="font-weight-bold mr-1">@tag.Trim()</MudChip>
-                                            }
-                                        </MudStack>
-                                    </MudStack>
-                                </MudListItem>
+                                <MudStack Row="true" Spacing="1">
+                                    @foreach (var tag in goal.Tag.Split(',', StringSplitOptions.RemoveEmptyEntries).Take(3))
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Tertiary">@tag.Trim()</MudChip>
+                                    }
+                                    @if (goal.Tag.Split(',', StringSplitOptions.RemoveEmptyEntries).Length > 3)
+                                    {
+                                        <MudText Typo="Typo.caption" Class="mud-text-secondary">+@(goal.Tag.Split(',', StringSplitOptions.RemoveEmptyEntries).Length - 3)</MudText>
+                                    }
+                                </MudStack>
                             }
-                        </MudList>
+                        </div>
 
-                        @if (goal.TargetAmount > 0)
-                        {
-                            <MudProgressLinear Color="Color.Primary" Size="Size.Large" Rounded="true"
-                                               Value="@((double)(goal.InvestedAmount / goal.TargetAmount * 100M))" Class="my-3">
-                                <MudText Typo="Typo.body2" Class="mud-text-white">@((goal.InvestedAmount / goal.TargetAmount).ToString("P0"))</MudText>
-                            </MudProgressLinear>
-                        }
-                        else
-                        {
-                            <MudProgressLinear Color="Color.Surface" Size="Size.Large" Rounded="true" Value="0" Class="my-3">
-                                <MudText Typo="Typo.body2" Class="mud-text-white">0%</MudText>
-                            </MudProgressLinear>
-                        }
-                    </MudCardContent>
-                    <MudCardActions Class="d-flex justify-end pa-3 pt-0">
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Edit"
-                                   OnClick="(() => EditGoal(goal.Id))" Class="mr-2 ">Edit</MudButton>
-                        <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" StartIcon="@Icons.Material.Filled.Delete"
-                                   OnClick="(() => ConfirmDeleteGoal(goal.Id, goal.Name))" Class="rounded-lg">Delete</MudButton>
-                    </MudCardActions>
-                </MudCard>
-            </MudItem>
+                        <MudSpacer />
+
+                        <!-- Actions -->
+                        <MudStack Row="true" Spacing="2">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Medium"
+                                           OnClick="@(() => EditGoal(goal.Id))" Title="Edit Goal" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Medium"
+                                           OnClick="@(() => ConfirmDeleteGoal(goal.Id, goal.Name))" Title="Delete Goal" />
+                        </MudStack>
+                    </MudStack>
+                }
+            </MudPaper>
         }
-    </MudGrid>
 
-    @if (totalPages > 1)
-    {
-        <div class="d-flex justify-center mt-6">
-            <MudPagination Selected="currentPage" SelectedChanged="OnPageChange" Count="totalPages" Color="Color.Primary" Size="Size.Large" />
-        </div>
+        @if (totalFilteredPages > 1)
+        {
+            <div class="d-flex justify-center mt-6">
+                <MudPagination Selected="@currentPage" SelectedChanged="OnPageChange" Count="@totalFilteredPages" Color="Color.Primary" Size="Size.Large" />
+            </div>
+        }
+        else if (DisplayedGoals.Count > 0 && totalFilteredGoals <= limit)
+        {
+            <div class="d-flex justify-center mt-6">
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-4">
+                    @if (IsSearchActive)
+                    {
+                        <text>All matching goals displayed (@totalFilteredGoals found).</text>
+                    }
+                    else
+                    {
+                        <text>All goals displayed.</text>
+                    }
+                </MudText>
+            </div>
+        }
     }
-    else if (GoalEntries.Count > 0 && totalGoalsCount <= limit) // Changed condition to reflect "all goals displayed"
+}
+
+@code{
+    private Color GetProgressColor(decimal investmentAmt, decimal targetAmt)
     {
-        <div class="d-flex justify-center mt-6">
-            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-4">All goals displayed.</MudText>
-        </div>
-    }
+        var value = (double)(investmentAmt / targetAmt * 100M);
+        switch (value)
+        {
+            case < 50:
+                return Color.Error; // Red for less than 50%
+                break;
+            case < 75:  
+                return Color.Warning; // Yellow for 50% to 75%  
+                break;  
+            case < 100:
+                return Color.Info; // Blue for 75% to 100%
+                break;
+            default:
+                return Color.Success; // Green for 100% and above
+                break;
+        }
+		return Color.Default; // Fallback color
+        
+	}
 }
 
 @code {
     [Parameter]
     public SupabaseApiService<GoalEntry> SupabaseService { get; set; }
 
-    private List<GoalEntry> GoalEntries { get; set; } = new List<GoalEntry>();
+    // View mode selection
+    private string selectedViewMode = "card";
+    
+    // Search related properties
+    private string searchTerm = string.Empty;
+    private bool IsSearchActive => !string.IsNullOrWhiteSpace(searchTerm);
+    
+    // Data properties
+    private List<GoalEntry> AllGoals { get; set; } = new();
+    private List<GoalEntry> FilteredGoals { get; set; } = new();
+    private List<GoalEntry> DisplayedGoals { get; set; } = new();
+    
+    // Pagination properties
     private int currentPage = 1;
-    private int limit = 4; // Display 4 cards per page
+    private int limit = 4;
     private bool isLoading = false;
-    private int totalGoalsCount = 0; // To store the total count of goals
-    private int totalPages = 0;
-
-    private string[] _cardClass = { "rounded-xl d-flex flex-column mud-background-alt", "rounded-xl d-flex flex-column mud-background-alt mud-border-secondary" };
+    private int totalGoalsCount = 0;
+    private int totalFilteredGoals = 0;
+    private int totalFilteredPages = 0;
+    
+    private string[] cardClass = { "rounded-xl d-flex flex-column mud-background-alt", "rounded-xl d-flex flex-column mud-background-alt mud-border-secondary" };
 
     protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine("OnInitializedAsync: Starting...");
-        await LoadTotalGoalsCount(); // First get the total count
-        totalPages = (int)Math.Ceiling(totalGoalsCount / (double)limit);
-        await LoadGoals(currentPage); // Then load the first page
-        Console.WriteLine($"OnInitializedAsync: totalGoalsCount = {totalGoalsCount}, totalPages = {totalPages}, currentPage = {currentPage}");
+        await LoadAllGoals();
     }
 
-
-    /// <summary>
-    /// Loads the total count of financial goals from the Supabase API.
-    /// This is used to determine the total number of pages for pagination.
-    /// NOTE: For large datasets, this approach of calling GetAll() can be inefficient.
-    /// A dedicated API endpoint or a more optimized way to get the count from Supabase
-    /// without fetching all data would be preferable in a production environment.
-    /// </summary>
-    private async Task LoadTotalGoalsCount()
+    private async Task LoadAllGoals()
     {
-        Console.WriteLine("LoadTotalGoalsCount: Fetching all goals to get total count...");
-        if (SupabaseService == null)
-        {
-            Snackbar.Add("SupabaseService is not provided. Cannot get total goals count.", Severity.Error);
-            Console.WriteLine("Error: SupabaseService is null in LoadTotalGoalsCount.");
-            return;
-        }
-
-        try
-        {
-            //var result = await SupabaseService.GetAll(); // Fetch all to get total count
-            var result = await SupabaseService.BatchRead(0, 1); // Gets top 1, record and in the Header 'Content-Range' it has the total count as '0-0/9'.
-
-            if (result.IsSuccess && result.Data != null)
-            {
-                totalGoalsCount = result.GetTotalCountFromContentRange();
-                //totalGoalsCount = result.Data.Count;
-                Console.WriteLine($"LoadTotalGoalsCount: Successfully fetched totalGoalsCount = {totalGoalsCount}");
-            }
-            else
-            {
-                Snackbar.Add($"Error getting total goals count: {result.ErrorMessage}", Severity.Error);
-                Console.WriteLine($"Error in LoadTotalGoalsCount: {result.ErrorMessage}");
-            }
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"An unexpected error occurred while getting total goals count: {ex.Message}", Severity.Error);
-            Console.WriteLine($"Exception in LoadTotalGoalsCount: {ex.Message}");
-        }
-    }
-
-
-    /// <summary>
-    /// Loads a specific page of financial goals from the Supabase API using BatchRead.
-    /// </summary>
-    /// <param name="pageNumber">The page number to load (1-based).</param>
-    private async Task LoadGoals(int pageNumber)
-    {
-        Console.WriteLine($"LoadGoals: Loading page {pageNumber}...");
         isLoading = true;
-        GoalEntries.Clear(); // Clear existing entries before loading new page
         StateHasChanged();
 
         try
@@ -230,56 +446,88 @@ else
             if (SupabaseService == null)
             {
                 Snackbar.Add("SupabaseService is not provided. Cannot load goals.", Severity.Error);
-                Console.WriteLine("Error: SupabaseService is null in LoadGoals.");
-                isLoading = false;
-                StateHasChanged();
                 return;
             }
 
-            int offset = (pageNumber - 1) * limit;
-            Console.WriteLine($"LoadGoals: Calculated offset = {offset}, limit = {limit}");
-            var result = await SupabaseService.BatchRead(offset, limit);
+            var result = await SupabaseService.GetAll();
 
             if (result.IsSuccess && result.Data != null)
             {
-                GoalEntries.AddRange(result.Data);
-                Console.WriteLine($"LoadGoals: Successfully loaded {result.Data.Count} goals for page {pageNumber}.");
+                AllGoals = result.Data;
+                totalGoalsCount = AllGoals.Count;
+                ApplyFilter();
             }
             else
             {
-                Snackbar.Add($"Error loading goals for page {pageNumber}: {result.ErrorMessage}", Severity.Error);
-                Console.WriteLine($"Error in LoadGoals for page {pageNumber}: {result.ErrorMessage}");
+                Snackbar.Add($"Error loading goals: {result.ErrorMessage}", Severity.Error);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"An unexpected error occurred during page load: {ex.Message}", Severity.Error);
-            Console.WriteLine($"Exception in LoadGoals: {ex.Message}");
+            Snackbar.Add($"An unexpected error occurred while loading goals: {ex.Message}", Severity.Error);
         }
         finally
         {
             isLoading = false;
             StateHasChanged();
-            Console.WriteLine($"LoadGoals: Finished loading page {pageNumber}. GoalEntries count: {GoalEntries.Count}");
         }
     }
 
-    /// <summary>
-    /// Handles the page change event from MudPagination.
-    /// </summary>
-    /// <param name="pageNumber">The newly selected page number.</param>
-    private async Task OnPageChange(int pageNumber)
+    private void ApplyFilter()
     {
-        Console.WriteLine($"OnPageChange: New page selected = {pageNumber}");
-        currentPage = pageNumber;
-        await LoadGoals(currentPage);
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            FilteredGoals = AllGoals.ToList();
+        }
+        else
+        {
+            FilteredGoals = AllGoals.Where(g => 
+                g.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                (!string.IsNullOrEmpty(g.Description) && g.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrEmpty(g.FundName) && g.FundName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrEmpty(g.Platform) && g.Platform.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrEmpty(g.Tag) && g.Tag.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+            ).ToList();
+        }
+
+        totalFilteredGoals = FilteredGoals.Count;
+        totalFilteredPages = (int)Math.Ceiling(totalFilteredGoals / (double)limit);
+        currentPage = 1;
+        UpdateDisplayedGoals();
     }
 
-    /// <summary>
-    /// Displays a confirmation dialog before deleting a goal entry.
-    /// </summary>
-    /// <param name="goalId">The unique identifier of the goal to be deleted.</param>
-    /// <param name="goalName">The name of the goal, used for display in the confirmation message.</param>
+    private void UpdateDisplayedGoals()
+    {
+        int skip = (currentPage - 1) * limit;
+        DisplayedGoals = FilteredGoals.Skip(skip).Take(limit).ToList();
+    }
+
+    private async Task OnSearchChanged()
+    {
+        ApplyFilter();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void PerformSearch()
+    {
+        ApplyFilter();
+        StateHasChanged();
+    }
+
+    private void ClearSearch()
+    {
+        searchTerm = string.Empty;
+        ApplyFilter();
+        StateHasChanged();
+    }
+
+    private async Task OnPageChange(int pageNumber)
+    {
+        currentPage = pageNumber;
+        UpdateDisplayedGoals();
+        await InvokeAsync(StateHasChanged);
+    }
+
     private async Task ConfirmDeleteGoal(Guid goalId, string goalName)
     {
         var parameters = new DialogParameters
@@ -300,13 +548,8 @@ else
         }
     }
 
-    /// <summary>
-    /// Deletes a specific goal entry from the Supabase API and updates the UI.
-    /// </summary>
-    /// <param name="goalId">The unique identifier of the goal to be deleted.</param>
     private async Task DeleteGoal(Guid goalId)
     {
-        Console.WriteLine($"DeleteGoal: Attempting to delete goal with ID: {goalId}");
         isLoading = true;
         StateHasChanged();
 
@@ -315,9 +558,6 @@ else
             if (SupabaseService == null)
             {
                 Snackbar.Add("SupabaseService is not provided. Cannot delete goal.", Severity.Error);
-                Console.WriteLine("Error: SupabaseService is null in DeleteGoal.");
-                isLoading = false;
-                StateHasChanged();
                 return;
             }
 
@@ -326,21 +566,24 @@ else
             if (result.IsSuccess)
             {
                 Snackbar.Add("Goal deleted successfully!", Severity.Success);
-                Console.WriteLine($"DeleteGoal: Successfully deleted goal with ID: {goalId}");
-                // After deletion, reload the total count and the current page
-                await LoadTotalGoalsCount();
-                await LoadGoals(currentPage);
+                AllGoals.RemoveAll(g => g.Id == goalId);
+                totalGoalsCount = AllGoals.Count;
+                ApplyFilter();
+                
+                if (DisplayedGoals.Count == 0 && currentPage > 1)
+                {
+                    currentPage--;
+                    UpdateDisplayedGoals();
+                }
             }
             else
             {
                 Snackbar.Add($"Error deleting goal: {result.ErrorMessage}", Severity.Error);
-                Console.WriteLine($"Error in DeleteGoal: {result.ErrorMessage}");
             }
         }
         catch (Exception ex)
         {
             Snackbar.Add($"An unexpected error occurred during deletion: {ex.Message}", Severity.Error);
-            Console.WriteLine($"Exception in DeleteGoal: {ex.Message}");
         }
         finally
         {
@@ -349,14 +592,8 @@ else
         }
     }
 
-    /// <summary>
-    /// Redirects the user to the GoalEntry edit page.
-    /// </summary>
-    /// <param name="goalId">The unique identifier of the goal to be edited.</param>
     private void EditGoal(Guid goalId)
     {
-        Console.WriteLine($"EditGoal: Navigating to /dynamic-forms/GoalContribution/edit-plan/{goalId}");
-        //dynamic-forms/GoalContribution/edit-plan
         NavigationManager.NavigateTo($"dynamic-forms/GoalContribution/edit-plan/{goalId}");
     }
 }
