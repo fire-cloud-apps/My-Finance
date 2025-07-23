@@ -29,11 +29,15 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 5,
+          "SelectedChildIndex": 6,
           "Children": [
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{75188d03-9892-4ae2-abf1-207126247ce5}"
             },
             {
               "$type": "Document",
@@ -45,8 +49,7 @@
               "RelativeToolTip": "Layout\\MainLayout.razor",
               "ViewState": "AgIAAAYAAAAAAAAAAAAAABUAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-07-21T16:03:44.932Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-21T16:03:44.932Z"
             },
             {
               "$type": "Document",
@@ -82,8 +85,7 @@
               "RelativeToolTip": "Pages\\DynamicPage.razor",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAI0AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-07-21T15:42:50.799Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-21T15:42:50.799Z"
             },
             {
               "$type": "Document",
@@ -93,7 +95,7 @@
               "RelativeDocumentMoniker": "..\\MyFinace.Modules\\GoalEntry\\ListGoalEntry.razor",
               "ToolTip": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\GoalEntry\\ListGoalEntry.razor",
               "RelativeToolTip": "..\\MyFinace.Modules\\GoalEntry\\ListGoalEntry.razor",
-              "ViewState": "AgIAABoAAAAAAAAAAAAAACYAAABHAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACYAAABHAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2025-07-18T13:08:02.832Z",
               "EditorCaption": ""
