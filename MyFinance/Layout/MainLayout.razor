@@ -20,7 +20,7 @@
 
 <PageTitle>Home</PageTitle>
 
-<DeviceDetect @ref="DeviceDetect" OnDeviceTypeChanged="OnDeviceTypeChanged"></DeviceDetect>
+<DeviceDetect @ref="DeviceDetect" OnDeviceTypeChanged="OnDeviceTypeChanged" />
 
 @code {
     private DeviceDetect DeviceDetect;
@@ -29,7 +29,7 @@
     private async Task OnDeviceTypeChanged(DeviceType deviceType)
     {
         _currentDeviceType = deviceType;
-        Console.WriteLine($"Device type changed to {deviceType}");
+		Logger.LogInformation($"MainLayout: Device type changed to {deviceType}");
         // Update your layout based on the device type
     }
 }
@@ -110,27 +110,17 @@
 
         @if(_currentDeviceType == DeviceType.Mobile)
         {
-            <MudAppBar Bottom="true" Class="align-content-center">
-                <MudIconButton Icon="@Icons.Material.Filled.ListAlt"
-                               Color="Color.Tertiary" Edge="Edge.Start"
-                               OnClick="@((e) =>  NavigationManager.NavigateTo("dynamic-forms/Goals/List"))" />
-
-                <MudIconButton Icon="@Icons.Material.Filled.List"
-                               Color="Color.Tertiary" Edge="Edge.Start"
-                               OnClick="@((e) => NavigationManager.NavigateTo(@MetaDetailsOptions.Value.InternalURLs.GoalEntryList))" />
-                
-            </MudAppBar>
+            <MobileNavMenu />
         }
 
-    <MudDrawer @bind-Open="_drawerOpen">
-        <NavMenu />
-    </MudDrawer>
-    <MudMainContent>       
-        <MudContainer>
+        <MudDrawer @bind-Open="_drawerOpen">
+            <NavMenu />
+        </MudDrawer>
+        <MudMainContent>       
+            <MudContainer>
                 @Body
-        </MudContainer>
-              
-    </MudMainContent>
+            </MudContainer>              
+        </MudMainContent>
     }
 
 </MudLayout>
@@ -141,13 +131,15 @@
     private bool _drawerOpen = true; // Default to drawer open for initial load
     private bool _isInitialized = false;
 
-    // No need for _isMasterKeySet, _masterKey, _localStorageToken in MainLayout if not directly displayed/used
+    // No need for _isMasterKeySet, _masterKey, 
+    // _localStorageToken in MainLayout if not directly displayed/used
 
     protected override async Task OnInitializedAsync()
     {
         _isInitialized = false;
         try
         {
+            
             if(GlobalServices.UserInfo is not null)
             {
                 Logger.LogInformation( $"MainLayout: UserInfo already initialized. { JsonSerializer.Serialize(GlobalServices.UserInfo)}");

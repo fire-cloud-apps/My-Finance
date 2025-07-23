@@ -2,7 +2,9 @@
     <MudAvatar>
         <MudImage Src="img/logo-pack-1.svg"></MudImage>
     </MudAvatar>
-    <MudStack Spacing="0"  Class="mt-1">
-        <MudText Typo="Typo.h6" >@MetaDetailsOptions.Value.Name</MudText>        
+    <MudStack Spacing="0">
+        <MudText Typo="Typo.h6">@MetaDetailsOptions.Value.ShortName</MudText>
+        <MudText Typo="Typo.body2" 
+        Class="mud-text-secondary">V-@MetaDetailsOptions.Value.Version</MudText>
     </MudStack>
 </MudStack>

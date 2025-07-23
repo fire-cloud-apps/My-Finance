@@ -1,4 +1,4 @@
-﻿
+﻿@page "/goaldashboard"
 @using Microsoft.Extensions.Logging
 @using MyFinance.Model
 @using Supabase.RestAPI

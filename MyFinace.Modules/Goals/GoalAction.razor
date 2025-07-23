@@ -52,7 +52,7 @@
 }
 else
 {
-    <MudContainer MaxWidth="MaxWidth.Medium" Class="py-8 px-4 sm:px-6 md:px-8">
+ 
     <MudText Typo="Typo.h4" Align="Align.Center" Color="Color.Primary" Class="mb-6 font-weight-bold">
         <MudIcon Icon="@Icons.Material.Filled.AddTask" Size="Size.Large" Class="mr-2" /> @_model Financial Goal
     </MudText>
@@ -220,35 +220,45 @@ else
                                   For="@(() => _goal.Tag)" />
                 </MudItem>
             </MudGrid>
-            <div class="d-flex justify-center mt-8 gap-4">
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.Save"
-                           Size="Size.Large"
-                           OnClick="Submit"
-                           Class="px-6 py-3 rounded-lg mud-elevation-5">
-                    @if (_processing)
-                    {
-                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
-                        <MudText Class="ms-2">Processing</MudText>
-                    }
-                    else
-                    {
-                        <MudText>Submit</MudText>
-                    }
-                </MudButton>
-                <MudButton Variant="Variant.Outlined"
-                           Color="Color.Secondary"
-                           StartIcon="@Icons.Material.Filled.Refresh"
-                           Size="Size.Large"
-                           OnClick="Reset"
-                           Class="px-6 py-3 rounded-lg mud-elevation-5">
-                    Reset
-                </MudButton>
+
+            <div Class="d-flex justify-space-between flex-grow-1 gap-4">
+                <div Class="d-flex justify-start flex-grow-1 gap-4" Elevation="0">
+                    <MudIconButton 
+                        OnClick="@(() => NavigationManager.NavigateTo("dynamic-forms/Goals/List"))" 
+                        Icon="@Icons.Material.Filled.ArrowBack" 
+                        aria-label="go back" />
+                </div>
+                <div Class="d-flex justify-end flex-grow-1 gap-4" Elevation="0">
+                    <MudButton Variant="Variant.Filled"
+                                Color="Color.Primary"
+                                Size="Size.Small" StartIcon="@Icons.Material.Filled.Save"
+                                Class="mt-4 mud-elevation-2"
+                                OnClick="Submit">
+                        @if (_processing)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Processing</MudText>
+                        }
+                        else
+                        {
+                            <MudText>Submit</MudText>
+                        }
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined"
+                                Color="Color.Secondary"
+                                Size="Size.Medium"
+                                Class="mt-4 mud-elevation-2"
+                                StartIcon="@Icons.Material.Filled.Refresh"
+                                OnClick="Reset">
+                        Reset
+                    </MudButton>
+
+                </div>
             </div>
+           
         </MudForm>
     </MudPaper>
-</MudContainer>
+
 }
 
 @* Method Initialization *@
@@ -346,6 +356,7 @@ else
                 
                 //Add/edit Goal Logics.
                 SupabaseResult<Goal> result;
+				_goal.LastModified = DateTime.UtcNow;
                 if (_isCreate)
                 {
                     result = await GoalService.Create(_goal);

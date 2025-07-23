@@ -20,8 +20,19 @@
         </CardHeaderContent>
     </MudCardHeader>
     <MudCardContent Class="flex-grow-1">
-        <MudText Typo="Typo.body2" Color="Color.Default" Class="mb-3 mud-text-truncate-2-lines">@(string.IsNullOrWhiteSpace(Goal.Description) ? "No description provided." : Goal.Description)</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Default" Class="mb-3 mud-text-truncate-2-lines">
+            @TextHelper.TruncateString(Goal.Description, 50)
+        </MudText>
+        
+        <!-- Last Modified -->
+        <MudTooltip Text="Last Modified" Arrow="true">
+            <MudChip T="string" Size="Size.Small" Icon="material-symbols-outlined/nest_clock_farsight_analog" Variant="Variant.Text"
+                     Color="Color.Info">
+                @(Goal.LastModified.HasValue? Goal.LastModified.Value.ToString("D"): "")
+            </MudChip>
+        </MudTooltip>        
 
+        <!-- List of Amounts -->
         <MudList T="string" Dense="true">
             <MudListItem Icon="@Icons.Material.Filled.AttachMoney" IconColor="Color.Success">
                 <MudText Typo="Typo.body2">Target: <span class="font-weight-bold">@Goal.TargetAmount.ToString("C", Utils.CultureInfo_IN)</span></MudText>

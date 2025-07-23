@@ -1,69 +1,93 @@
 ﻿@using MyFinace.Modules.Goals
+@using MyFinance.Model
 @using MyFinance.Utility.Helper
+@using System.Globalization
 
-<MudCard Elevation="8" Class="rounded-lg pa-4 d-flex flex-column" Style="height: 100%;">
-    <MudCardHeader Class="pb-2">
-        <CardHeaderContent>
-            <div class="d-flex align-center">
-                @if (!string.IsNullOrEmpty(Goal.ImageSVG))
-                {
-                    <div style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; margin-right: 8px; flex-shrink: 0;">
-                        @((MarkupString)Goal.ImageSVG)
-                    </div>
-                }
-                <div class="flex-grow-1">
-                    <MudText Typo="Typo.h6" Class="font-weight-bold mud-text-primary mud-text-truncate">@Goal.Name</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">@Goal.InvestmentCategory.ToString()</MudText>
+<MudGrid Class="pa-4 hover:bg-surface align-center" Style="border-bottom: 1px solid var(--mud-palette-lines-default);">
+
+    <!-- Goal Icon & Info -->
+    <MudItem xs="12" sm="6" md="4" lg="3">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+            @if (!string.IsNullOrEmpty(Goal.ImageSVG))
+            {
+                <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                    @((MarkupString)Goal.ImageSVG)
                 </div>
-            </div>
-        </CardHeaderContent>
-    </MudCardHeader>
-    <MudCardContent Class="flex-grow-1">
-        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3 mud-text-truncate-2-lines">@(string.IsNullOrWhiteSpace(Goal.Description) ? "No description provided." : Goal.Description)</MudText>
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Size="Size.Large" />
+            }
+            <MudStack Spacing="0">
+                <MudLink Href="@("viewgoal/" + @Goal.Id)" Typo="Typo.h6" Color="Color.Default" Class="font-weight-bold">
+                    <MudTooltip Text="@Goal.Name">
+                        @TextHelper.TruncateString(Goal.Name, 30)
+                    </MudTooltip>
+                </MudLink>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    <MudTooltip Text="@Goal.Description">
+                        @TextHelper.TruncateString(Goal.Description, 50)
+                    </MudTooltip>
+                </MudText>
+            </MudStack>
+        </MudStack>
+    </MudItem>
 
-        <MudList T="string" Dense="true">
-            <MudListItem Icon="@Icons.Material.Filled.AttachMoney" IconColor="Color.Success">
-                <MudText Typo="Typo.body2">Target: <span class="font-weight-bold">@Goal.TargetAmount.ToString("C", Utils.CultureInfo_IN)</span></MudText>
-            </MudListItem>
-            <MudListItem Icon="@Icons.Material.Filled.MonetizationOn" IconColor="Color.Warning">
-                <MudText Typo="Typo.body2">Invested: <span class="font-weight-bold">@Goal.TotalAmountInvested.ToString("C", Utils.CultureInfo_IN)</span></MudText>
-            </MudListItem>
-            <MudListItem Icon="@Icons.Material.Filled.DateRange" IconColor="Color.Tertiary">
-                <MudText Typo="Typo.body2">Target Year: <span class="font-weight-bold">@(Goal.TargetYear?.Year.ToString() ?? "N/A")</span></MudText>
-            </MudListItem>
-        </MudList>
+    <!-- Financial Info -->
+    <MudItem xs="12" sm="6" md="4" lg="4">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceAround" Spacing="4">
+            <MudStack Spacing="0" AlignItems="AlignItems.Center">
+                <MudText Typo="Typo.caption" Color="Color.Tertiary">SIP</MudText>
+                <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-success">@Goal.TotalSIPAmount.ToString("C0", new CultureInfo("en-IN"))</MudText>
+            </MudStack>
+            <MudStack Spacing="0" AlignItems="AlignItems.Center">
+                <MudText Typo="Typo.caption" Color="Color.Tertiary">Invested</MudText>
+                <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-info">@Goal.TotalAmountInvested.ToString("C0", new CultureInfo("en-IN"))</MudText>
+            </MudStack>
+            <MudStack Spacing="0" AlignItems="AlignItems.Center">
+                <MudText Typo="Typo.caption" Color="Color.Tertiary">Target</MudText>
+                <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-warning">@Goal.TargetAmount.ToString("C0", new CultureInfo("en-IN"))</MudText>
+            </MudStack>
+        </MudStack>
+    </MudItem>
 
-        @* Progress Bar on Amount *@
-        <MudText Typo="Typo.caption" Class="mt-3 mb-1">Investment Progress:</MudText>
-        <MudProgressLinear Value="@(CalculateProgressPercentageFunc.Invoke(Goal.TotalAmountInvested, Goal.TargetAmount))"
-                           Color="Color.Success" Size="Size.Large" Class="rounded-pill">
-            <MudText Typo="Typo.caption" Class="font-weight-bold">@(CalculateProgressPercentageFunc.Invoke(Goal.TotalAmountInvested, Goal.TargetAmount).ToString("F0"))%</MudText>
-        </MudProgressLinear>
+    <!-- Progress -->
+    <MudItem xs="12" sm="12" md="4" lg="5">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
+            @{
+                var progressValue = Goal.TargetAmount > 0 ? (double)(Goal.TotalAmountInvested / Goal.TargetAmount * 100M) : 0;
+            }
+            <MudProgressCircular Color="@ProgressColor.GetProgressColor(Goal.TotalAmountInvested, Goal.TargetAmount)"
+                                 Rounded="true" Size="Size.Large"
+                                 StrokeWidth="4" Value="@progressValue">
+                @if (progressValue >= 100)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" />
+                }
+                else
+                {
+                    <MudText Typo="Typo.caption" Class="text-center">
+                        @((Goal.TargetAmount > 0 ? (Goal.TotalAmountInvested / Goal.TargetAmount).ToString("P0") : "0%"))
+                    </MudText>
+                }
+            </MudProgressCircular>
+            <MudStack Justify="Justify.Center" Spacing="0" Style="flex-grow: 1;">
+                <MudProgressLinear Color="@ProgressColor.GetProgressColor(Goal.TotalAmountInvested, Goal.TargetAmount)" Striped="false" Size="Size.Large"
+                                   Min="0" Max="@((double) @Goal.TargetAmount)"
+                                   Value="@((double) @Goal.TotalAmountInvested)" Class="my-2">
+                    <MudText Typo="Typo.caption">
+                        Remaining: @((Goal.TargetAmount - Goal.TotalAmountInvested).ToString("C0", new CultureInfo("en-IN")))
+                    </MudText>
+                </MudProgressLinear>
+            </MudStack>
+        </MudStack>
+    </MudItem>
+</MudGrid>
 
-        @* Progress Bar on Years Remaining *@
-        @if (CalculateYearsRemainingFunc.Invoke(Goal.TargetYear) > 0 && Goal.TargetYear.HasValue)
-        {
-            <MudText Typo="Typo.caption" Class="mt-2 mb-1">Time Remaining:</MudText>
-            <MudProgressLinear Value="@(CalculateTimeProgressPercentageFunc.Invoke(Goal.StartedYear, Goal.TargetYear))"
-                               Color="Color.Info" Size="Size.Large" Class="rounded-pill">
-                <MudText Typo="Typo.caption" Class="font-weight-bold">@CalculateYearsRemainingFunc.Invoke(Goal.TargetYear) Years Left</MudText>
-            </MudProgressLinear>
-        }
-        else if (CalculateYearsRemainingFunc.Invoke(Goal.TargetYear) == 0 && Goal.TargetYear.HasValue && Goal.TargetYear.Value.Year <= DateTime.Now.Year)
-        {
-            <MudText Typo="Typo.caption" Class="mt-2 mb-1" Color="Color.Warning">Target year reached or passed!</MudText>
-        }
-    </MudCardContent>
-    <MudCardActions Class="d-flex justify-space-between pt-0">
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Visibility" Size="Size.Small" OnClick="(() => OnViewGoal.InvokeAsync(Goal.Id))">View</MudButton>
-        <MudButton Variant="Variant.Text" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="(() => OnEditGoal.InvokeAsync(Goal.Id))">Edit</MudButton>
-        <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Size="Size.Small" OnClick="(() => OnConfirmDelete.InvokeAsync((Goal.Id, Goal.Name)))">Delete</MudButton>
-    </MudCardActions>
-</MudCard>
 
 @code {
     [Parameter]
-    public GoalEntity Goal { get; set; }
+    public Goal Goal { get; set; }
 
     // Parameters for passing functions from the parent
     [Parameter]

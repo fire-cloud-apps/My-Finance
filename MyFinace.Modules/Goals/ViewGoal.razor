@@ -1,11 +1,16 @@
 ﻿@page "/viewgoal/{GoalId:guid}"
+@using Microsoft.Extensions.Logging
 @using MyFinance.Model
 @using MyFinance.Utility
 @using MyFinance.Utility.Helper
 @using Supabase.RestAPI
+@using System.Globalization
 @* @inject SupabaseService SupabaseService *@
 @inject ISnackbar Snackbar
 @inject NavigationManager NavigationManager
+@inject SupabaseApiService<Goal> Supabase_GoalService
+@inject SupabaseApiService<GoalEntry> Supabase_GoalEntryService
+@inject ILogger<ViewGoal> Logger
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
     <MudText Typo="Typo.h4" Align="Align.Left" Color="Color.Primary" Class="mb-6 font-weight-bold">Your Financial Goal</MudText>
@@ -39,22 +44,28 @@
                                 @((MarkupString)Goal.ImageSVG)
                             </div>
                         }
-                        <div class="text-center text-sm-left">
-                            <MudText Typo="Typo.h5" Class="font-weight-bold mud-text-primary">@Goal.Name</MudText>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">ID: @Goal.Id</MudText>
+                        <div class="text-left text-sm-left">
+                            <MudText Typo="Typo.h5" 
+                                    Class="font-weight-bold mud-text-primary">
+                                    @Goal.Name
+                            </MudText>
+                            @* <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                ID: @Goal.Id
+                            </MudText> *@
+                            <MudText Typo="Typo.body2" Align="Align.Left" Class="mt-2">@(string.IsNullOrWhiteSpace(Goal.Description) ? "N/A" : Goal.Description)</MudText>
                         </div>
                     </div>
-                    <MudText Typo="Typo.body2" Align="Align.Left" Class="mt-2" Color="Color.Secondary">@(string.IsNullOrWhiteSpace(Goal.Description) ? "N/A" : Goal.Description)</MudText>
+                    
                 </CardHeaderContent>
             </MudCardHeader>
             <MudCardContent>
                 <MudGrid Spacing="4">
-                    <MudItem xs="12" Class="d-flex justify-center align-center flex-column">
-                        <MudText Typo="Typo.subtitle1" Class="mb-2 mud-text-secondary">Goal Progress</MudText>
+                    <MudItem xs="12" Class="d-flex flex-column">
+                        <MudText Typo="Typo.h5" Class="mb-2 mud-text-secondary">Goal Progress</MudText>
                     </MudItem>
                     <MudItem xs="12">
                         <MudProgressLinear Value="ProgressPercentage" Color="Color.Success" Size="Size.Large" Class="my-2 rounded-pill mud-elevation-1">
-                            <MudText Typo="Typo.subtitle2" Color="Color.Dark" Class="font-weight-bold">@ProgressPercentage.ToString("F1")% Completed</MudText>
+                            <MudText Typo="Typo.subtitle2" Class="font-weight-bold">@ProgressPercentage.ToString("F1")% Completed</MudText>
                         </MudProgressLinear>
                     </MudItem>
 
@@ -70,13 +81,22 @@
                                     <MudText Typo="Typo.subtitle2">Investment Category:</MudText>
                                     <MudChip Color="Color.Secondary" Size="Size.Small" Class="ml-2 mud-elevation-1">@Goal.InvestmentCategory.ToString()</MudChip>
                                 </MudListItem>
-                                <MudListItem Icon="@Icons.Material.Filled.Person" IconColor="Color.Dark">
+                                <MudListItem Icon="@Icons.Material.Filled.Person" IconColor="Color.Default">
                                     <MudText Typo="Typo.subtitle2">Owned By:</MudText>
                                     <MudChip Color="Color.Dark" Size="Size.Small" Class="ml-2 mud-elevation-1">@(string.IsNullOrWhiteSpace(Goal.OwnedBy) ? "N/A" : Goal.OwnedBy)</MudChip>
                                 </MudListItem>
                                 <MudListItem Icon="@Icons.Material.Filled.Label" IconColor="Color.Success">
                                     <MudText Typo="Typo.subtitle2">Tags:</MudText>
                                     <MudText Typo="Typo.body2" Color="Color.Secondary">@(string.IsNullOrWhiteSpace(Goal.Tag) ? "N/A" : Goal.Tag)</MudText>
+                                </MudListItem>
+                                <MudListItem Icon="material-symbols-outlined/nest_clock_farsight_analog" IconColor="Color.Info">
+                                    
+                                    <MudTooltip Text="Last Modified" Arrow="true">
+                                        <MudChip T="string" Size="Size.Small"  Variant="Variant.Text"
+                                                    Color="Color.Info">
+                                           Last Modified: @(Goal.LastModified.HasValue? Goal.LastModified.Value.ToString("D"): "")
+                                        </MudChip>
+                                    </MudTooltip>
                                 </MudListItem>
                             </MudList>
                         </MudPaper>
@@ -139,9 +159,87 @@
                         </MudPaper>
                     </MudItem>
                 </MudGrid>
+
+                <br />
+                <!-- List View -->
+                <MudPaper Elevation="4" Class="rounded-lg overflow-hidden">
+                    @foreach (var goal in ChildGoalEntries)
+                    {
+                        <MudStack Row="true" AlignItems="AlignItems.Center"
+                                  Class="@(goal.IsActive ? "pa-4 hover:bg-surface" : "pa-4 hover:bg-surface opacity-75")"
+                                  Style="border-bottom: 1px solid var(--mud-palette-lines-default);">
+
+                            <!-- Goal Icon & Info -->
+                            <div style="min-width: 200px;">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+                                    @if (!string.IsNullOrEmpty(goal.ImageSVG))
+                                    {
+                                        <div style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                            @((MarkupString)goal.ImageSVG)
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Size="Size.Large" />
+                                    }
+                                    <MudStack Spacing="0">
+                                        <MudText Typo="Typo.subtitle1"
+                                                 Color="@(goal.IsActive? Color.Default : Color.Secondary)"
+                                                 Class="font-weight-bold mud-text-primary">
+                                            @TextHelper.TruncateString(goal.Name, 30)
+                                        </MudText>
+                                        <MudText Typo="Typo.caption"
+                                                 Class="mud-text-secondary">@goal.FundName</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </div>
+
+                            <!-- Platform -->
+                            <div style="min-width: 120px;">
+                                <MudChip T="string" Size="Size.Small"
+                                         Color="@(goal.IsActive? Color.Dark: Color.Secondary)"
+                                         Class="font-weight-bold">@goal.Platform</MudChip>
+                            </div>
+
+                            <!-- Financial Info -->
+                            <div>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="4">
+                                    <MudStack Spacing="0" AlignItems="AlignItems.Center">
+                                        <MudText Typo="Typo.caption" Class="mud-text-tertiary">SIP</MudText>
+                                        <MudText Typo="Typo.body2" Class="font-weight-bold text-success">@goal.SIPAmount.ToString("C0", new CultureInfo("en-IN"))</MudText>
+                                    </MudStack>
+                                    <MudStack Spacing="0" AlignItems="AlignItems.Center">
+                                        <MudText Typo="Typo.caption" Class="mud-text-tertiary">Invested</MudText>
+                                        <MudText Typo="Typo.body2" Class="font-weight-bold text-info">@goal.InvestedAmount.ToString("C0", new CultureInfo("en-IN"))</MudText>
+                                    </MudStack>
+                                    <MudStack Spacing="0" AlignItems="AlignItems.Center">
+                                        <MudText Typo="Typo.caption" Class="mud-text-tertiary">Target</MudText>
+                                        <MudText Typo="Typo.body2" Class="font-weight-bold text-warning">@goal.TargetAmount.ToString("C0", new CultureInfo("en-IN"))</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </div>
+
+                            <!-- Progress -->
+                            <div style="min-width: 200px;">
+                                <MudStack Spacing="1">
+                                    <MudProgressLinear Color="@GetProgressColor(goal.InvestedAmount, goal.TargetAmount)" Size="Size.Medium" Rounded="true"
+                                                       Value="@(goal.TargetAmount > 0 ? (double)(goal.InvestedAmount / goal.TargetAmount * 100M) : 0)" />
+                                    <MudText Typo="Typo.caption" Class="text-center">
+                                        @(goal.TargetAmount > 0 ? (goal.InvestedAmount / goal.TargetAmount).ToString("P0") : "0%")
+                                    </MudText>
+                                </MudStack>
+                            </div>
+
+                            <MudSpacer />
+                            
+                        </MudStack>
+                    }
+                </MudPaper>
+
             </MudCardContent>
-            <MudCardActions Class="d-flex justify-center pt-4">
-                <MudButton  Variant="Variant.Filled" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowBack" Class="mud-elevation-2">
+            <MudCardActions Class="d-flex flex-column justify-left pt-4">
+                <MudButton  Variant="Variant.Filled" Color="Color.Primary"
+                           OnClick="@(() => NavigationManager.NavigateTo("dynamic-forms/Goals/List"))" EndIcon="@Icons.Material.Filled.ArrowBack" Class="mud-elevation-2">
                     Back to Find Goal
                 </MudButton>
             </MudCardActions>
@@ -151,15 +249,13 @@
 
 @* Global Variable  *@
 @code{
-    [Parameter]
-    public SupabaseApiService<Goal> Supabase_GoalService { get; set; }
-    [Parameter]
-    public GlobalServices Global { get; set; }
+   
     [Parameter]
     public Guid GoalId { get; set; }
 
     private Goal? Goal { get; set; }
     private bool IsLoading { get; set; } = true;
+	private List<GoalEntry> ChildGoalEntries { get; set; } = new List<GoalEntry>();
 
     // CultureInfo for Indian Rupees
     private System.Globalization.CultureInfo CultureInfo_IN = new System.Globalization.CultureInfo("en-IN");
@@ -201,9 +297,13 @@
     {
         if (Supabase_GoalService == null)
         {
-            Snackbar.Add("Supabase_GoalService is not provided. Cannot load goals.", Severity.Error);
-            return;
+            throw new ArgumentNullException(nameof(Supabase_GoalService), "GoalService cannot be null.");
         }
+        else if (string.IsNullOrEmpty(Supabase_GoalService.AccessToken))
+        {
+            throw new ArgumentException("AccessToken cannot be null or empty.", nameof(Supabase_GoalService.AccessToken));
+        }
+
         await LoadGoalDetails();
     }
 
@@ -211,6 +311,7 @@
     {
         IsLoading = true;
         var result = await Supabase_GoalService.GetById(GoalId);
+
         if (result.IsSuccess)
         {
             Goal = result.Data;
@@ -218,14 +319,46 @@
             {
                 Snackbar.Add($"Could not find goal with ID: {GoalId}", Severity.Error);
             }
+            else
+            {
+				Logger.LogInformation($"Loaded goal: {Goal.Name} (ID: {Goal.Id})");
+                var childGoals = await Supabase_GoalEntryService.Filter("parent_GoalId", Goal.Id.ToString());
+                if (childGoals.IsSuccess)
+                {
+					ChildGoalEntries = childGoals.Data;
+                }
+            }
         }
         else
         {
             Snackbar.Add($"Error loading goal: {result.ErrorMessage}", Severity.Error);
         }
-        // Assuming your table name is "Goal" (singular) based on your feedback
-        //Goal = await SupabaseService.SearchEntityByIdAsync<GoalEntity>("Goal", GoalId);
         
         IsLoading = false;
+    }
+}
+
+@* Get Progress Color *@
+@code {
+    private Color GetProgressColor(decimal investmentAmt, decimal targetAmt)
+    {
+        var value = (double)(investmentAmt / targetAmt * 100M);
+        switch (value)
+        {
+            case < 50:
+                return Color.Error; // Red for less than 50%
+                break;
+            case < 75:
+                return Color.Warning; // Yellow for 50% to 75%
+                break;
+            case < 100:
+                return Color.Info; // Blue for 75% to 100%
+                break;
+            default:
+                return Color.Success; // Green for 100% and above
+                break;
+        }
+        return Color.Default; // Fallback color
+
     }
 }

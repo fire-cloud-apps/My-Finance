@@ -1,14 +1,17 @@
 ﻿@page "/dynamic-forms/{Module}/{Component}/{Id:guid?}"
 
 @using MyFinace.Modules.GoalEntry
+@using MyFinance.Component
 @using MyFinance.Model
 @using MyFinance.Utility
 @using MyFinace.Modules.Goals
 @using Supabase.RestAPI
+@using static MyFinance.Component.DeviceDetect
 
 @inject SupabaseApiService<Goal> GoalService
 @inject SupabaseApiService<GoalEntry> GoalEntryService
-@inject MyFinance.Utility.SupabaseService SupabaseService  
+@inject ILogger<DynamicPage> Logger
+
 
 
 @* Paramer and Variable Decleration *@
@@ -28,18 +31,13 @@
         _isInitializing = true;
         try
         {
-            Console.WriteLine($"Is Goal Service {GoalService == null}");
-            Console.WriteLine($"Is Goal Entry Service {GoalEntryService == null}");
+			Logger.LogInformation($"Is Goal Service {GoalService == null}");
+			Logger.LogInformation($"Is Goal Entry Service {GoalEntryService == null}");
 
             var session = await LocalStorage.GetItemAsync<JsSession>("sessionInfo");
             _globalServices = new GlobalServices(session);
-            GlobalServices.AuthToken = await LocalStorage.GetItemAsync<string>("accessToken");
-            LogHelper.LogMessage(
-                source:"DynamicPage",
-                level: LogLevel.Information,
-                method: "OnInitializedAsync",
-                message: $"Dynamic Form:Token: {!string.IsNullOrEmpty( GlobalServices.AuthToken)}."
-            );
+            GlobalServices.AuthToken = await LocalStorage.GetItemAsync<string>("accessToken");            
+			Logger.LogInformation($"Dynamic Form:Token: {!string.IsNullOrEmpty(GlobalServices.AuthToken)}.");
 
             // Assign access token to the injected services
             GoalService.AccessToken = GlobalServices.AuthToken;
@@ -56,14 +54,28 @@
     }
 }
 
+<DeviceDetect @ref="DeviceDetect" OnDeviceTypeChanged="OnDeviceTypeChanged"></DeviceDetect>
+
+@code {
+    private DeviceDetect DeviceDetect;
+    private DeviceType _currentDeviceType = DeviceType.Desktop; // Default to Desktop
+
+    private async Task OnDeviceTypeChanged(DeviceType deviceType)
+    {
+        _currentDeviceType = deviceType;
+		Logger.LogInformation($"DynamicPage: Device type changed to {deviceType}");
+        // Update your layout based on the device type
+    }
+}
+
 @if(string.IsNullOrEmpty(Module) || string.IsNullOrEmpty(Component))
 {
 	<MudText Typo="Typo.h6" Class="text-danger">Module or Component not specified.</MudText>
 }
 else
 {
-	<PageTitle>MyFinance - @Module#@Component</PageTitle>
-	<MudContainer Class="ma-4 pa-4" >
+	<PageTitle>MyFinance - @Module - @Component</PageTitle>
+	<MudContainer Class="@(_currentDeviceType == DeviceType.Mobile ? "" : "ma-4 pa-4")">
 
 	@if (_isInitializing)
 	{
@@ -90,15 +102,11 @@ else
 					case "Add":
 					case "Add-Goals":
 					case "addgoals":
-						<AddGoals GoalService="@GoalService"
-							Global="@_globalServices"
-									SupabaseService="@SupabaseService" />
+						<GoalAction Global="@_globalServices" 										GoalService="@GoalService" />
 						break;
 					case "Edit":
-					case "Edit-Goals":
-						@* <EditGoals Id="@Id.Value" GoalService="@GoalService"
-								Global="@_globalServices"  />  *@
-							<GoalAction Global="@_globalServices"  GoalID="@Id"
+					case "Edit-Goals":						
+						<GoalAction Global="@_globalServices"  GoalID="@Id"
 									GoalService="@GoalService" />
 						break;
 					case "Find":
@@ -106,13 +114,12 @@ else
 						break;
 					case "List":
 					case "ListGoals":
-						<ListGoals Supabase_GoalService="@GoalService" Global="@_globalServices" />
-						break;
+							<ListGoals Supabase_GoalService="@GoalService" Global="@_globalServices" />
+							break;					
 					default:
-						<MudText Typo="Typo.h6"
-							Class="text-warning">Unknown Goal Component: @Component</MudText>
-
-						break;
+					<MudText Typo="Typo.h6"
+						Class="text-warning">Unknown Goal Component: @Component</MudText>
+					break;
 				}
 				break;
 			case "GoalContribution":
@@ -131,7 +138,7 @@ else
 						break;
 					case "List":
 					case "ListGoalsPlans":
-						<ListGoalEntry SupabaseService="GoalEntryService" />
+							<ListGoalEntry DeviceType="@_currentDeviceType" SupabaseService="GoalEntryService" />
 
 						break;
 					default:
@@ -139,8 +146,19 @@ else
 						break;
 				}
 				break;
+			case "AWS":
+				@switch(Component)
+					{
+						case "Serverless":
+							<TestLearn />
+							break;
+						default:
+							<MudText Typo="Typo.h6" Class="text-warning">Unknown Goals Contribution Component: @Component</MudText>
+							break;
+					}
+					break;
 			default:
-				Console.WriteLine($"Module {Module} & Component {Component} not recognized.");
+					Logger.LogInformation($"Module {Module} & Component {Component} not recognized.");
 				break;
 		}
 	}

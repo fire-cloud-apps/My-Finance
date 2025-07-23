@@ -6,6 +6,21 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="Goals\GoalEntity.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Goals\AddGoals.razor" />
+    <Content Remove="Goals\EditGoals.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="GoalEntry\AddGoalEntry.zip" />
+    <None Remove="Goals\GoalDashboard - Copy.razor.txt" />
+    <None Remove="Goals\GoalsDashboard -Copy..razor.txt" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <SupportedPlatform Include="browser" />
@@ -16,6 +31,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.6" />
     <PackageReference Include="MudBlazor" Version="8.8.0" />
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
+    <PackageReference Include="Blazor-ApexCharts" Version="6.0.1" />
   </ItemGroup>
 
   <ItemGroup>

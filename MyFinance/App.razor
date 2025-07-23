@@ -1,7 +1,7 @@
 ﻿@using Supabase.RestAPI
 @using System.Text.Json
 <Router AppAssembly="@typeof(Program).Assembly"
-        AdditionalAssemblies="@(new[] { typeof(MyFinace.Modules.Goals.GoalEntity).Assembly })"> @* Added AdditionalAssemblies *@
+        AdditionalAssemblies="@(new[] { typeof(MyFinace.Modules.Goals.GoalAction).Assembly })"> @* Added AdditionalAssemblies *@
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />

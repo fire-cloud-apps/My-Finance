@@ -1,0 +1,278 @@
+﻿@page "/infographic"
+@using MudBlazor
+@inject IJSRuntime JSRuntime
+
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-8">
+
+    <MudPaper Class="pa-8 mb-12 text-center" Elevation="0" Style="background-color: transparent;">
+        <MudText Typo="Typo.h3" Class="font-extrabold mb-2" Color="Color.Primary">The Future is Now: Serverless Event-Driven Architecture</MudText>
+        <MudText Typo="Typo.h5" Class="text-gray-400">How a Healthcare Startup Solved Real-Time Data Processing with AWS</MudText>
+    </MudPaper>
+
+    <MudPaper Class="pa-6 mb-16" Elevation="2" Style="background-color: #2d3748;">
+        <MudGrid AlignItems="AlignItems.Center">
+            <MudItem xs="12" md="2" Class="text-center">
+                <MudText Typo="Typo.h1" Color="Color.Warning">&#128123;</MudText>
+            </MudItem>
+            <MudItem xs="12" md="10">
+                <MudText Typo="Typo.h4" Class="font-bold mb-4" Color="Color.Primary">The Challenge</MudText>
+                <MudText Class="text-gray-300 leading-relaxed">
+                    A healthcare startup faced a critical challenge: processing fluctuating volumes of sensitive patient appointment data in real-time. They needed a system that could send automated reminders, update medical records, and notify staff instantly. The solution had to be highly scalable, secure enough for HIPAA compliance, and cost-effective, all without the burden of managing servers.
+                </MudText>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <MudText Typo="Typo.h4" Class="font-bold text-center mb-10" Color="Color.Primary">Core Architectural Principles</MudText>
+    <MudGrid Spacing="4" Class="mb-16">
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-6 text-center" Elevation="2" Style="background-color: #2d3748;">
+                <MudAvatar Color="Color.Warning" Size="Size.Large" Class="mb-4">
+                    <MudIcon Icon="@Icons.Material.Filled.FlashOn" Size="Size.Large" />
+                </MudAvatar>
+                <MudText Typo="Typo.h6" Class="font-bold mb-2" Color="Color.Primary">Event-Driven Computing</MudText>
+                <MudText Class="text-gray-300">Systems react to actions, or "events," like a new appointment booking. This eliminates wasted resources and reduces latency compared to constantly checking for updates.</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-6 text-center" Elevation="2" Style="background-color: #2d3748;">
+                <MudAvatar Color="Color.Error" Size="Size.Large" Class="mb-4">
+                    <MudIcon Icon="@Icons.Material.Filled.CloudOff" Size="Size.Large" />
+                </MudAvatar>
+                <MudText Typo="Typo.h6" Class="font-bold mb-2" Color="Color.Primary">Serverless Architecture</MudText>
+                <MudText Class="text-gray-300">Forget managing servers. AWS Lambda provides the code execution environment, automatically scaling up or down and charging only for the compute time used.</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-6 text-center" Elevation="2" Style="background-color: #2d3748;">
+                <MudAvatar Color="Color.Secondary" Size="Size.Large" Class="mb-4">
+                    <MudIcon Icon="@Icons.Material.Filled.LinkOff" Size="Size.Large" />
+                </MudAvatar>
+                <MudText Typo="Typo.h6" Class="font-bold mb-2" Color="Color.Primary">Decoupled Workflows</MudText>
+                <MudText Class="text-gray-300">Services are independent. Amazon EventBridge acts as a central event bus, routing events to multiple targets without tight coupling.</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudPaper Class="pa-8 mb-16" Elevation="2" Style="background-color: #2d3748;">
+        <MudText Typo="Typo.h4" Class="font-bold text-center mb-4" Color="Color.Primary">The Architectural Blueprint</MudText>
+        <MudText Class="text-center text-gray-300 mb-10 max-w-3xl mx-auto">This flowchart illustrates the journey of patient data from initial upload to final notifications, all orchestrated by serverless, event-driven services.</MudText>
+
+        <div class="flow-container">
+            <div class="flow-node" style="border-color: #ffa600;">
+                <MudText Typo="Typo.subtitle1" Class="font-bold" Style="color: #ffa600;">1. Data Ingestion</MudText>
+                <MudText Typo="Typo.body2">Appointment Data (JSON) is uploaded to an S3 Bucket.</MudText>
+            </div>
+            <div class="flow-arrow">&darr;</div>
+            <div class="flow-node" style="border-color: #ef5675;">
+                <MudText Typo="Typo.subtitle1" Class="font-bold" Style="color: #ef5675;">2. Event Trigger</MudText>
+                <MudText Typo="Typo.body2">S3 `PutObject` event is sent to Amazon EventBridge.</MudText>
+            </div>
+            <div class="flow-arrow">&darr;</div>
+            <div class="flow-node" style="border-color: #7a5195;">
+                <MudText Typo="Typo.subtitle1" Class="font-bold" Style="color: #7a5195;">3. Initial Processing</MudText>
+                <MudText Typo="Typo.body2">EventBridge triggers a primary Lambda function to process the data (e.g., mask PII) and save it to a secure S3 bucket.</MudText>
+            </div>
+            <div class="flow-arrow">&darr;</div>
+            <div class="flow-node" style="border-color: #003f5c;">
+                <MudText Typo="Typo.subtitle1" Class="font-bold" Style="color: #003f5c;">4. Fan-Out with EventBridge</MudText>
+                <MudText Typo="Typo.body2">The primary Lambda publishes a new `AppointmentProcessed` event to EventBridge.</MudText>
+            </div>
+
+            <div class="flow-arrow-horizontal-group">
+                <div class="flow-arrow-horizontal"></div>
+                <div class="flow-arrow">&darr;</div>
+                <div class="flow-arrow-horizontal"></div>
+            </div>
+
+            <MudGrid Spacing="4">
+                <MudItem xs="12" md="4">
+                    <div class="flow-node" style="border-color: #20c997;">
+                         <MudText Typo="Typo.subtitle1" Class="font-bold" Style="color: #20c997;">5a. Patient Reminder</MudText>
+                         <MudText Typo="Typo.body2">A Lambda function is triggered to send an automated appointment reminder.</MudText>
+                    </div>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                     <div class="flow-node" style="border-color: #0d6efd;">
+                        <MudText Typo="Typo.subtitle1" Class="font-bold" Style="color: #0d6efd;">5b. Record Update</MudText>
+                        <MudText Typo="Typo.body2">Another Lambda function updates the central electronic medical records system.</MudText>
+                    </div>
+                </MudItem>
+                 <MudItem xs="12" md="4">
+                    <div class="flow-node" style="border-color: #6610f2;">
+                         <MudText Typo="Typo.subtitle1" Class="font-bold" Style="color: #6610f2;">5c. Staff Notification</MudText>
+                         <MudText Typo="Typo.body2">An Amazon SNS topic is triggered to notify relevant staff members via SMS or email.</MudText>
+                    </div>
+                </MudItem>
+            </MudGrid>
+        </div>
+    </MudPaper>
+
+    <MudText Typo="Typo.h4" Class="font-bold text-center mb-4" Color="Color.Primary">Why Choose Serverless?</MudText>
+    <MudText Class="text-center text-gray-300 mb-10 max-w-3xl mx-auto">The benefits of a serverless, event-driven approach are substantial compared to traditional server-based infrastructures. Here's how it excels:</MudText>
+    <MudPaper Class="pa-6 mb-16" Elevation="2" Style="background-color: #2d3748;">
+        <MudGrid Spacing="4">
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard Elevation="0" Class="pa-4 text-center" Style="background-color: #1a202c;">
+                    <MudText Typo="Typo.h3" Class="font-bold" Color="Color.Success">90%+</MudText>
+                    <MudText Typo="Typo.subtitle1" Class="text-gray-300">Cost Efficiency</MudText>
+                    <MudText Typo="Typo.body2" Class="text-gray-400">Pay only for what you use, eliminating idle server costs.</MudText>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard Elevation="0" Class="pa-4 text-center" Style="background-color: #1a202c;">
+                    <MudText Typo="Typo.h3" Class="font-bold" Color="Color.Success">Seamless</MudText>
+                    <MudText Typo="Typo.subtitle1" Class="text-gray-300">Scalability</MudText>
+                    <MudText Typo="Typo.body2" Class="text-gray-400">Automatically scales to handle thousands of events.</MudText>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard Elevation="0" Class="pa-4 text-center" Style="background-color: #1a202c;">
+                    <MudText Typo="Typo.h3" Class="font-bold" Color="Color.Success">Automated</MudText>
+                    <MudText Typo="Typo.subtitle1" Class="text-gray-300">Workflows</MudText>
+                    <MudText Typo="Typo.body2" Class="text-gray-400">Reduces manual processing and improves efficiency.</MudText>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard Elevation="0" Class="pa-4 text-center" Style="background-color: #1a202c;">
+                    <MudText Typo="Typo.h3" Class="font-bold" Color="Color.Success">High</MudText>
+                    <MudText Typo="Typo.subtitle1" Class="text-gray-300">Reliability</MudText>
+                    <MudText Typo="Typo.body2" Class="text-gray-400">Decoupled architecture ensures fault tolerance and high availability.</MudText>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <MudText Typo="Typo.h4" Class="font-bold text-center mb-10" Color="Color.Primary">Security & Compliance by Design</MudText>
+    <MudGrid Spacing="4" Class="mb-16">
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-6" Elevation="2" Style="background-color: #2d3748;">
+                <MudText Typo="Typo.h6" Class="font-bold mb-4" Color="Color.Primary">HIPAA-Ready Architecture</MudText>
+                <MudText Class="text-gray-300 mb-4">Handling Protected Health Information (PHI) requires robust security. This architecture leverages HIPAA-eligible AWS services and best practices to ensure data is protected at every stage.</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-6" Elevation="2" Style="background-color: #2d3748;">
+                <MudList T="string" Dense="true">
+                    <MudListItem Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
+                        <MudText Class="text-gray-300"><strong>End-to-End Encryption:</strong> SSE-KMS for data at rest in S3 and HTTPS for data in transit.</MudText>
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
+                        <MudText Class="text-gray-300"><strong>IAM Least Privilege:</strong> Functions and services have only the minimum permissions required to operate.</MudText>
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
+                        <MudText Class="text-gray-300"><strong>VPC Isolation:</strong> Lambda functions run in a private Virtual Private Cloud, restricting network access.</MudText>
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
+                        <MudText Class="text-gray-300"><strong>Comprehensive Auditing:</strong> AWS CloudTrail and AWS Config track all API calls and configuration changes.</MudText>
+                    </MudListItem>
+                    <MudListItem Icon="@Icons.Material.Filled.CheckCircle" IconColor="Color.Success">
+                        <MudText Class="text-gray-300"><strong>Threat Detection:</strong> Amazon GuardDuty provides intelligent threat detection to protect accounts and workloads.</MudText>
+                    </MudListItem>
+                </MudList>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudText Typo="Typo.h4" Class="font-bold text-center mb-4" Color="Color.Primary">Versatility Across Industries</MudText>
+    <MudText Class="text-center text-gray-300 mb-10 max-w-3xl mx-auto">While born from a healthcare need, this powerful architectural pattern is incredibly versatile. It's being adopted across various industries to solve similar challenges involving real-time, event-based data processing.</MudText>
+    <MudPaper Class="pa-6 mb-16" Elevation="2" Style="background-color: #2d3748;">
+        <MudGrid Spacing="4">
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard Elevation="0" Class="pa-4 text-center" Style="background-color: #1a202c;">
+                    <MudIcon Icon="@Icons.Material.Filled.LocalHospital" Color="Color.Primary" Size="Size.Large" Class="mb-2" />
+                    <MudText Typo="Typo.h6" Class="font-bold text-gray-300">Healthcare</MudText>
+                    <MudText Typo="Typo.body2" Class="text-gray-400">Real-time patient data processing for reminders and record updates.</MudText>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard Elevation="0" Class="pa-4 text-center" Style="background-color: #1a202c;">
+                    <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Color="Color.Secondary" Size="Size.Large" Class="mb-2" />
+                    <MudText Typo="Typo.h6" Class="font-bold text-gray-300">E-commerce</MudText>
+                    <MudText Typo="Typo.body2" Class="text-gray-400">Trigger order confirmations or inventory updates upon purchases.</MudText>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard Elevation="0" Class="pa-4 text-center" Style="background-color: #1a202c;">
+                    <MudIcon Icon="@Icons.Material.Filled.Sensors" Color="Color.Warning" Size="Size.Large" Class="mb-2" />
+                    <MudText Typo="Typo.h6" Class="font-bold text-gray-300">IoT</MudText>
+                    <MudText Typo="Typo.body2" Class="text-gray-400">Process sensor data for real-time analytics in smart devices.</MudText>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudCard Elevation="0" Class="pa-4 text-center" Style="background-color: #1a202c;">
+                    <MudIcon Icon="@Icons.Material.Filled.Payments" Color="Color.Error" Size="Size.Large" Class="mb-2" />
+                    <MudText Typo="Typo.h6" Class="font-bold text-gray-300">FinTech</MudText>
+                    <MudText Typo="Typo.body2" Class="text-gray-400">Handle transaction events for fraud detection or notifications.</MudText>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+</MudContainer>
+
+<MudAppBar Bottom="true" Fixed="true" Elevation="0" Style="background-color: #003f5c;">
+    <MudText Class="mx-auto text-white">Infographic by Canvas Infographics. Data sourced from "Serverless Event-Driven Architecture" technical brief.</MudText>
+</MudAppBar>
+
+<style>
+    body {
+        background-color: #1a202c; /* Dark background */
+        color: #e2e8f0; /* Light text color */
+    }
+    .chart-container { /* Kept for general container styling, though no charts are here */
+        position: relative;
+        width: 100%;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        height: 320px;
+        max-height: 400px;
+    }
+    .flow-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+    .flow-arrow {
+        font-size: 2rem;
+        line-height: 1;
+        color: #7a5195;
+        font-weight: bold;
+    }
+    .flow-node {
+        border: 2px solid;
+        text-align: center;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        background-color: #1a202c; /* Darker background for flowchart nodes */
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        transition: all 0.3s ease-in-out;
+        color: #e2e8f0; /* Light text for flow nodes */
+        width: 100%; /* Ensure nodes take full width in their flex item */
+        max-width: 400px; /* Limit width for readability */
+    }
+    .flow-node:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+    }
+    .flow-arrow-horizontal-group {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+    }
+    .flow-arrow-horizontal {
+        flex-grow: 1;
+        height: 2px;
+        background-color: #7a5195;
+    }
+</style>
+
+

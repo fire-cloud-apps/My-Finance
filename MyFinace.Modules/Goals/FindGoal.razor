@@ -1,4 +1,5 @@
 ﻿@page "/findgoal"
+@using MyFinance.Model
 @using MyFinance.Utility
 @* @inject SupabaseService SupabaseService *@
 @inject NavigationManager NavigationManager
@@ -6,7 +7,7 @@
 
 <MudText Typo="Typo.h5" Class="mb-4">Find Your Financial Goal</MudText>
 
-<MudAutocomplete T="GoalEntity"
+<MudAutocomplete T="Goal"
                  Label="Search Goal by Name"
                  Variant="Variant.Filled"
                  SearchFunc="@SearchGoals"
@@ -28,15 +29,15 @@
     [Parameter]
     public MyFinance.Utility.SupabaseService? SupabaseService { get; set; }
 
-    private async Task<IEnumerable<GoalEntity>> SearchGoals(string value, CancellationToken cancellationToken)
+    private async Task<IEnumerable<Goal>> SearchGoals(string value, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            return new List<GoalEntity>();
+            return new List<Goal>();
         }
 
         // Call the C# service which in turn calls the JS interop for Supabase search
-        var goals = await SupabaseService.SearchEntitiesByNameAsync<GoalEntity>("Goal", value);
+        var goals = await SupabaseService.SearchEntitiesByNameAsync<Goal>("Goal", value);
 
         // Filter and return only the top 5 or so, if you have many results
         // The JS function `searchByName` returns all matches, so we can limit here if needed.
@@ -44,7 +45,7 @@
         return goals.Where(g => g.Name.Contains(value, StringComparison.OrdinalIgnoreCase)).Take(10);
     }
 
-    private void OnGoalSelected(GoalEntity? selectedGoal)
+    private void OnGoalSelected(Goal? selectedGoal)
     {
         if (selectedGoal != null)
         {

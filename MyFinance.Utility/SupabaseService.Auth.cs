@@ -15,16 +15,32 @@ namespace MyFinance.Utility
 {
     public partial class SupabaseService 
     {
-        
+        private JsSession? _lastSession;
+
         [JSInvokable]
         public void OnJsAuthStateChanged(JsSession? session, string source)
         {
+            // Only act if the session/user actually changed
+            bool sessionChanged = !AreSessionsEqual(_lastSession, session);
+
             LogHelper.LogMessage(
                 source: source,
                 method: "OnJsAuthStateChanged",
                 level: LogLevel.Information,
-                message: $" C#: Auth state changed received from JS. Session present: {session != null} Source: {source}");
-            
+                message: $"C#: Auth state changed received from JS. Session present: {session != null} Source: {source} Changed: {sessionChanged}");
+
+            if (!sessionChanged)
+            {
+                LogHelper.LogMessage(
+                    source: source,
+                    method: "OnJsAuthStateChanged",
+                    level: LogLevel.Information,
+                    message: "C#: Ignoring duplicate auth state change event."
+                );
+                return; // Ignore duplicate events
+            }
+
+            _lastSession = session;
             CurrentSession = session;
             OnAuthStateChanged?.Invoke(session, source);
 
@@ -42,6 +58,14 @@ namespace MyFinance.Utility
                 _snackbar.Add("Logged out successfully!", Severity.Info);
                 _navigationManager.NavigateTo("login");
             }
+        }
+
+        // Helper to compare sessions (customize as needed)
+        private bool AreSessionsEqual(JsSession? a, JsSession? b)
+        {
+            if (a == null && b == null) return true;
+            if (a == null || b == null) return false;
+            return a.AccessToken == b.AccessToken && a.User?.Id == b.User?.Id;
         }
 
         [JSInvokable]

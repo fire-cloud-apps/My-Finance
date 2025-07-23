@@ -1,0 +1,19 @@
+﻿<MudAppBar Bottom="true" Class="align-content-center">
+    @* <MudAvatar>
+                    <MudImage Src="img/goals-icon.svg"></MudImage>
+                </MudAvatar>
+                <MudAvatar>
+                    <MudImage  Src="img/sip-entry.svg"></MudImage>
+                </MudAvatar> *@
+
+
+    <MudIconButton Icon="@Icons.Material.Filled.ListAlt"
+                   Color="Color.Tertiary" Edge="Edge.Start"
+                   OnClick="@((e) =>  NavigationManager.NavigateTo("dynamic-forms/Goals/List"))" />
+
+    <MudSpacer />
+    <MudIconButton Icon="@Icons.Material.Filled.List"
+                   Color="Color.Tertiary" Edge="Edge.Start"
+                   OnClick="@((e) => NavigationManager.NavigateTo(@MetaDetailsOptions.Value.InternalURLs.GoalEntryList))" />
+
+</MudAppBar>

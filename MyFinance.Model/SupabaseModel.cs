@@ -16,6 +16,9 @@ namespace MyFinance.Model
 
         [JsonPropertyName("created_at")]
         public DateTime? CreatedAt { get; set; }
+
+        [JsonPropertyName("lastModified")]
+        public DateTime? LastModified { get; set; } = DateTime.Now;
     }
 
     public class GoalEntryModel

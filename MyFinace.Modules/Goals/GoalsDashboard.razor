@@ -1,0 +1,528 @@
+﻿@using Microsoft.Extensions.Logging
+@using MyFinance.Model
+@using Supabase.RestAPI
+@using MudBlazor
+@using Color = MudBlazor.Color
+@using Size = MudBlazor.Size
+@using ApexCharts
+@using System.Globalization
+
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+@inject ILogger<GoalDashboard> Logger
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-8">
+    <!-- Header Section with Gradient Background -->
+    <MudPaper Elevation="8" Class="pa-6 mb-6 rounded-lg" Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <div class="d-flex align-center justify-space-between">
+            <div>
+                <MudText Typo="Typo.h3" Class="mb-2" Style="font-weight: 700; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                    <MudIcon Icon="@Icons.Material.Filled.Dashboard" Class="mr-3" Size="Size.Large" />
+                    Financial Goals Dashboard
+                </MudText>
+                <MudText Typo="Typo.subtitle1" Style="opacity: 0.9;">
+                    Track your financial journey with interactive insights
+                </MudText>
+            </div>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Surface"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       Href="dynamic-forms/Goals/Add-Goals"
+                       Class="rounded-pill px-6 py-3"
+                       Style="color: gray font-weight: 600; box-shadow: 0 4px 15px rgba(255,255,255,0.3);">
+                Add New Goal
+            </MudButton>
+        </div>
+    </MudPaper>
+
+    @if (_isLoading)
+    {
+        <MudPaper Elevation="4" Class="pa-8 rounded-lg text-center">
+            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+            <MudText Typo="Typo.h6" Class="mt-4 mud-text-secondary">Loading your financial goals...</MudText>
+        </MudPaper>
+    }
+    else if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Class="my-4 rounded-lg" Elevation="4">
+            <MudText Typo="Typo.h6">@_errorMessage</MudText>
+        </MudAlert>
+    }
+    else if (_goals == null || !_goals.Any())
+    {
+        <MudPaper Elevation="4" Class="pa-8 rounded-lg text-center">
+            <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Size="Size.Large" Color="Color.Primary" Class="mb-4" />
+            <MudText Typo="Typo.h5" Class="mb-4">Ready to Start Your Financial Journey?</MudText>
+            <MudText Typo="Typo.body1" Class="mb-6 mud-text-secondary">No financial goals found. Create your first goal to begin tracking your progress!</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Href="/addgoal" Class="rounded-pill px-8 py-4" Size="Size.Large">
+                Create Your First Goal
+            </MudButton>
+        </MudPaper>
+    }
+    else
+    {
+        <!-- Enhanced KPI Cards with Modern Design -->
+        <MudGrid Spacing="4" Class="mb-8">
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Elevation="8" Class="pa-6 rounded-xl position-relative overflow-hidden" Style="background: linear-gradient(90deg, #00d2ff 0%, #3a47d5 100%); min-height: 140px;">
+                    <div class="d-flex align-center justify-space-between">
+                        <div>
+                            <MudText Typo="Typo.h4" Style="color: white; font-weight: 700; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
+                                @_goals.Count()
+                            </MudText>
+                            <MudText Typo="Typo.subtitle1" Style="color: white; opacity: 0.9;">Total Goals</MudText>
+                        </div>
+                        <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Size="Size.Large" Style="color: white; opacity: 0.7;" />
+                    </div>
+                    <div class="position-absolute" style="top: -20px; right: -20px; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%;">                        
+                            <MudImage Height="78" Width="78" 
+                                Src="img/total-goals.svg"></MudImage>
+                    </div>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Elevation="8" Class="pa-6 rounded-xl position-relative overflow-hidden" Style="background: linear-gradient(90deg, hsla(179, 83%, 64%, 1) 0%, hsla(338, 75%, 64%, 1) 50%, hsla(14, 92%, 86%, 1) 100%); min-height: 140px;">
+                    <div class="d-flex align-center justify-space-between">
+                        <div>
+                            <MudText Typo="Typo.h4" Style="color: #2c3e50; font-weight: 700;">
+                                @_goals.Count(g => g.Status.Equals(GoalStatus.InProgress))
+                            </MudText>
+                            <MudText Typo="Typo.subtitle1" Style="color: #2c3e50; opacity: 0.8;">Active Goals</MudText>
+                        </div>
+                        <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Size="Size.Large" Style="color: #2c3e50; opacity: 0.7;" />
+                    </div>
+                    <div class="position-absolute" style="top: -20px; right: -20px; width: 80px; height: 80px; background: rgba(255,255,255,0.2); border-radius: 50%;">
+                        <MudImage Height="78" Width="78"
+                                  Src="img/active-goals.svg"></MudImage>
+                    </div>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Elevation="8" Class="pa-6 rounded-xl position-relative overflow-hidden" Style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); min-height: 140px;">
+                    <div class="d-flex align-center justify-space-between">
+                        <div>
+                            <MudText Typo="Typo.h4" Style="color: #2c3e50; font-weight: 700;">
+                                @_goals.Count(g => g.Status.Equals(GoalStatus.Completed))
+                            </MudText>
+                            <MudText Typo="Typo.subtitle1" Style="color: #2c3e50; opacity: 0.8;">Completed</MudText>
+                        </div>
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Large" Style="color: #2c3e50; opacity: 0.7;" />
+                    </div>
+                    <div class="position-absolute" style="top: -20px; right: -20px; width: 80px; height: 80px; background: rgba(255,255,255,0.2); border-radius: 50%;">
+                        <MudImage Height="78" Width="78"
+                                  Src="img/completed-goals.svg"></MudImage>
+                    </div>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Elevation="8" Class="pa-6 rounded-xl position-relative overflow-hidden" Style="background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%); min-height: 140px;">
+                    <div class="d-flex align-center justify-space-between">
+                        <div>
+                            <MudText Typo="Typo.h6" Style="color: #2c3e50; font-weight: 700;">
+                                @(Math.Round((double)_goals.Count(g => g.Status.Equals(GoalStatus.Completed)) / _goals.Count() * 100, 1))%
+                            </MudText>
+                            <MudText Typo="Typo.subtitle1" Style="color: #2c3e50; opacity: 0.8;">Success Rate</MudText>
+                        </div>
+                        <MudIcon Icon="@Icons.Material.Filled.Analytics" Size="Size.Large" Style="color: #2c3e50; opacity: 0.7;" />
+                    </div>
+                    <div class="position-absolute" style="top: -20px; right: -20px; width: 80px; height: 80px; background: rgba(255,255,255,0.2); border-radius: 50%;">
+                        <MudImage Height="78" Width="78"
+                                  Src="img/success-ratio.svg"></MudImage>
+                    </div>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <!-- Financial Summary Cards -->
+        <MudGrid Spacing="4" Class="mb-8">
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Elevation="6" Class="pa-6 rounded-xl" Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; min-height: 120px;">
+                    <div class="d-flex align-center justify-space-between">
+                        <div>
+                            <MudText Typo="Typo.h5" Style="font-weight: 700;">
+                                @_goals.Sum(g => g.TargetAmount).ToString("C", CultureInfo_IN)
+                            </MudText>
+                            <MudText Typo="Typo.subtitle1" Style="opacity: 0.9;">Target Amount</MudText>
+                        </div>
+                        <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Size="Size.Large" Style="opacity: 0.7;" />
+                    </div>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Elevation="6" Class="pa-6 rounded-xl" Style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; min-height: 120px;">
+                    <div class="d-flex align-center justify-space-between">
+                        <div>
+                            <MudText Typo="Typo.h5" Style="font-weight: 700;">
+                                @_goals.Sum(g => g.TotalAmountInvested).ToString("C", CultureInfo_IN)
+                            </MudText>
+                            <MudText Typo="Typo.subtitle1" Style="opacity: 0.9;">Amount Invested</MudText>
+                        </div>
+                        <MudIcon Icon="@Icons.Material.Filled.Savings" Size="Size.Large" Style="opacity: 0.7;" />
+                    </div>
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Elevation="6" Class="pa-6 rounded-xl" Style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; min-height: 120px;">
+                    <div class="d-flex align-center justify-space-between">
+                        <div>
+                            <MudText Typo="Typo.h5" Style="font-weight: 700;">
+                                @_goals.Sum(g => g.TotalSIPAmount).ToString("C", CultureInfo_IN)
+                            </MudText>
+                            <MudText Typo="Typo.subtitle1" Style="opacity: 0.9;">Total SIP Amount</MudText>
+                        </div>
+                        <MudIcon Icon="@Icons.Material.Filled.RepeatOne" Size="Size.Large" Style="opacity: 0.7;" />
+                    </div>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <!-- Interactive Charts Section -->
+        <MudGrid Spacing="4" Class="mb-8">
+            <!-- Goal Status Distribution - Enhanced Donut Chart -->
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="8" Class="pa-6 rounded-xl" Style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
+                    <div class="d-flex align-center mb-4">
+                        <MudIcon Icon="@Icons.Material.Filled.DonutLarge" Color="Color.Primary" Class="mr-3" />
+                        <MudText Typo="Typo.h6" Style="font-weight: 600; color: #2c3e50;">Goal Status Distribution</MudText>
+                    </div>
+                    @if (_goalStatusData != null && _goalStatusData.Any())
+                    {
+                        <ApexChart TItem="GoalStatusChartData"
+                                   Title="Goal Status Overview"
+                                   Height="350">
+                            <ApexPointSeries TItem="GoalStatusChartData"
+                                             Items="@_goalStatusChartData"
+                                             Name="Goals"
+                                             SeriesType="SeriesType.Donut"
+                                             XValue="@(e => e.Status)"
+                                             YValue="@(e => e.Count)"
+                                             PointColor="@(e => e.Color)" />
+                        </ApexChart>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Class="text-center mud-text-secondary">No data available</MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+
+            <!-- Investment Category Distribution -->
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="8" Class="pa-6 rounded-xl" Style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);">
+                    <div class="d-flex align-center mb-4">
+                        <MudIcon Icon="@Icons.Material.Filled.PieChart" Color="Color.Secondary" Class="mr-3" />
+                        <MudText Typo="Typo.h6" Style="font-weight: 600; color: #2c3e50;">Investment Categories</MudText>
+                    </div>
+                    @if (_investmentCategoryChartData != null && _investmentCategoryChartData.Any())
+                    {
+                        <ApexChart TItem="InvestmentCategoryChartData"
+                                   Title="Investment Distribution"
+                                   Height="350">
+                            <ApexPointSeries TItem="InvestmentCategoryChartData"
+                                             Items="@_investmentCategoryChartData"
+                                             Name="Target Amount"
+                                             SeriesType="SeriesType.Pie"
+                                             XValue="@(e => e.Category)"
+                                             YValue="@(e => e.Amount)"
+                                             PointColor="@(e => e.Color)" />
+                        </ApexChart>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Class="text-center mud-text-secondary">No data available</MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <!-- Progress Tracking Charts -->
+        <MudGrid Spacing="4" Class="mb-8">
+            <!-- Investment Progress Bar Chart -->
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="8" Class="pa-6 rounded-xl" Style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
+                    <div class="d-flex align-center mb-4">
+                        <MudIcon Icon="@Icons.Material.Filled.BarChart" Color="Color.Success" Class="mr-3" />
+                        <MudText Typo="Typo.h6" Style="font-weight: 600; color: #2c3e50;">Investment Progress (Top 10)</MudText>
+                    </div>
+                    @if (_investmentProgressChartData != null && _investmentProgressChartData.Any())
+                    {
+                        <ApexChart TItem="InvestmentProgressChartData"
+                                   Title="Target vs Invested"
+                                   Height="400">
+                            
+                            <ApexPointSeries TItem="InvestmentProgressChartData"
+                                             Items="@_investmentProgressChartData"
+                                             Name="Target Amount"
+                                             SeriesType="SeriesType.Bar"
+                                             XValue="@(e => e.GoalName)"
+                                             YValue="@(e => e.TargetAmount)"
+                                             Color="#667eea" />
+                            <ApexPointSeries TItem="InvestmentProgressChartData"
+                                             Items="@_investmentProgressChartData"
+                                             Name="Invested Amount"
+                                             SeriesType="SeriesType.Bar"
+                                             XValue="@(e => e.GoalName)"
+                                             YValue="@(e => e.InvestedAmount)"
+                                             Color="#f093fb" />
+                        </ApexChart>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Class="text-center mud-text-secondary">No data available</MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+
+            <!-- SIP Contribution Area Chart -->
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="8" Class="pa-6 rounded-xl" Style="background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%);">
+                    <div class="d-flex align-center mb-4">
+                        <MudIcon Icon="@Icons.Material.Filled.ShowChart" Color="Color.Warning" Class="mr-3" />
+                        <MudText Typo="Typo.h6" Style="font-weight: 600; color: #2c3e50;">SIP Contributions (Top 5)</MudText>
+                    </div>
+                    @if (_sipContributionChartData != null && _sipContributionChartData.Any())
+                    {
+                        <ApexChart TItem="SIPContributionChartData"
+                                   Title="Monthly SIP Amounts"
+                                   Height="400">
+                            <ApexPointSeries TItem="SIPContributionChartData"
+                                             Items="@_sipContributionChartData"
+                                             Name="SIP Amount"
+                                             SeriesType="SeriesType.Area"
+                                             XValue="@(e => e.GoalName)"
+                                             YValue="@(e => e.SIPAmount)"
+                                             Color="#4facfe" />
+                        </ApexChart>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Class="text-center mud-text-secondary">No data available</MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <!-- Goal Completion Timeline -->
+        <MudItem xs="12">
+            <MudPaper Elevation="8" Class="pa-6 rounded-xl" Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="d-flex align-center mb-4">
+                    <MudIcon Icon="@Icons.Material.Filled.Timeline" Style="color: white;" Class="mr-3" />
+                    <MudText Typo="Typo.h6" Style="font-weight: 600; color: white;">Goal Completion Timeline</MudText>
+                </div>
+                @if (_goalTimelineChartData != null && _goalTimelineChartData.Any())
+                {
+                    <ApexChart TItem="GoalTimelineChartData"
+                               Title="Target Years Distribution"
+                               Height="350">
+                        <ApexPointSeries TItem="GoalTimelineChartData"
+                                         Items="@_goalTimelineChartData"
+                                         Name="Goals"
+                                         SeriesType="SeriesType.Line"
+                                         XValue="@(e => e.Year)"
+                                         YValue="@(e => e.GoalCount)"
+                                         Color="#ffffff" />
+                    </ApexChart>
+                }
+                else
+                {
+                    <MudText Typo="Typo.body2" Class="text-center" Style="color: white; opacity: 0.8;">No timeline data available</MudText>
+                }
+            </MudPaper>
+        </MudItem>
+
+        
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public SupabaseApiService<Goal> GoalApiService { get; set; }
+
+    private List<Goal> _goals = new List<Goal>();
+    private bool _isLoading = true;
+    private string _errorMessage;
+    private System.Globalization.CultureInfo CultureInfo_IN = new System.Globalization.CultureInfo("en-IN");
+
+    // Chart Data Classes
+    public class GoalStatusChartData
+    {
+        public string Status { get; set; }
+        public int Count { get; set; }
+        public string Color { get; set; }
+    }
+
+    public class InvestmentCategoryChartData
+    {
+        public string Category { get; set; }
+        public decimal Amount { get; set; }
+        public string Color { get; set; }
+    }
+
+    public class InvestmentProgressChartData
+    {
+        public string GoalName { get; set; }
+        public decimal TargetAmount { get; set; }
+        public decimal InvestedAmount { get; set; }
+    }
+
+    public class SIPContributionChartData
+    {
+        public string GoalName { get; set; }
+        public decimal SIPAmount { get; set; }
+    }
+
+    public class GoalTimelineChartData
+    {
+        public int Year { get; set; }
+        public int GoalCount { get; set; }
+    }
+
+    // Chart Data Collections
+    private List<GoalStatusChartData> _goalStatusChartData = new();
+    private List<InvestmentCategoryChartData> _investmentCategoryChartData = new();
+    private List<InvestmentProgressChartData> _investmentProgressChartData = new();
+    private List<SIPContributionChartData> _sipContributionChartData = new();
+    private List<GoalTimelineChartData> _goalTimelineChartData = new();
+
+    // Legacy data for backward compatibility
+    private double[] _goalStatusData = new double[0];
+    private double[] _investmentCategoryData = new double[0];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGoals();
+    }
+
+    private async Task LoadGoals()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+        try
+        {
+            var result = await GoalApiService.GetAll();
+
+            if (result.IsSuccess)
+            {
+                _goals = result.Data?.OrderBy(g => g.TargetYear ?? DateTime.MaxValue).ToList() ?? new List<Goal>();
+                CalculateChartData();
+            }
+            else
+            {
+                _errorMessage = result.ErrorMessage;
+                Snackbar.Add($"Error loading goals: {_errorMessage}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"An unexpected error occurred: {ex.Message}";
+            Snackbar.Add($"An unexpected error occurred: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void CalculateChartData()
+    {
+        if (_goals == null || !_goals.Any())
+        {
+            return;
+        }
+
+        // Goal Status Distribution
+        var statusGroups = _goals.GroupBy(g => g.Status).ToList();
+        _goalStatusChartData = statusGroups.Select((g, index) => new GoalStatusChartData
+        {
+            Status = g.Key.ToString(),
+            Count = g.Count(),
+            Color = GetStatusChartColor(index)
+        }).ToList();
+
+        // Investment Category Distribution
+        var categoryGroups = _goals.GroupBy(g => g.InvestmentCategory)
+            .Select(g => new { Category = g.Key, TotalTarget = g.Sum(x => x.TargetAmount) })
+            .Where(x => x.TotalTarget > 0)
+            .ToList();
+
+        _investmentCategoryChartData = categoryGroups.Select((c, index) => new InvestmentCategoryChartData
+        {
+            Category = c.Category.ToString(),
+            Amount = c.TotalTarget,
+            Color = GetCategoryChartColor(index)
+        }).ToList();
+
+        // Investment Progress (Top 10)
+        var topGoalsForProgress = _goals.OrderByDescending(g => g.TargetAmount).Take(10).ToList();
+        _investmentProgressChartData = topGoalsForProgress.Select(g => new InvestmentProgressChartData
+        {
+            GoalName = g.Name.Length > 15 ? g.Name.Substring(0, 15) + "..." : g.Name,
+            TargetAmount = g.TargetAmount,
+            InvestedAmount = g.TotalAmountInvested
+        }).ToList();
+
+        // SIP Contribution (Top 5)
+        var topGoalsForSIP = _goals.Where(g => g.TotalSIPAmount > 0)
+            .OrderByDescending(g => g.TotalSIPAmount)
+            .Take(5)
+            .ToList();
+
+        _sipContributionChartData = topGoalsForSIP.Select(g => new SIPContributionChartData
+        {
+            GoalName = g.Name.Length > 15 ? g.Name.Substring(0, 15) + "..." : g.Name,
+            SIPAmount = g.TotalSIPAmount
+        }).ToList();
+
+        // Goal Timeline
+        var timelineGroups = _goals.Where(g => g.TargetYear.HasValue)
+            .GroupBy(g => g.TargetYear.Value.Year)
+            .OrderBy(g => g.Key)
+            .ToList();
+
+        _goalTimelineChartData = timelineGroups.Select(g => new GoalTimelineChartData
+        {
+            Year = g.Key,
+            GoalCount = g.Count()
+        }).ToList();
+
+        // Legacy data for backward compatibility
+        _goalStatusData = _goalStatusChartData.Select(x => (double)x.Count).ToArray();
+        _investmentCategoryData = _investmentCategoryChartData.Select(x => (double)x.Amount).ToArray();
+    }
+
+    private string GetStatusChartColor(int index)
+    {
+        var colors = new[] { "#667eea", "#f093fb", "#4facfe", "#43e97b", "#fa709a", "#ff9a9e" };
+        return colors[index % colors.Length];
+    }
+
+    private string GetCategoryChartColor(int index)
+    {
+        var colors = new[] { "#ffecd2", "#fcb69f", "#a8edea", "#fed6e3", "#d299c2", "#fef9d7" };
+        return colors[index % colors.Length];
+    }
+
+    private Color GetStatusColor(GoalStatus status)
+    {
+        return status switch
+        {
+            GoalStatus.YTB => Color.Info,
+            GoalStatus.InProgress => Color.Primary,
+            GoalStatus.Completed => Color.Success,
+            GoalStatus.Cancelled => Color.Error,
+            GoalStatus.Hold => Color.Warning,
+            _ => Color.Dark,
+        };
+    }
+
+    private void EditGoal(object id)
+    {
+        Navigation.NavigateTo($"/editgoal/{id}");
+    }
+}

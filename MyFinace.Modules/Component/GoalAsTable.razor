@@ -1,1 +1,116 @@
-﻿<div>Test</div>
+﻿@using MyFinance.Model
+@using System.Globalization
+@using MyFinance.Utility.Helper
+<!-- Table View -->
+<MudTable Items="@Goals" Dense="true" Hover="true"
+          Class="rounded-lg" Elevation="4">
+    <HeaderContent>
+        <MudTh>Goal</MudTh>
+        <MudTh>Platform</MudTh>
+        <MudTh>SIP Amount</MudTh>
+        <MudTh>Invested</MudTh>
+        <MudTh>Target</MudTh>
+        <MudTh>Progress</MudTh>
+        <MudTh>Tags</MudTh>
+        <MudTh>Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Goal">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                @if (!string.IsNullOrEmpty(context.ImageSVG))
+                {
+                    <div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                        @((MarkupString)context.ImageSVG)
+                    </div>
+                }
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Size="Size.Medium" />
+                }
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.body2"
+                             Color="@(ActiveCalculate (context)? Color.Default: Color.Secondary)"
+                             Class="font-weight-bold">@TextHelper.TruncateString(context.Name, 25)</MudText>
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@context.CreatedAt</MudText>
+                </MudStack>
+            </MudStack>
+        </MudTd>
+        <MudTd DataLabel="Platform">
+            <MudChip T="string" Size="Size.Small"
+                     Color="@(ActiveCalculate (context) ? Color.Dark : Color.Secondary)">
+				@context.CreatedAt?.ToString("MMM yyyy", new CultureInfo("en-IN"))
+            </MudChip>
+        </MudTd>
+        <MudTd DataLabel="Target Amount">
+            <MudText Typo="Typo.body2" Class="font-weight-bold text-success">@context.TargetAmount.ToString("C", new CultureInfo("en-IN"))</MudText>
+        </MudTd>
+        <MudTd DataLabel="Amount Invested">
+            <MudText Typo="Typo.body2" Class="font-weight-bold text-info">@context.TotalAmountInvested.ToString("C", new CultureInfo("en-IN"))</MudText>
+        </MudTd>
+        <MudTd DataLabel="SIP">
+            <MudText Typo="Typo.body2" Class="font-weight-bold text-warning">@context.TotalSIPAmount.ToString("C", new CultureInfo("en-IN"))</MudText>
+        </MudTd>
+        <MudTd DataLabel="Progress">
+            <MudStack Spacing="1">
+                <MudProgressLinear Color="@ProgressColor.GetProgressColor(context.TotalAmountInvested, context.TargetAmount)" Size="Size.Medium" Rounded="true"
+                                   Value="@(context.TargetAmount > 0 ? (double)(context.TotalAmountInvested / context.TargetAmount * 100M) : 0)" />
+                <MudText Typo="Typo.caption" Class="text-center">
+                    @(context.TargetAmount > 0 ? (context.TotalAmountInvested / context.TargetAmount).ToString("P0") : "0%")
+                </MudText>
+            </MudStack>
+        </MudTd>
+        <MudTd DataLabel="Tags">
+            @if (!string.IsNullOrEmpty(context.Tag))
+            {
+                <MudStack Row="true" Spacing="1">
+                    @foreach (var tag in context.Tag.Split(',', StringSplitOptions.RemoveEmptyEntries).Take(2))
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Tertiary">@tag.Trim()</MudChip>
+                    }
+                    @if (context.Tag.Split(',', StringSplitOptions.RemoveEmptyEntries).Length > 2)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">+@(context.Tag.Split(',', StringSplitOptions.RemoveEmptyEntries).Length - 2)</MudText>
+                    }
+                </MudStack>
+            }
+        </MudTd>
+        <MudTd DataLabel="Actions">
+            <MudStack Row="true" Spacing="1">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small"
+                               OnClick="@(() => OnEditGoal.InvokeAsync(context.Id))" Title="Edit Goal" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                               OnClick="(() => OnConfirmDelete.InvokeAsync((context.Id, context.Name)))" Title="Delete Goal" />
+            </MudStack>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code{
+    [Parameter]
+    public IEnumerable<Goal> Goals { get; set; }
+
+    private bool ActiveCalculate(Goal goal)
+    {
+        switch(goal.Status)
+        {
+            case GoalStatus.YTB:
+            case GoalStatus.InProgress:
+                return true;
+            case GoalStatus.Completed:
+            case GoalStatus.Cancelled:
+            case GoalStatus.Hold:
+                return false;
+            default:
+                return false;
+
+        }
+    }
+
+    [Parameter]
+    public EventCallback<Guid> OnEditGoal { get; set; }
+
+    [Parameter]
+    public EventCallback<(Guid Id, string Name)> OnConfirmDelete { get; set; }
+}
+
+

@@ -4,7 +4,9 @@
 @using MyFinance.Utility.Helper
 @using Supabase.RestAPI
 @using System.Text.Json
+
 @inject ISnackbar Snackbar
+@inject ILogger<GoalEntryForm> Logger
 
 @inject NavigationManager NavigationManager
 
@@ -22,92 +24,134 @@
             <MudSkeleton Width="105px" Height="40px" Class="ml-3" />
         </MudCardActions>
     </MudCard>
-
 }
 else
-{
-    <MudContainer MaxWidth="MaxWidth.Medium" Class="my-8">
-        <div class="d-flex flex-column align-center justify-center mb-6">
-            <div class="d-flex align-center justify-center">
-                <MudIcon Icon="@Icons.Material.Filled.Lightbulb" Color="Color.Primary" Size="Size.Large" Class="mr-2" />
-                <MudText Typo="Typo.h5" Align="Align.Center" Color="Color.Primary">Create New Goal Entry</MudText>
-            </div>
-            <MudText Typo="Typo.body2" Align="Align.Center" Class="mt-2">
-                Set up your financial aspirations by defining a new goal.
-            </MudText>
+{    
+    <div class="d-flex flex-column align-center justify-center mb-6">
+        <div class="d-flex align-center justify-center">
+            <MudIcon Icon="@Icons.Material.Filled.Lightbulb" Color="Color.Primary" Size="Size.Large" Class="mr-2" />
+            <MudText Typo="Typo.h5" Align="Align.Center" Color="Color.Primary">Goal SIP Contribution</MudText>
         </div>
+        <MudText Typo="Typo.body2" Align="Align.Center" Class="mt-2">
+            Set up your financial aspirations by defining a Financial Goal by SIP.
+        </MudText>
+    </div>
 
-        <MudPaper Elevation="6" Class="pa-8 rounded-xl shadow-lg animate__animated animate__fadeInUp" Color="Color.Surface">
-            <MudForm @ref="form" Model="@goalEntry" EnableValidation="true">
-                <MudGrid Spacing="3">
-                    <MudItem xs="12" sm="6">
-                        <SelectGoal @ref="@selectGoal" GoalSelected="HandleGoalSelection"  InitialSelectedGoal="@InitialGoalForChild" ApiService="@GoalService" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="goalEntry.Name" Label="Goal Name" Required="true" RequiredError="Goal Name is required!"
-                                      AdornmentIcon="@Icons.Material.Filled.EmojiObjects" AdornmentColor="Color.Warning" Adornment="Adornment.Start" Variant="Variant.Outlined" FullWidth="true"></MudTextField>
-                    </MudItem>
-                    <MudItem xs="12">
-                        <MudTextField @bind-Value="goalEntry.Description" Label="Description" Lines="3" Variant="Variant.Outlined" FullWidth="true"
-                                      AdornmentIcon="@Icons.Material.Filled.Description" AdornmentColor="Color.Info" Adornment="Adornment.Start"></MudTextField>
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudSelect @bind-Value="goalEntry.Platform" Label="Platform" Required="true" RequiredError="Platform is required!"
-                                   AdornmentIcon="@Icons.Material.Filled.Cloud" AdornmentColor="Color.Tertiary" Adornment="Adornment.Start" Variant="Variant.Outlined" FullWidth="true">
-                            @foreach (var platform in GoalEntryMetaData.Platform)
-                            {
-                                <MudSelectItem Value="@platform">@platform</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudCheckBox @bind-Value="goalEntry.IsActive" Label="Is Active" Color="Color.Primary" Class="mt-4" T="bool"></MudCheckBox>
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="goalEntry.FundName" Label="Fund Name"
-                                      AdornmentIcon="@Icons.Material.Filled.AccountBalance" AdornmentColor="Color.Surface" Adornment="Adornment.Start" Variant="Variant.Outlined" FullWidth="true"></MudTextField>
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="goalEntry.SIPAmount" Label="SIP Amount" Required="true" RequiredError="SIP Amount is required!"
-                                         Min="0" Format="N2" Adornment="Adornment.Start" AdornmentText="₹" HideSpinButtons="true" Variant="Variant.Outlined" FullWidth="true"
-                                         AdornmentIcon="@Icons.Material.Filled.Payments" AdornmentColor="Color.Success"></MudNumericField>
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="goalEntry.TargetAmount" Label="Target Amount" Required="true" RequiredError="Target Amount is required!"
-                                         Min="0" Format="N2" Adornment="Adornment.Start" AdornmentText="₹" HideSpinButtons="true" Variant="Variant.Outlined" FullWidth="true"
-                                         AdornmentIcon="@Icons.Material.Filled.TrendingUp" AdornmentColor="Color.Info"></MudNumericField>
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="goalEntry.InvestedAmount" Label="Invested Amount" Required="true" RequiredError="Invested Amount is required!"
-                                         Min="0" Format="N2" Adornment="Adornment.Start" AdornmentText="₹" HideSpinButtons="true" Variant="Variant.Outlined" FullWidth="true"
-                                         AdornmentIcon="@Icons.Material.Filled.AccountBalanceWallet" AdornmentColor="Color.Success"></MudNumericField>
-                    </MudItem>
-                    <MudItem xs="12">
-                        <MudTextField @bind-Value="goalEntry.ImageSVG" Label="Image SVG (Paste SVG content)" Lines="5" Variant="Variant.Outlined" FullWidth="true"
-                                      AdornmentIcon="@Icons.Material.Filled.Image" AdornmentColor="Color.Warning" Adornment="Adornment.Start"></MudTextField>
-                    </MudItem>
-                    <MudItem xs="12">
-                        <MudTextField @bind-Value="goalEntry.Tag" Label="Tags (comma separated)"
-                                      AdornmentIcon="@Icons.Material.Filled.LocalOffer" AdornmentColor="Color.Error" Adornment="Adornment.Start" Variant="Variant.Outlined" FullWidth="true"></MudTextField>
-                    </MudItem>
-                    <MudItem xs="12">
-                        <MudTextField @bind-Value="goalEntry.OwnedBy" Label="Owned By"
-                                      AdornmentIcon="@Icons.Material.Filled.Person" AdornmentColor="Color.Surface" Adornment="Adornment.Start" Variant="Variant.Outlined" FullWidth="true"></MudTextField>
-                    </MudItem>
-                </MudGrid>
-            </MudForm>
-            <MudCardActions Class="d-flex justify-content-end pa-4">
-                <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Secondary" OnClick="ResetForm" Class="mr-2">
-                    <MudIcon Icon="@Icons.Material.Filled.Cancel" Class="mr-1" />
-                    Cancel
-                </MudButton>
-                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveGoal" Disabled="@(!form.IsValid)" EndIcon="@Icons.Material.Filled.Save">
-                    <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-1" />
-                    @(_model + " Goal")
-                </MudButton>
-            </MudCardActions>
-        </MudPaper>
-    </MudContainer>
+    <MudPaper Elevation="6" Class="pa-8 rounded-xl shadow-lg animate__animated animate__fadeInUp" Color="Color.Surface">
+        <MudForm @ref="form" Model="@goalEntry" EnableValidation="true">
+            <MudGrid Spacing="3">
+                <MudItem xs="12" sm="6">
+                    <SelectGoal @ref="@selectGoal" GoalSelected="HandleGoalSelection"  InitialSelectedGoal="@InitialGoalForChild" ApiService="@GoalService" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="goalEntry.Name" Label="Goal Name" Required="true" RequiredError="Goal Name is required!"
+                                    AdornmentIcon="@Icons.Material.Filled.EmojiObjects" AdornmentColor="Color.Warning" Adornment="Adornment.Start" Variant="Variant.Outlined" FullWidth="true"></MudTextField>
+                </MudItem>
+                <MudItem xs="12">
+                    @* @bind-Value="goalEntry.Description" *@
+
+                    <MudList T="string">
+                        <MudListItem Icon="@Icons.Material.Filled.Description" IconColor="@(goalEntry.IsActive ? Color.Info : Color.Secondary)" >
+                            @GoalDescription
+                        </MudListItem>
+                    </MudList>
+                  
+
+                    @* <MudTextField  @bind-Value="@goalEntry.Description" FullWidth="true"
+                                    AdornmentIcon="@Icons.Material.Filled.Description" AdornmentColor="Color.Info" Adornment="Adornment.Start"></MudTextField> *@
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudSelect @bind-Value="goalEntry.Platform" Label="Platform" Required="true" RequiredError="Platform is required!"
+                                AdornmentIcon="@Icons.Material.Filled.Cloud" AdornmentColor="Color.Tertiary" Adornment="Adornment.Start" Variant="Variant.Outlined" FullWidth="true">
+                        @foreach (var platform in GoalEntryMetaData.Platform)
+                        {
+                            <MudSelectItem Value="@platform">@platform</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudCheckBox @bind-Value="goalEntry.IsActive" Label="Is Active" Color="Color.Primary" Class="mt-4" T="bool"></MudCheckBox>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="goalEntry.FundName" Label="Fund Name"
+                                    AdornmentIcon="@Icons.Material.Filled.AccountBalance" AdornmentColor="Color.Surface" Adornment="Adornment.Start" Variant="Variant.Outlined" FullWidth="true"></MudTextField>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudNumericField @bind-Value="goalEntry.SIPAmount" Label="SIP Amount" Required="true" RequiredError="SIP Amount is required!"
+                                        Min="0" Format="N2" Adornment="Adornment.Start" AdornmentText="₹" HideSpinButtons="true" Variant="Variant.Outlined" FullWidth="true"
+                                        AdornmentIcon="@Icons.Material.Filled.Payments" AdornmentColor="Color.Success"></MudNumericField>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudNumericField @bind-Value="goalEntry.TargetAmount" Label="Target Amount" Required="true" RequiredError="Target Amount is required!"
+                                        Min="0" Format="N2" Adornment="Adornment.Start" AdornmentText="₹" HideSpinButtons="true" Variant="Variant.Outlined" FullWidth="true"
+                                        AdornmentIcon="@Icons.Material.Filled.TrendingUp" AdornmentColor="Color.Info"></MudNumericField>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                         
+                    <MudNumericField @bind-Value="goalEntry.InvestedAmount" Label="Invested Amount" Required="true" RequiredError="Invested Amount is required!"
+                                     HelperTextOnFocus="true" HelperText="Combination of Invested Amount and Profit. eg. 'Total Value'"
+                                        Min="0" Format="N2" Adornment="Adornment.Start" AdornmentText="₹" HideSpinButtons="true" Variant="Variant.Outlined" FullWidth="true"
+                                        AdornmentIcon="@Icons.Material.Filled.AccountBalanceWallet" AdornmentColor="Color.Success"></MudNumericField>
+                   
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="goalEntry.ImageSVG" Label="Image SVG (Paste SVG content)" Lines="5" Variant="Variant.Outlined" FullWidth="true"
+                                    AdornmentIcon="@Icons.Material.Filled.Image" AdornmentColor="Color.Warning" Adornment="Adornment.Start"></MudTextField>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTextField @bind-Value="goalEntry.Tag" Label="Tags (comma separated)"
+                                    AdornmentIcon="@Icons.Material.Filled.LocalOffer" AdornmentColor="Color.Error" Adornment="Adornment.Start" Variant="Variant.Outlined" FullWidth="true"></MudTextField>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudSelect T="string" @bind-Value="goalEntry.OwnedBy" Label="Owned By" Required="true" RequiredError="Platform is required!"
+                               AdornmentIcon="@Icons.Material.Filled.Person" AdornmentColor="Color.Surface" Adornment="Adornment.Start" Variant="Variant.Outlined" FullWidth="true">
+                        @foreach (var owned in _ownedBy)
+                        {
+                            <MudSelectItem Value="owned">@owned</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+        <MudCardActions Class="d-flex justify-content-end pa-4">
+
+            <div Class="d-flex justify-space-between flex-grow-1 gap-4">
+                <div Class="d-flex justify-start flex-grow-1 gap-4" Elevation="0">
+                    <MudIconButton OnClick="@(() => NavigationManager.NavigateTo("dynamic-forms/GoalContribution/List"))"
+                                   Icon="@Icons.Material.Filled.ArrowBack"
+                                   aria-label="go back" />
+                </div>
+                <div Class="d-flex justify-end flex-grow-1 gap-4" Elevation="0">        
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Small" StartIcon="@Icons.Material.Filled.Save"
+                               Class="mt-4 mud-elevation-2"
+                               OnClick="SaveGoal">
+                        @if (_processing)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Processing</MudText>
+                        }
+                        else
+                        {
+                            <MudText>Submit</MudText>
+                        }
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Secondary"
+                               Size="Size.Medium"
+                               Class="mt-4 mud-elevation-2"
+                               StartIcon="@Icons.Material.Filled.Refresh"
+                               OnClick="ResetForm">
+                        Reset
+                    </MudButton>
+
+                </div>
+            </div>
+            
+        </MudCardActions>
+    </MudPaper>
+
 }
 
 @* Variable Declarations *@
@@ -132,13 +176,26 @@ else
     SelectGoal selectGoal;
     private bool _isCreate = true; // Flag to determine if we are creating a new goal entry or 'edit' a existing goal.
     private string _model = string.Empty;
+    private readonly string[] _ownedBy =
+        {
+		"SR Ganesh Ram","SR Alamelu"
+        };
 
-	
+    private string GoalDescription =>
+        $"To buy/reach  '{goalEntry.Name}' by investing in {goalEntry.FundName} " +
+        $"and invested the amount of '{goalEntry.InvestedAmount.ToString("C", Utils.CultureInfo_IN)}' in the platform '{goalEntry.Platform}'. " +
+        $"Currently this goal is {(goalEntry.IsActive ? "active" : "not active")}. " +
+        $"The Target Amount is {goalEntry.TargetAmount.ToString("C", Utils.CultureInfo_IN)} and the SIP Amount is '{goalEntry.SIPAmount.ToString("C", Utils.CultureInfo_IN)}'. " +
+        $"This account is owned by '{goalEntry.OwnedBy}'. Holded on the platform {goalEntry.Platform}'. " +
+        $"Currently this is updated on '{(goalEntry.LastModified.HasValue ? goalEntry.LastModified.Value.ToString("D") : "NA")}'.";
+    
+
 }
 
 @* Initialization and Goal Setter *@
 @code{
 
+	private string _description = "Goal Entry Form";
     protected override async Task OnInitializedAsync()
     {
         _isInitializing = true;
@@ -213,57 +270,76 @@ else
 
 @* Create/Update Goal Event Handler *@
 @code {
+    private bool _processing = false;
     private async Task SaveGoal()
     {
-        await form.Validate();
-
-        if (form.IsValid)
+        _processing = true;
+        try
         {
-            Console.WriteLine($"Creating Goal Entry: {JsonSerializer.Serialize<GoalEntry>(goalEntry)}");
-            SupabaseResult<GoalEntry> result;
+            await form.Validate();
 
-            if (_isCreate)
+            if (form.IsValid)
             {
-                result = await GoalEntryService.Create(goalEntry);
+                Console.WriteLine($"Creating Goal Entry: {JsonSerializer.Serialize<GoalEntry>(goalEntry)}");
+                SupabaseResult<GoalEntry> result;
+                goalEntry.LastModified = DateTime.UtcNow; // Set the last modified time to now
+				goalEntry.Description = GoalDescription; // Update the description based on the current state of the goal entry
+                if (_isCreate)
+                {
+                    result = await GoalEntryService.Create(goalEntry);
+                }
+                else
+                {
+
+                    result = await GoalEntryService.Update(GoalID, goalEntry);
+                    //result = await GoalEntryService.Update(goalEntry);
+                }
+
+                if (result.IsSuccess)
+                {
+                    var resultData = result.Data; // Store the created goal for subsequent operations
+                    Snackbar.Add($"Goal Entry {_model} Successfully!", Severity.Success, config =>
+                    {
+                        config.VisibleStateDuration = 3000;
+                        config.ShowCloseIcon = false;
+                    });
+                }
+                else
+                {
+                    Snackbar.Add($"Goal Entry {_model} Failed! - {result.ErrorMessage}", Severity.Error, config =>
+                    {
+                        config.VisibleStateDuration = 3000;
+                        config.ShowCloseIcon = false;
+                    });
+                }
+
+                await CalculateParentGoals();
+                ResetForm();
+                NavigationManager.NavigateTo("dynamic-forms/GoalContribution/List");
             }
             else
             {
-
-                result = await GoalEntryService.Update(GoalID, goalEntry);
-                //result = await GoalEntryService.Update(goalEntry);
-            }
-
-            if (result.IsSuccess)
-            {
-                var resultData = result.Data; // Store the created goal for subsequent operations
-                Snackbar.Add($"Goal Entry {_model} Successfully!", Severity.Success, config =>
+                Snackbar.Add("Please correct the form errors.", Severity.Warning, config =>
                 {
                     config.VisibleStateDuration = 3000;
                     config.ShowCloseIcon = false;
                 });
             }
-            else
-            {
-                Snackbar.Add($"Goal Entry {_model} Failed! - {result.ErrorMessage}", Severity.Error, config =>
-                {
-                    config.VisibleStateDuration = 3000;
-                    config.ShowCloseIcon = false;
-                });
-            }
-
-            await CalculateParentGoals();
-            ResetForm();
-
-			NavigationManager.NavigateTo("dynamic-forms/Goals/List"); 
         }
-        else
+        catch (Exception ex)
         {
-            Snackbar.Add("Please correct the form errors.", Severity.Warning, config =>
+			Logger.LogError(ex, "Error saving goal entry");
+            Snackbar.Add($"Error saving goal entry: {ex.Message}", Severity.Error, config =>
             {
                 config.VisibleStateDuration = 3000;
                 config.ShowCloseIcon = false;
             });
+		}
+        finally
+        {
+            _processing = false;
         }
+        
     }
 
     private void ResetForm()

@@ -2,10 +2,12 @@
 @using MyFinance.Model
 @using MyFinance.Utility.Helper
 @using Supabase.RestAPI
-@using System.Globalization 
+@using System.Globalization
+
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject NavigationManager NavigationManager
+
 
 @if (isLoading && DisplayedGoals.Count == 0 && totalGoalsCount == 0)
 {
@@ -20,7 +22,15 @@ else
     <div class="ma-2 pa-2 d-flex" elevation="0">
         <MudStack Spacing="2" Row="true" AlignItems="AlignItems.Center">
             <MudIcon Color="Color.Warning" Icon="@Icons.Material.Filled.Pin" Size="Size.Large" />
-            <MudText Typo="Typo.h4" Class="mb-0 mud-text-secondary">Your Financial Goals</MudText>
+            @if (DeviceType == DeviceType.Mobile)
+            {
+                <MudText Typo="Typo.button" Class="mb-0 mud-text-secondary">Financial Goals</MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.h4" Class="mb-0 mud-text-secondary">Your Financial Goals</MudText>
+            }
+            
         </MudStack>
         <MudSpacer />
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
@@ -75,12 +85,15 @@ else
                       Class="rounded-lg" Elevation="4">
                 <HeaderContent>
                     <MudTh>Goal</MudTh>
-                    <MudTh>Platform</MudTh>
+                    <MudTh>
+                        <MudTableSortLabel SortBy="new Func<GoalEntry, object>(x => x.Platform)">
+                            Platform
+                        </MudTableSortLabel>                        
+                    </MudTh>
                     <MudTh>SIP Amount</MudTh>
                     <MudTh>Invested</MudTh>
                     <MudTh>Target</MudTh>
                     <MudTh>Progress</MudTh>
-                    <MudTh>Tags</MudTh>
                     <MudTh>Actions</MudTh>
                 </HeaderContent>
                 <RowTemplate>
@@ -97,9 +110,15 @@ else
                                 <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Size="Size.Medium" />
                             }
                             <MudStack Spacing="0">
+
                                 <MudText Typo="Typo.body2" 
                                  Color="@(context.IsActive? Color.Default: Color.Secondary)" 
-                                 Class="font-weight-bold">@TextHelper.TruncateString(context.Name, 25)</MudText>
+                                 Class="font-weight-bold">
+                                    <MudTooltip Text="@context.Description">
+                                        @TextHelper.TruncateString(context.Name, 30)
+                                    </MudTooltip>
+                                 </MudText>
+                                
                                 <MudText Typo="Typo.caption" Class="mud-text-secondary">@context.FundName</MudText>
                             </MudStack>
                         </MudStack>
@@ -120,28 +139,14 @@ else
                     </MudTd>
                     <MudTd DataLabel="Progress">
                         <MudStack Spacing="1">
-                            <MudProgressLinear Color="@GetProgressColor(context.InvestedAmount, context.TargetAmount)" Size="Size.Medium" Rounded="true"
+                            <MudProgressLinear Color="@ProgressColor.GetProgressColor(context.InvestedAmount, context.TargetAmount)" Size="Size.Medium" Rounded="true"
                                                Value="@(context.TargetAmount > 0 ? (double)(context.InvestedAmount / context.TargetAmount * 100M) : 0)" />
                             <MudText Typo="Typo.caption" Class="text-center">
                                 @(context.TargetAmount > 0 ? (context.InvestedAmount / context.TargetAmount).ToString("P0") : "0%")
                             </MudText>
                         </MudStack>
                     </MudTd>
-                    <MudTd DataLabel="Tags">
-                        @if (!string.IsNullOrEmpty(context.Tag))
-                        {
-                            <MudStack Row="true" Spacing="1">
-                                @foreach (var tag in context.Tag.Split(',', StringSplitOptions.RemoveEmptyEntries).Take(2))
-                                {
-                                    <MudChip T="string" Size="Size.Small" Color="Color.Tertiary">@tag.Trim()</MudChip>
-                                }
-                                @if (context.Tag.Split(',', StringSplitOptions.RemoveEmptyEntries).Length > 2)
-                                {
-                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">+@(context.Tag.Split(',', StringSplitOptions.RemoveEmptyEntries).Length - 2)</MudText>
-                                }
-                            </MudStack>
-                        }
-                    </MudTd>
+                    
                     <MudTd DataLabel="Actions">
                         <MudStack Row="true" Spacing="1">
                             <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small"
@@ -186,6 +191,13 @@ else
                                     <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" Class="mr-1" />
                                     @TextHelper.TruncateString(goal.Description, 98)
                                 </MudText>
+
+                                <MudTooltip Text="Last Modified" Arrow="true">
+                                    <MudChip T="string" Size="Size.Small" Icon="material-symbols-outlined/nest_clock_farsight_analog" Variant="Variant.Text"
+                                             Color="Color.Info">
+                                        @(goal.LastModified.HasValue? goal.LastModified.Value.ToString("D"): "")
+                                    </MudChip>
+                                </MudTooltip>
 
                                 <MudList T="string" DisablePadding="true" Class="my-2">
                                     <MudListItem Icon="@Icons.Material.Filled.AccountBalance" IconColor="Color.Secondary">
@@ -232,7 +244,7 @@ else
                                 {
                                     @* Color = "@(goal.IsActive? Color.Dark: Color.Secondary)" *@
                                     <MudProgressLinear 
-                                        Color="@GetProgressColor(goal.InvestedAmount, goal.TargetAmount)" Size="Size.Large" Rounded="true"
+                                        Color="@ProgressColor.GetProgressColor(goal.InvestedAmount, goal.TargetAmount)" Size="Size.Large" Rounded="true"
                                                        Value="@((double)(goal.InvestedAmount / goal.TargetAmount * 100M))" Class="my-3">
                                         <MudText Typo="Typo.body2" Class="mud-text-white">@((goal.InvestedAmount / goal.TargetAmount).ToString("P0"))</MudText>
                                     </MudProgressLinear>
@@ -279,11 +291,14 @@ else
                                     <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Size="Size.Large" />
                                 }
                                 <MudStack Spacing="0">
-                                    <MudText Typo="Typo.subtitle1"
-                                             Color="@(goal.IsActive? Color.Default : Color.Secondary)"
-                                             Class="font-weight-bold mud-text-primary">
-                                        @TextHelper.TruncateString(goal.Name, 30)
-                                    </MudText>
+                                    <MudLink Href="@($"dynamic-forms/GoalContribution/edit-plan/{goal.Id}")" Typo="Typo.h6"
+                                             Color="@(goal.IsActive? Color.Default: Color.Secondary)"
+                                        Class="font-weight-bold mud-text-primary">
+                                        <MudTooltip Text="@goal.Description">
+                                            @TextHelper.TruncateString(goal.Name, 30)
+                                        </MudTooltip>
+                                    </MudLink>
+                                   
                                     <MudText Typo="Typo.caption"                                        
                                         Class="mud-text-secondary">@goal.FundName</MudText>
                                 </MudStack>
@@ -316,41 +331,50 @@ else
                         </div>
 
                         <!-- Progress -->
-                        <div style="min-width: 200px;">
-                            <MudStack Spacing="1">
-                                <MudProgressLinear Color="@GetProgressColor(goal.InvestedAmount, goal.TargetAmount)" Size="Size.Medium" Rounded="true"
-                                                   Value="@(goal.TargetAmount > 0 ? (double)(goal.InvestedAmount / goal.TargetAmount * 100M) : 0)" />
-                                <MudText Typo="Typo.caption" Class="text-center">
-                                    @(goal.TargetAmount > 0 ? (goal.InvestedAmount / goal.TargetAmount).ToString("P0") : "0%")
-                                </MudText>
+                        <div style="min-width: 30%;">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
+                                @{
+                                    var progressValue = goal.TargetAmount > 0 ? (double)(goal.InvestedAmount / goal.TargetAmount * 100M) : 0;
+                                }
+                                <MudProgressCircular Color="@ProgressColor.GetProgressColor(goal.InvestedAmount, goal.TargetAmount)" Rounded="true" Size="Size.Large"
+                                                     StrokeWidth="4" Value="@progressValue">
+                                    @if (progressValue >= 100)
+                                    {
+                                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" />
+                                    }
+                                    else
+                                    {
+                                        <MudText Typo="Typo.caption" Class="text-center">
+                                            @((goal.TargetAmount > 0 ? (goal.InvestedAmount / goal.TargetAmount).ToString("P0") : "0%"))
+                                        </MudText>
+                                    }
+                                </MudProgressCircular>
+                                <MudStack Justify="Justify.Center" Spacing="0" Style="flex-grow: 1;">
+                                    <MudProgressLinear Color="@ProgressColor.GetProgressColor(goal.InvestedAmount, goal.TargetAmount)" Striped="false" Size="Size.Large"
+                                                       Min="0" Max="@((double) @goal.TargetAmount)"
+                                                       Value="@((double) @goal.InvestedAmount)" Class="my-2">
+                                        <MudText Typo="Typo.caption">
+                                            Remaining: @((goal.TargetAmount - goal.InvestedAmount).ToString("C0", new CultureInfo("en-IN")))
+                                        </MudText>
+                                    </MudProgressLinear>
+                                </MudStack>
                             </MudStack>
                         </div>
 
-                        <!-- Tags -->
-                        <div style="min-width: 150px;">
-                            @if (!string.IsNullOrEmpty(goal.Tag))
-                            {
-                                <MudStack Row="true" Spacing="1">
-                                    @foreach (var tag in goal.Tag.Split(',', StringSplitOptions.RemoveEmptyEntries).Take(3))
-                                    {
-                                        <MudChip T="string" Size="Size.Small" Color="Color.Tertiary">@tag.Trim()</MudChip>
-                                    }
-                                    @if (goal.Tag.Split(',', StringSplitOptions.RemoveEmptyEntries).Length > 3)
-                                    {
-                                        <MudText Typo="Typo.caption" Class="mud-text-secondary">+@(goal.Tag.Split(',', StringSplitOptions.RemoveEmptyEntries).Length - 3)</MudText>
-                                    }
-                                </MudStack>
-                            }
-                        </div>
+                        <!-- Last modified -->
+                        <div style="min-width: 20px;">
+                            <MudTooltip Text="@($"Last Modified : {(goal.LastModified.HasValue ? goal.LastModified.Value.ToString("D") : "Not Available")}")" Arrow="true">
+                                <MudChip T="string" Size="Size.Small" Icon="material-symbols-outlined/nest_clock_farsight_analog" Variant="Variant.Text"
+                                         Color="Color.Info" />
+                            </MudTooltip>
+                        </div>                      
 
                         <MudSpacer />
 
                         <!-- Actions -->
                         <MudStack Row="true" Spacing="2">
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Medium"
-                                           OnClick="@(() => EditGoal(goal.Id))" Title="Edit Goal" />
                             <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Medium"
-                                           OnClick="@(() => ConfirmDeleteGoal(goal.Id, goal.Name))" Title="Delete Goal" />
+                              OnClick="@(() => ConfirmDeleteGoal(goal.Id, goal.Name))" Title="Delete Goal" />
                         </MudStack>
                     </MudStack>
                 }
@@ -381,34 +405,12 @@ else
     }
 }
 
-@code{
-    private Color GetProgressColor(decimal investmentAmt, decimal targetAmt)
-    {
-        var value = (double)(investmentAmt / targetAmt * 100M);
-        switch (value)
-        {
-            case < 50:
-                return Color.Error; // Red for less than 50%
-                break;
-            case < 75:  
-                return Color.Warning; // Yellow for 50% to 75%  
-                break;  
-            case < 100:
-                return Color.Info; // Blue for 75% to 100%
-                break;
-            default:
-                return Color.Success; // Green for 100% and above
-                break;
-        }
-		return Color.Default; // Fallback color
-        
-	}
-}
-
 @code {
     [Parameter]
     public SupabaseApiService<GoalEntry> SupabaseService { get; set; }
 
+    [Parameter]
+    public DeviceType DeviceType { get; set; } = DeviceType.Desktop;
     // View mode selection
     private string selectedViewMode = "card";
     
@@ -423,7 +425,7 @@ else
     
     // Pagination properties
     private int currentPage = 1;
-    private int limit = 4;
+    private int limit = 12;
     private bool isLoading = false;
     private int totalGoalsCount = 0;
     private int totalFilteredGoals = 0;
@@ -477,7 +479,7 @@ else
     {
         if (string.IsNullOrWhiteSpace(searchTerm))
         {
-            FilteredGoals = AllGoals.ToList();
+            FilteredGoals = AllGoals.OrderBy(g => g.LastModified).ToList();
         }
         else
         {
@@ -487,7 +489,7 @@ else
                 (!string.IsNullOrEmpty(g.FundName) && g.FundName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
                 (!string.IsNullOrEmpty(g.Platform) && g.Platform.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
                 (!string.IsNullOrEmpty(g.Tag) && g.Tag.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
-            ).ToList();
+            ).OrderBy(g => g.LastModified).ToList();
         }
 
         totalFilteredGoals = FilteredGoals.Count;

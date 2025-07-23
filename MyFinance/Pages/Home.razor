@@ -2,6 +2,7 @@
 @page "/dashboard"
 
 @using MyFinace.Modules.GoalEntry
+@using MyFinace.Modules.Goals
 @using MyFinance.Component
 @using MyFinance.Model
 @using Supabase.RestAPI
@@ -11,9 +12,6 @@
 @inject SupabaseApiService<GoalEntry> GoalEntryService
 @inject IAuthTokenProvider AuthTokenProvider
 
-
-
-@* @if (!string.IsNullOrEmpty(GlobalServices.AuthToken)) *@
 @if (_isInitializing)
 {
     <MudCard>
@@ -28,13 +26,16 @@
             <MudSkeleton Width="105px" Height="40px" Class="ml-3" />
         </MudCardActions>
     </MudCard>
-    
 }
 else
-{
-    @* <SelectGoal GoalSelected="HandleGoalSelection" ApiService="@GoalService" /> *@
+{    
     
-    <MyFinace.Modules.Goals.GoalDashboard GoalApiService="@GoalService" />
+
+    <GoalsDashboard GoalApiService="@GoalService" />
+    <br />
+    <GoalDashboard GoalApiService="@GoalService" />
+     <br/>
+    <GoalSummary />
 }
 
 

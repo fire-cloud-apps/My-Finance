@@ -1,0 +1,141 @@
+﻿@using Microsoft.Extensions.Logging
+@using MyFinance.Model
+@using MyFinance.Utility.Helper
+@using System.Globalization
+@using Supabase.RestAPI
+@inject SupabaseApiService<Goal> GoalService
+@inject ILogger<GoalSummary> Logger
+
+@if (_isInitializing)
+{
+    <MudCard>
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="200px" />
+        <MudCardContent>
+            <MudSkeleton Width="30%" Height="42px;" />
+            <MudSkeleton Width="80%" />
+            <MudSkeleton Width="100%" />
+        </MudCardContent>
+        <MudCardActions>
+            <MudSkeleton Width="64px" Height="40px" Class="ml-2" />
+            <MudSkeleton Width="105px" Height="40px" Class="ml-3" />
+        </MudCardActions>
+    </MudCard>
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-8">
+        <MudPaper Elevation="6" Class="rounded-lg overflow-hidden">
+            @foreach (var goal in _goalList)
+            {
+                <MudGrid Class="pa-4 hover:bg-surface align-center" Style="border-bottom: 1px solid var(--mud-palette-lines-default);">
+
+                    <!-- Goal Icon & Info -->
+                    <MudItem xs="12" sm="6" md="4" lg="3">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+                            @if (!string.IsNullOrEmpty(goal.ImageSVG))
+                            {
+                                <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                                    @((MarkupString)goal.ImageSVG)
+                                </div>
+                            }
+                            else
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Size="Size.Large" />
+                            }
+                            <MudStack Spacing="0">
+                                <MudText Typo="Typo.h6" Color="Color.Default" Class="font-weight-bold">
+                                    <MudTooltip Text="@goal.Name">
+                                        @TextHelper.TruncateString(goal.Name, 30)
+                                    </MudTooltip>
+                                </MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                    <MudTooltip Text="@goal.Description">
+                                        @TextHelper.TruncateString(goal.Description, 50)
+                                    </MudTooltip>
+                                </MudText>
+                            </MudStack>
+                        </MudStack>
+                    </MudItem>
+
+                    <!-- Financial Info -->
+                    <MudItem xs="12" sm="6" md="4" lg="4">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceAround" Spacing="4">
+                            <MudStack Spacing="0" AlignItems="AlignItems.Center">
+                                <MudText Typo="Typo.caption" Color="Color.Tertiary">SIP</MudText>
+                                <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-success">@goal.TotalSIPAmount.ToString("C0", new CultureInfo("en-IN"))</MudText>
+                            </MudStack>
+                            <MudStack Spacing="0" AlignItems="AlignItems.Center">
+                                <MudText Typo="Typo.caption" Color="Color.Tertiary">Invested</MudText>
+                                <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-info">@goal.TotalAmountInvested.ToString("C0", new CultureInfo("en-IN"))</MudText>
+                            </MudStack>
+                            <MudStack Spacing="0" AlignItems="AlignItems.Center">
+                                <MudText Typo="Typo.caption" Color="Color.Tertiary">Target</MudText>
+                                <MudText Typo="Typo.subtitle1" Class="font-weight-bold text-warning">@goal.TargetAmount.ToString("C0", new CultureInfo("en-IN"))</MudText>
+                            </MudStack>
+                        </MudStack>
+                    </MudItem>
+
+                    <!-- Progress -->
+                    <MudItem xs="12" sm="12" md="4" lg="5">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
+                            @{
+                                var progressValue = goal.TargetAmount > 0 ? (double)(goal.TotalAmountInvested / goal.TargetAmount * 100M) : 0;
+                            }
+                            <MudProgressCircular Color="@ProgressColor.GetProgressColor(goal.TotalAmountInvested, goal.TargetAmount)"
+                                                 Rounded="true" Size="Size.Large"
+                                                 StrokeWidth="4" Value="@progressValue">
+                                @if (progressValue >= 100)
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" />
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.caption" Class="text-center">
+                                        @((goal.TargetAmount > 0 ? (goal.TotalAmountInvested / goal.TargetAmount).ToString("P0") : "0%"))
+                                    </MudText>
+                                }
+                            </MudProgressCircular>
+                            <MudStack Justify="Justify.Center" Spacing="0" Style="flex-grow: 1;">
+                                <MudProgressLinear Color="@ProgressColor.GetProgressColor(goal.TotalAmountInvested, goal.TargetAmount)" Striped="false" Size="Size.Large"
+                                                   Min="0" Max="@((double) @goal.TargetAmount)"
+                                                   Value="@((double) @goal.TotalAmountInvested)" Class="my-2">
+                                    <MudText Typo="Typo.caption">
+                                        Remaining: @((goal.TargetAmount - goal.TotalAmountInvested).ToString("C0", new CultureInfo("en-IN")))
+                                    </MudText>
+                                </MudProgressLinear>
+                            </MudStack>
+                        </MudStack>
+                    </MudItem>
+                </MudGrid>
+            }
+        </MudPaper>
+    </MudContainer>
+}
+
+@code {
+    private bool _isInitializing = true;
+    private List<Goal> _goalList { get; set; } = new List<Goal>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isInitializing = true;
+        try
+        {
+            var result = await GoalService.GetAll();
+            if (result.IsSuccess)
+            {
+                _goalList = result.Data;
+            }
+            else
+            {
+                Logger.LogWarning("Failed to load goals: {ErrorMessage}", result.ErrorMessage);
+            }
+            await Task.Delay(500); // Simulate network delay
+        }
+        finally
+        {
+            _isInitializing = false;
+        }
+    }
+
+}

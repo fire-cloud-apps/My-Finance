@@ -5,7 +5,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection; // Add this using directive at the top of the file
 using MudBlazor.Services;
 using MyFinance;
-using MyFinance.Helpers;
 using MyFinance.Utility;
 using MyFinance.Utility.Helper;
 using Supabase.RestAPI;

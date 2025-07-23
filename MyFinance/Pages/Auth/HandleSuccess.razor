@@ -108,7 +108,9 @@
                 GlobalServices.UserInfo = userInfo; // Update the global user info
                 GlobalServices.AuthToken = session.AccessToken; // Update the global auth token
 
-                Logger.LogInformation($"Handle-Success::JsSession Success! {JsonSerializer.Serialize(GlobalServices.JsSession)} ");
+                //Logger.LogInformation($"Handle-Success::JsSession Success! {JsonSerializer.Serialize(GlobalServices.JsSession)} ");
+                Logger.LogWarning($"BaseUri: {NavigationManager.BaseUri}, Uri:{NavigationManager.Uri} HistoryState: {NavigationManager.HistoryEntryState} ");
+
                 NavigationManager.NavigateTo("home", false);
             }
             else

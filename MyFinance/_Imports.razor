@@ -10,7 +10,6 @@
 @using Microsoft.JSInterop
 
 @using MyFinance
-@using MyFinance.Helpers
 @using MyFinance.Layout
 @using MyFinance.Utility
 @using MyFinance.Utility.Helper
@@ -20,15 +19,4 @@
 @inject SupabaseService SupabaseService
 @inject ILocalStorageService LocalStorage
 
- @* 
-	 TODO: To be optimized for Blazor WebAssembly, consider using the following namespaces only when needed 
-
- 
- *@
 @inject IOptions<MetaDetails> MetaDetailsOptions
-
-	@* 
-		Issue-Fix: ttle: "Optimize Imports for Blazor WebAssembly"
-	*@
-@*
- Optimize: Remove unused namespaces to reduce the size of the Blazor WebAssembly application.*@
