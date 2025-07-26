@@ -19,9 +19,12 @@
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                 @if (!string.IsNullOrEmpty(context.ImageSVG))
                 {
-                    <div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                   @*  <div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
                         @((MarkupString)context.ImageSVG)
-                    </div>
+                    </div> *@
+                    <MudImage Src="@context.ImageSVG" Width="50" Height="50"
+                              Class="ma-2"
+                              Style="display: flex; align-items: center; justify-content: center; margin-right: 8px;  flex-shrink: 0;" Alt="@context.Name" />
                 }
                 else
                 {
@@ -35,10 +38,10 @@
                 </MudStack>
             </MudStack>
         </MudTd>
-        <MudTd DataLabel="Platform">
+        <MudTd DataLabel="Target">
             <MudChip T="string" Size="Size.Small"
                      Color="@(ActiveCalculate (context) ? Color.Dark : Color.Secondary)">
-				@context.CreatedAt?.ToString("MMM yyyy", new CultureInfo("en-IN"))
+				@context.TargetYear?.ToString("MMM yyyy", new CultureInfo("en-IN"))
             </MudChip>
         </MudTd>
         <MudTd DataLabel="Target Amount">

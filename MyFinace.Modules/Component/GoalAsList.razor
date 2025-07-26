@@ -10,9 +10,12 @@
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
             @if (!string.IsNullOrEmpty(Goal.ImageSVG))
             {
-                <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                <MudImage Src="@Goal.ImageSVG" Width="50" Height="50"
+                          Class="ma-2"
+                          Style="display: flex; align-items: center; justify-content: center; margin-right: 8px;  flex-shrink: 0;" Alt="@Goal.Name" />
+                @* <div style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
                     @((MarkupString)Goal.ImageSVG)
-                </div>
+                </div> *@
             }
             else
             {

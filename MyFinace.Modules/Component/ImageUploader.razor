@@ -1,36 +1,68 @@
 ﻿@using Microsoft.AspNetCore.Components.Forms
 @using System.IO
 
-<MudFileUpload T="IBrowserFile" Accept=".png, .jpg, .svg" FilesChanged="UploadFiles2" MaximumFileCount="100">
-    <ActivatorContent>
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   StartIcon="@Icons.Material.Filled.Image">
-            Only image files
-        </MudButton>
-    </ActivatorContent>
-</MudFileUpload>
+<MudStack Row="true" Spacing="1">
+    <MudFileUpload T="IBrowserFile" Accept=".png, .jpg, .svg" FilesChanged="UploadFiles" MaximumFileCount="100">
+        <ActivatorContent>
+            <MudButton Variant="Variant.Filled"
+					   Color="Color.Primary" FullWidth="true"
+                       >
+                
+                @if (!string.IsNullOrEmpty(_base64Image))
+                {
+                    <MudImage Fluid="true" Src="@_base64Image" Elevation="2"
+                              Width="24" Height="24"
+                    Style="max-width: 100%; height: auto; border-radius: 4px;" />
+                }
+                else
+                {
+                    @("Select (svg/png) Image file to upload.")
+                }
+            </MudButton>
+        </ActivatorContent>
+    </MudFileUpload>
 
-@if (!string.IsNullOrEmpty(base64Image))
-{
-    <MudText Typo="Typo.subtitle1" Class="mt-4 font-weight-bold">Image Preview:</MudText>
-    
-        <MudImage Fluid="true" Src="@base64Image" Alt="Uploaded Image Preview" 
-            Elevation="25" Class="rounded-lg ma-4"
-            Width="200" Height="150" 
-            Style="max-width: 100%; height: auto; border-radius: 8px;" />
-    
-}
+    @* @if (!string.IsNullOrEmpty(_base64Image))
+    {
+        <MudImage Fluid="true" Src="@_base64Image" Alt="Uploaded Image Preview"
+                  Elevation="25" Class="rounded-lg ma-4"
+                  Width="50" Height="50"
+                  Style="max-width: 100%; height: auto; border-radius: 8px;" />
+    } *@
+
+</MudStack>
+
+
+
 
 @code {
-    private string base64Image = string.Empty;
+    private string _base64Image = string.Empty;
     private string errorMessage = string.Empty;
+    [Parameter]
+    public string Base64Image
+    {
+        get => _base64Image;
+        set
+        {
+            if (_base64Image != value)
+            {
+                _base64Image = value;
+                // Important: Invoke the 'Changed' event when the internal value changes
+                Base64ImageChanged.InvokeAsync(value);
+				Console.WriteLine($"Base64Image changed...");
+            }
+        }
+    }
+    // This EventCallback is essential for @bind-Base64Image to work
+    [Parameter]
+    public EventCallback<string> Base64ImageChanged { get; set; }
+    
 
-    private async Task UploadFiles2(IBrowserFile file)
+    private async Task UploadFiles(IBrowserFile file)
     {
         // Clear previous messages and errors
         errorMessage = string.Empty;
-        base64Image = string.Empty;
+        _base64Image = string.Empty;
 
         if (file == null)
         {
@@ -50,16 +82,16 @@
         }
 
         // Validate file type (MIME type)
-        // Ensure only PNG, JPEG, or SVG are accepted
+        // Ensure only PNG or SVG are accepted
         if (!(file.ContentType.Equals("image/png", StringComparison.OrdinalIgnoreCase) ||
-              file.ContentType.Equals("image/jpeg", StringComparison.OrdinalIgnoreCase) ||
+              //file.ContentType.Equals("image/jpeg", StringComparison.OrdinalIgnoreCase) ||
               file.ContentType.Equals("image/svg+xml", StringComparison.OrdinalIgnoreCase)))
         {
-            errorMessage = "Invalid file type. Please upload a PNG, JPG, or SVG image.";
+            errorMessage = "Invalid file type. Please upload a PNG, or SVG image.";
             StateHasChanged();
             return;
         }
-        
+
         try
         {
             // Open a read stream for the selected file.
@@ -78,9 +110,12 @@
                     // Construct the Base64 Data URL.
                     // This format is "data:MIME_TYPE;base64,BASE64_STRING"
                     // It allows the browser to display the image directly from the string.
-                    base64Image = $"data:{file.ContentType};base64,{Convert.ToBase64String(imageBytes)}";
+                    _base64Image = $"data:{file.ContentType};base64,{Convert.ToBase64String(imageBytes)}";
                 }
             }
+			Base64Image = _base64Image; // Update the parameter with the new Base64 image string
+			await Base64ImageChanged.InvokeAsync(_base64Image); // Notify parent components of the change
+            //await OnImageSelected.InvokeAsync(base64Image);
         }
         catch (Exception ex)
         {

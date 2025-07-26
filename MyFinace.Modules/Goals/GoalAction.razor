@@ -1,4 +1,5 @@
-﻿@using Microsoft.Extensions.Logging
+﻿@using Humanizer
+@using Microsoft.Extensions.Logging
 @using MyFinace.Modules.Goals
 @using System.ComponentModel.DataAnnotations
 @using System.Globalization
@@ -8,7 +9,9 @@
 @using MyFinance.Utility.Helper
 @using Supabase.RestAPI
 @using System.Text.Json
+@using MyFinace.Modules.Component
 
+@inject ILogger<GoalAction> Logger
 @inject NavigationManager NavigationManager
 
 @implements IAsyncDisposable
@@ -63,6 +66,20 @@ else
     @* https://animate.style/ *@
     <MudPaper Elevation="6" Class="pa-6 rounded-xl animate__animated animate__fadeInUp">
         <MudForm Model="@_goal" @ref="form" Validation="@(GoalValidator)">
+            <MudPaper Class="pa-4">
+                <MudStack Row="true">   
+                
+                    <MudImage Src="@_goal.ImageSVG" Width="50" Height="50" 
+                    Class="ma-2"
+                        Style="display: flex; align-items: center; justify-content: center; flex-shrink: 0;" Alt="@_goal.Name" />
+                   
+                    <MudStack Justify="Justify.Center" Spacing="0">
+                        <MudText Typo="Typo.h5">@_goal.Name</MudText>
+                        <MudText Color="Color.Warning" Typo="Typo.body2">@("Updated " + @_goal.LastModified.Humanize())</MudText>
+                    </MudStack>
+                </MudStack>
+            </MudPaper>
+            <div class="ma-2 pa-2" />
             <MudGrid Spacing="4">
                 <MudItem xs="12" sm="6">
                     <MudTextField @bind-Value="_goal.Name"
@@ -93,14 +110,12 @@ else
                     </MudSelect>
                 </MudItem>
                 <MudItem xs="12">
-                    <MudTextField @bind-Value="_goal.Description"
-                                  Label="Description"
-                                  Variant="Variant.Outlined"
-                                  Adornment="Adornment.Start"
-                                  AdornmentIcon="@Icons.Material.Filled.Description"
-                                  Lines="3"
-                                  AdornmentColor="Color.Secondary"
-                                  For="@(() => _goal.Description)" />
+                    
+                    <MudList T="string">
+                        <MudListItem Icon="@Icons.Material.Filled.Description" IconColor="@GetColorCode(_goal.Status)">
+							@(GenerateGoalSummary(_goal))
+                        </MudListItem>
+                    </MudList>
                 </MudItem>
                 <MudItem xs="12" sm="6">
                     <MudNumericField @bind-Value="_goal.TargetAmount"
@@ -185,31 +200,6 @@ else
                     </MudSelect>
                 </MudItem>
                 <MudItem xs="12">
-                    <MudTextField @bind-Value="_goal.ImageSVG"
-                                  Label="Image (SVG)"
-                                  Variant="Variant.Outlined"
-                                  Adornment="Adornment.Start"
-                                  AdornmentIcon="@Icons.Material.Filled.Image"
-                                  AdornmentColor="Color.Warning"
-                                  HelperText="Paste your SVG code here. (e.g., &lt;svg&gt;...&lt;/svg&gt;)"
-                                  Lines="5"
-                                  For="@(() => _goal.ImageSVG)" />
-                    @if (!string.IsNullOrWhiteSpace(_goal.ImageSVG))
-                    {
-                        <div class="d-flex justify-center mt-4">
-                            <MudPaper Class="rounded-lg pa-2 mud-border-primary" Style="max-width: 150px; max-height: 150px; overflow: hidden;">
-                                <div dangerouslySetInnerHTML="@((MarkupString)_goal.ImageSVG)"></div>
-                            </MudPaper>
-                        </div>
-                        <MudText Typo="Typo.caption" Align="Align.Center" Class="mt-2">
-                            SVG Preview
-                        </MudText>
-                        <MudText Typo="Typo.caption" Align="Align.Center" Class="mt-1 text-danger">
-                            Note: If the SVG preview is not visible, ensure your pasted SVG is valid and check your browser's console for Content Security Policy (CSP) errors.
-                        </MudText>
-                    }
-                </MudItem>
-                <MudItem xs="12">
                     <MudTextField @bind-Value="_goal.Tag"
                                   Label="Tags (comma-separated)"
                                   Variant="Variant.Outlined"
@@ -219,6 +209,10 @@ else
                                   HelperText="E.g., #retirement, #education, #car"
                                   For="@(() => _goal.Tag)" />
                 </MudItem>
+                <MudItem xs="12">
+                    <ImageUploader @bind-Base64Image="@_goal.ImageSVG" />
+                </MudItem>
+               
             </MudGrid>
 
             <div Class="d-flex justify-space-between flex-grow-1 gap-4">
@@ -252,7 +246,6 @@ else
                                 OnClick="Reset">
                         Reset
                     </MudButton>
-
                 </div>
             </div>
            
@@ -261,8 +254,62 @@ else
 
 }
 
+@* Get Color Code and Goal Summary *@
+@code{
+    public Color GetColorCode(GoalStatus status)
+    {
+        Color colorCode = status switch
+        {
+            GoalStatus.YTB => Color.Default,
+            GoalStatus.InProgress => Color.Info,
+            GoalStatus.Completed => Color.Success,
+            GoalStatus.Cancelled => Color.Error,
+            GoalStatus.Hold => Color.Warning,
+			_ => Color.Dark
+        };
+        return colorCode;
+    }
+
+    public string GenerateGoalSummary(Goal goal)
+    {
+        string statusText = goal.Status switch
+        {
+            GoalStatus.YTB => "Yet to begin",
+            GoalStatus.InProgress => "In progress",
+            GoalStatus.Completed => "Completed",
+            GoalStatus.Cancelled => "Cancelled",
+            GoalStatus.Hold => "On hold",
+            _ => "in an unknown status"
+        };
+
+        string descriptionPart = string.IsNullOrEmpty(goal.Description) ? "" : $" (\"{goal.Description}\")";
+
+        string sipPart = goal.TotalSIPAmount > 0 ?
+            $"contributing {goal.TotalSIPAmount.ToString("C", Utils.CultureInfo_IN)} monthly through {goal.SIPCount} active SIPs" :
+            "";
+
+        string targetYearPart = goal.TargetYear.HasValue ?
+            $"by {goal.TargetYear.Value.Year}" :
+            "";
+
+        string startedYearPart = goal.StartedYear.HasValue ?
+            $"in {goal.StartedYear.Value.Year}" :
+            "";
+
+        return $"{goal.OwnedBy}'s goal, '{goal.Name},'{descriptionPart} is currently '{statusText}'. " +
+               $"He/She started this '{goal.InvestmentCategory}' investment {startedYearPart} with a target of ${goal.TargetAmount.ToString("C", Utils.CultureInfo_IN)} {targetYearPart}. " +
+               $"So far, he has invested {goal.TotalAmountInvested.ToString("C", Utils.CultureInfo_IN)}{(string.IsNullOrEmpty(sipPart) ? "." : $", {sipPart} towards {goal.Name.ToLower()}.")}";
+    }
+
+    // Example usage:
+    // Goal myGoal = new Goal { /* ... populate with data ... */ };
+    // string summary = GenerateGoalSummary(myGoal);
+    // Console.WriteLine(summary);
+}
+
 @* Method Initialization *@
 @code {
+    private ImageUploader? _imageUploader;
     protected override async Task OnInitializedAsync()
     {        
         _isInitializing = true;
@@ -288,7 +335,7 @@ else
                 _isCreate = false; // Editing an existing goal entry
                 var toEdit = await GoalService.GetById(GoalID);
                 _goal = toEdit.Data;
-                    
+
             }
             _model = _isCreate ? "Create" : "Edit";
             LogHelper.LogMessage(
@@ -323,10 +370,21 @@ else
         _goal.Name = "My Financial Goal"; // Default name for the goal
         _goal.Description = "This is a sample goal description. Please update it with your actual goal details.";
         _goal.InvestmentCategory = MyFinance.Model.InvestmentCategory.Bonds; // Default category for the goal
-        _goal.ImageSVG = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='lightblue'/></svg>"; // Default SVG
-
+        _goal.ImageSVG = string.Empty;
         #endregion
 	}
+}
+
+@* Image Set Trigger Event *@
+@code{    
+
+    private void HandleImageSelectedInParent(string base64Image)
+    {
+        _goal.ImageSVG = base64Image;
+        // You can do whatever you need with the received base64 image here,
+        // e.g., save it to a database, display it, etc.
+        Logger.LogInformation($"Parent received image: {base64Image.Substring(0, Math.Min(50, base64Image.Length))}..."); // Log a snippet
+    }
 }
 
 @* Submission Goal Creation *@
@@ -356,7 +414,8 @@ else
                 
                 //Add/edit Goal Logics.
                 SupabaseResult<Goal> result;
-				_goal.LastModified = DateTime.UtcNow;
+				_goal.LastModified = DateTime.Now;
+				_goal.ImageSVG = _imageUploader?.Base64Image ?? _goal.ImageSVG; 
                 if (_isCreate)
                 {
                     result = await GoalService.Create(_goal);
@@ -398,7 +457,7 @@ else
         {
             _processing = false;
 
-            NavigationManager.NavigateTo("dynamic-forms/GoalContribution/List");
+            NavigationManager.NavigateTo("dynamic-forms/Goals/List");
         }
     }
 
