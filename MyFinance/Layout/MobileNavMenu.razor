@@ -12,8 +12,13 @@
                    OnClick="@((e) =>  NavigationManager.NavigateTo("dynamic-forms/Goals/List"))" />
 
     <MudSpacer />
+    <MudIconButton Icon="@Icons.Material.Filled.Book"
+                   Color="Color.Tertiary" Edge="Edge.Start"
+                   OnClick="@((e) => NavigationManager.NavigateTo(@MetaDetailsOptions.Value.InternalURLs.Learn))" />
+
     <MudIconButton Icon="@Icons.Material.Filled.List"
                    Color="Color.Tertiary" Edge="Edge.Start"
                    OnClick="@((e) => NavigationManager.NavigateTo(@MetaDetailsOptions.Value.InternalURLs.GoalEntryList))" />
+    
 
 </MudAppBar>

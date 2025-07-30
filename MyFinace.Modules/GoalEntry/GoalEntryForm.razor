@@ -48,17 +48,11 @@ else
                                     AdornmentIcon="@Icons.Material.Filled.EmojiObjects" AdornmentColor="Color.Warning" Adornment="Adornment.Start" Variant="Variant.Outlined" FullWidth="true"></MudTextField>
                 </MudItem>
                 <MudItem xs="12">
-                    @* @bind-Value="goalEntry.Description" *@
-
                     <MudList T="string">
                         <MudListItem Icon="@Icons.Material.Filled.Description" IconColor="@(goalEntry.IsActive ? Color.Info : Color.Secondary)" >
                             @GoalDescription
                         </MudListItem>
-                    </MudList>
-                  
-
-                    @* <MudTextField  @bind-Value="@goalEntry.Description" FullWidth="true"
-                                    AdornmentIcon="@Icons.Material.Filled.Description" AdornmentColor="Color.Info" Adornment="Adornment.Start"></MudTextField> *@
+                    </MudList>                  
                 </MudItem>
                 <MudItem xs="12" sm="6">
                     <MudSelect @bind-Value="goalEntry.Platform" Label="Platform" Required="true" RequiredError="Platform is required!"

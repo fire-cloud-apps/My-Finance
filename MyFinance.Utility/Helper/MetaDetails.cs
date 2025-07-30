@@ -22,6 +22,7 @@ public class InternalURLs
     public string GoalList { get; set; } = string.Empty;
     public string GoalEntryList { get; set; } = string.Empty;
     public string GoalEntryAdd { get; set; } = string.Empty;
+    public string Learn { get; set; } = string.Empty;
 }
 
 public class DefaultSettings

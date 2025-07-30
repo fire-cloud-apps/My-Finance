@@ -33,10 +33,10 @@ else
             }            
         </MudStack>
         <MudSpacer />
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-            <MudText Typo="Typo.body2" Class="mud-text-secondary">View: @(selectedViewMode)</MudText>
+        <MudStack Row="@(DeviceType == DeviceType.Desktop)" AlignItems="AlignItems.Center" Spacing="2">
 
-            <MudToggleGroup T="string" @bind-Value="selectedViewMode"  SelectionMode="SelectionMode.SingleSelection" Class="ml-2">
+            @* <MudText Typo="Typo.body2" Class="mud-text-secondary">View: @(selectedViewMode)</MudText>
+                <MudToggleGroup T="string" @bind-Value="selectedViewMode"  SelectionMode="SelectionMode.SingleSelection" Class="ml-2">
                 <MudToggleItem Value="@("card")" Text="card" Title="Card View">
                     <MudIcon Icon="@Icons.Material.Filled.ViewModule" />
                 </MudToggleItem>
@@ -46,13 +46,27 @@ else
                 <MudToggleItem Value="@("table")" Text="table" Title="Table View">
                     <MudIcon Icon="@Icons.Material.Filled.TableChart" />
                 </MudToggleItem>
-            </MudToggleGroup> 
+            </MudToggleGroup>  *@
 
             <MudDivider Vertical="true" FlexItem="true" Class="mx-2" />
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Medium" StartIcon="@Icons.Material.Filled.Add"
-                       OnClick="@(() => NavigationManager.NavigateTo("dynamic-forms/GoalContribution/add-plan"))">
-                Add New Goal
-            </MudButton>
+            
+            @if(DeviceType == DeviceType.Mobile)
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.Add"
+							   Color="Color.Tertiary"
+                               OnClick="@(() => NavigationManager.NavigateTo("dynamic-forms/GoalContribution/add-plan"))"
+                aria-label="Add Goals" />
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           Size="Size.Medium" StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="@(() => NavigationManager.NavigateTo("dynamic-forms/GoalContribution/add-plan"))">
+                    Add New Goal
+                </MudButton>
+            }
+            
+            
         </MudStack>
     </div>
 
@@ -69,10 +83,23 @@ else
                     }                   
                 </MudMenu>
             </MudTooltip>
+            <MudTooltip Text="Filter by Platform" Color="Color.Secondary"
+                        Arrow="true">
+                <MudMenu Icon="@Icons.Material.Filled.CorporateFare"
+                         Class="mr-5" AriaLabel="Filter by Platform">
+                    @foreach (var platform in GoalEntryMetaData.Platform)
+                    {
+                        <MudMenuItem OnClick="@(() => FilterByPlatform(platform))"
+                            Value="@platform">@platform</MudMenuItem>
+                    }
+                </MudMenu>
+            </MudTooltip>
+
+           
 
             <MudTooltip Text="Filter by Active/InActive" Color="Color.Secondary"
                         Arrow="true">
-                <MudCheckBox @bind-Value="_selectedIsActive" Color="@Color.Primary"></MudCheckBox>
+                <MudCheckBox @bind-Value="IsActiveSelected" Color="@Color.Primary"></MudCheckBox>
             </MudTooltip>
 
             <MudTextField @bind-Value="searchTerm"
@@ -87,6 +114,17 @@ else
                           @bind-Value:after="OnSearchChanged"
                           DebounceInterval="300" />
 
+            <MudToggleGroup T="string" @bind-Value="selectedViewMode" SelectionMode="SelectionMode.SingleSelection" Class="ml-2">
+                <MudToggleItem Value="@("card")" Text="card" Title="Card View">
+                    <MudIcon Icon="@Icons.Material.Filled.ViewModule" />
+                </MudToggleItem>
+                <MudToggleItem Value="@("list")" Text="list" Title="List View">
+                    <MudIcon Icon="@Icons.Material.Filled.ViewList" />
+                </MudToggleItem>
+                <MudToggleItem Value="@("table")" Text="table" Title="Table View">
+                    <MudIcon Icon="@Icons.Material.Filled.TableChart" />
+                </MudToggleItem>
+            </MudToggleGroup>
             <MudTooltip Text="Clear All Filters" Color="Color.Info"
                         Arrow="true">
                 <MudIconButton Icon="@Icons.Material.Filled.ClearAll"
@@ -432,7 +470,8 @@ else
     }
 }
 
-@code {
+@* Global Variables *@
+@code{
     [Parameter]
     public SupabaseApiService<GoalEntry> SupabaseService { get; set; }
 
@@ -440,16 +479,16 @@ else
     public DeviceType DeviceType { get; set; } = DeviceType.Desktop;
     // View mode selection
     private string selectedViewMode = "card";
-    
+
     // Search related properties
     private string searchTerm = string.Empty;
     private bool IsSearchActive => !string.IsNullOrWhiteSpace(searchTerm);
-    
+
     // Data properties
     private List<GoalEntry> AllGoals { get; set; } = new();
     private List<GoalEntry> FilteredGoals { get; set; } = new();
     private List<GoalEntry> DisplayedGoals { get; set; } = new();
-    
+
     // Pagination properties
     private int currentPage = 1;
     private int limit = 12;
@@ -461,9 +500,14 @@ else
     {
         "SR Ganesh Ram","SR Alamelu"
     };
-    
+
     private string[] cardClass = { "rounded-xl d-flex flex-column mud-background-alt", "rounded-xl d-flex flex-column mud-background-alt mud-border-secondary" };
 
+}
+
+@* Initialization Code *@
+@code {
+    
     protected override async Task OnInitializedAsync()
     {
         await LoadAllGoals();
@@ -528,6 +572,11 @@ else
             FilteredGoals = FilteredGoals
                 .Where(g => g.OwnedBy.Equals(_selectedOwner, StringComparison.OrdinalIgnoreCase)).ToList();
         }
+        if (!string.IsNullOrEmpty(_selectedPlatform))
+        {
+            FilteredGoals = FilteredGoals
+                .Where(g => g.Platform.Equals(_selectedPlatform, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
         if (_selectedIsActive.HasValue)
         {
             FilteredGoals = FilteredGoals
@@ -557,15 +606,7 @@ else
     {
         ApplyFilter();
         StateHasChanged();
-    }
-
-    private void ClearSearch()
-    {
-        searchTerm = string.Empty;
-		_selectedOwner = string.Empty;
-        ApplyFilter();
-        StateHasChanged();
-    }
+    }    
 
     private async Task OnPageChange(int pageNumber)
     {
@@ -573,7 +614,10 @@ else
         UpdateDisplayedGoals();
         await InvokeAsync(StateHasChanged);
     }
+}
 
+@* Delete/Edit Actions *@
+@code{
     private async Task ConfirmDeleteGoal(Guid goalId, string goalName)
     {
         var parameters = new DialogParameters
@@ -615,7 +659,7 @@ else
                 AllGoals.RemoveAll(g => g.Id == goalId);
                 totalGoalsCount = AllGoals.Count;
                 ApplyFilter();
-                
+
                 if (DisplayedGoals.Count == 0 && currentPage > 1)
                 {
                     currentPage--;
@@ -653,13 +697,37 @@ else
         Logger.LogInformation($"Filtering goals by Owner: {owner}");
         ApplyFilter();
     }
-
-    public bool? _selectedIsActive = null;
-    private async Task FilterByActive(bool activeState)
+    private bool? _selectedIsActive = null;
+    private bool? IsActiveSelected
     {
-		_selectedIsActive = activeState;
-        Logger.LogInformation($"Filtering by Active/InActive: {activeState}");
+        get
+        {
+            return _selectedIsActive;
+        }
+        set
+        {
+            _selectedIsActive = value;
+            Logger.LogInformation($"Filtering by Active/InActive: {value}");
+            ApplyFilter();
+        }
+    }
+
+    string _selectedPlatform = string.Empty;
+    private async Task FilterByPlatform(string platform)
+    {
+        _selectedPlatform = platform;
+        Logger.LogInformation($"Filtering by Platform: {platform}");
         ApplyFilter();
+    }
+
+    private void ClearSearch()
+    {
+        searchTerm = string.Empty;
+        _selectedOwner = string.Empty;
+        _selectedIsActive = null;
+        _selectedPlatform = string.Empty;
+        ApplyFilter();
+        StateHasChanged();
     }
 
 }
