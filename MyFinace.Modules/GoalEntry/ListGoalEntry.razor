@@ -1,4 +1,5 @@
 ﻿@page "/goalentries"
+@using Microsoft.Extensions.Logging
 @using MyFinance.Model
 @using MyFinance.Utility.Helper
 @using Supabase.RestAPI
@@ -7,7 +8,7 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject NavigationManager NavigationManager
-
+@inject ILogger<ListGoalEntry> Logger
 
 @if (isLoading && DisplayedGoals.Count == 0 && totalGoalsCount == 0)
 {
@@ -56,17 +57,44 @@ else
     </div>
 
     <MudPaper Elevation="6" Class="pa-6 rounded-xl animate__animated animate__fadeInUp mb-8">
-        <MudTextField @bind-Value="searchTerm"
-                      Label="Search Goals by Name"
-                      Variant="Variant.Outlined"
-                      Adornment="Adornment.End"
-                      AdornmentIcon="@Icons.Material.Filled.Search"
-                      AdornmentColor="Color.Primary"
-                      Clearable="true"
-                      OnAdornmentClick="PerformSearch"
-                      OnClearButtonClick="ClearSearch"
-                      @bind-Value:after="OnSearchChanged"
-                      DebounceInterval="300" />
+         <MudToolBar WrapContent="true">
+            <MudTooltip Text="Filter by Owner" Color="Color.Secondary"
+                        Arrow="true">
+                <MudMenu Icon="@Icons.Material.Filled.Person"
+                         Class="mr-5" AriaLabel="Filter by Owner">
+                    @foreach (var owned in _ownedBy)
+                    {
+                        <MudMenuItem OnClick="@(() => FilterByOwner(owned))"
+                                     Label="@owned" />
+                    }                   
+                </MudMenu>
+            </MudTooltip>
+
+            <MudTooltip Text="Filter by Active/InActive" Color="Color.Secondary"
+                        Arrow="true">
+                <MudCheckBox @bind-Value="_selectedIsActive" Color="@Color.Primary"></MudCheckBox>
+            </MudTooltip>
+
+            <MudTextField @bind-Value="searchTerm"
+                          Label="Search Goals by Name"
+                          Variant="Variant.Outlined"
+                          Adornment="Adornment.End"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          AdornmentColor="Color.Primary"
+                          Clearable="true"
+                          OnAdornmentClick="PerformSearch"
+                          OnClearButtonClick="ClearSearch"
+                          @bind-Value:after="OnSearchChanged"
+                          DebounceInterval="300" />
+
+            <MudTooltip Text="Clear All Filters" Color="Color.Info"
+                        Arrow="true">
+                <MudIconButton Icon="@Icons.Material.Filled.ClearAll"
+                               OnClick="ClearSearch"
+                               Color="Color.Info" />
+            </MudTooltip>
+        </MudToolBar>
+       
     </MudPaper>
 
     @if (DisplayedGoals.Count == 0 && !string.IsNullOrWhiteSpace(searchTerm))
@@ -429,6 +457,10 @@ else
     private int totalGoalsCount = 0;
     private int totalFilteredGoals = 0;
     private int totalFilteredPages = 0;
+    private readonly string[] _ownedBy =
+    {
+        "SR Ganesh Ram","SR Alamelu"
+    };
     
     private string[] cardClass = { "rounded-xl d-flex flex-column mud-background-alt", "rounded-xl d-flex flex-column mud-background-alt mud-border-secondary" };
 
@@ -491,6 +523,18 @@ else
             ).OrderBy(g => g.LastModified).ToList();
         }
 
+        if (!string.IsNullOrEmpty(_selectedOwner))
+        {
+            FilteredGoals = FilteredGoals
+                .Where(g => g.OwnedBy.Equals(_selectedOwner, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+        if (_selectedIsActive.HasValue)
+        {
+            FilteredGoals = FilteredGoals
+                .Where(g => g.IsActive.Equals(_selectedIsActive)).ToList();
+        }
+        
+
         totalFilteredGoals = FilteredGoals.Count;
         totalFilteredPages = (int)Math.Ceiling(totalFilteredGoals / (double)limit);
         currentPage = 1;
@@ -518,6 +562,7 @@ else
     private void ClearSearch()
     {
         searchTerm = string.Empty;
+		_selectedOwner = string.Empty;
         ApplyFilter();
         StateHasChanged();
     }
@@ -597,4 +642,24 @@ else
     {
         NavigationManager.NavigateTo($"dynamic-forms/GoalContribution/edit-plan/{goalId}");
     }
+}
+
+@* Filter's *@
+@code {
+    string _selectedOwner = string.Empty;
+    private async Task FilterByOwner(string owner)
+    {
+        _selectedOwner = owner;
+        Logger.LogInformation($"Filtering goals by Owner: {owner}");
+        ApplyFilter();
+    }
+
+    public bool? _selectedIsActive = null;
+    private async Task FilterByActive(bool activeState)
+    {
+		_selectedIsActive = activeState;
+        Logger.LogInformation($"Filtering by Active/InActive: {activeState}");
+        ApplyFilter();
+    }
+
 }

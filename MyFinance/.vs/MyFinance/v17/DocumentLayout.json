@@ -3,10 +3,10 @@
   "WorkspaceRootPath": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinance\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{6CDF67F2-189B-4ABC-B507-EB4FFA0DF97F}|..\\MyFinace.Modules\\MyFinace.Modules.csproj|d:\\github\\git.hotmail\\my-finance\\myfinace.modules\\goals\\goalaction.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{6CDF67F2-189B-4ABC-B507-EB4FFA0DF97F}|..\\MyFinace.Modules\\MyFinace.Modules.csproj|d:\\github\\git.hotmail\\my-finance\\myfinace.modules\\goalentry\\listgoalentry.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{6CDF67F2-189B-4ABC-B507-EB4FFA0DF97F}|..\\MyFinace.Modules\\MyFinace.Modules.csproj|d:\\github\\git.hotmail\\my-finance\\myfinace.modules\\component\\imageuploader.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{6CDF67F2-189B-4ABC-B507-EB4FFA0DF97F}|..\\MyFinace.Modules\\MyFinace.Modules.csproj|d:\\github\\git.hotmail\\my-finance\\myfinace.modules\\goalentry\\goalentryform.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     }
   ],
   "DocumentGroupContainers": [
@@ -16,37 +16,37 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 1,
           "Children": [
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
-            },
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "ImageUploader.razor",
-              "DocumentMoniker": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\Component\\ImageUploader.razor",
-              "RelativeDocumentMoniker": "..\\MyFinace.Modules\\Component\\ImageUploader.razor",
-              "ToolTip": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\Component\\ImageUploader.razor",
-              "RelativeToolTip": "..\\MyFinace.Modules\\Component\\ImageUploader.razor",
-              "ViewState": "AgIAABIAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAA==",
+              "Title": "GoalEntryForm.razor",
+              "DocumentMoniker": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\GoalEntry\\GoalEntryForm.razor",
+              "RelativeDocumentMoniker": "..\\MyFinace.Modules\\GoalEntry\\GoalEntryForm.razor",
+              "ToolTip": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\GoalEntry\\GoalEntryForm.razor",
+              "RelativeToolTip": "..\\MyFinace.Modules\\GoalEntry\\GoalEntryForm.razor",
+              "ViewState": "AgIAABABAAAAAAAAAAAkwMYAAAAGAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-07-26T06:32:04.646Z",
+              "WhenOpened": "2025-07-29T15:45:30.844Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "GoalAction.razor",
-              "DocumentMoniker": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\Goals\\GoalAction.razor",
-              "RelativeDocumentMoniker": "..\\MyFinace.Modules\\Goals\\GoalAction.razor",
-              "ToolTip": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\Goals\\GoalAction.razor",
-              "RelativeToolTip": "..\\MyFinace.Modules\\Goals\\GoalAction.razor",
-              "ViewState": "AgIAAEMAAAAAAAAAAAAAAEkAAABYAAAAAAAAAA==",
+              "Title": "ListGoalEntry.razor",
+              "DocumentMoniker": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\GoalEntry\\ListGoalEntry.razor",
+              "RelativeDocumentMoniker": "..\\MyFinace.Modules\\GoalEntry\\ListGoalEntry.razor",
+              "ToolTip": "D:\\GitHub\\Git.Hotmail\\My-Finance\\MyFinace.Modules\\GoalEntry\\ListGoalEntry.razor",
+              "RelativeToolTip": "..\\MyFinace.Modules\\GoalEntry\\ListGoalEntry.razor",
+              "ViewState": "AgIAAJoBAAAAAAAAAAAAAI8CAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-07-24T12:00:59.928Z",
+              "WhenOpened": "2025-07-29T15:44:17.781Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
             }
           ]
         }

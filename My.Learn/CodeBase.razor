@@ -1,0 +1,51 @@
+﻿@page "/learn"
+@using Microsoft.JSInterop
+@using MudBlazor
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Code & Diagrams</PageTitle>
+
+<MudCard Elevation="8" Class="ma-4 mt-8 rounded-lg pa-4 d-flex flex-column" Style=" height: 100%; border: 1px solid var(--mud-palette-lines-default);">
+    @((MarkupString)_html)
+</MudCard>
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-8">
+
+    
+</MudContainer> 
+
+@code {
+    private bool _isInitialized = false;
+    [Parameter]
+    public string Markdown { get; set; } = string.Empty;
+	private string _html = string.Empty;
+    protected override async Task OnInitializedAsync()
+    {
+        _isInitialized = false;
+        try
+        {
+            _html = Markdig.Markdown.ToHtml(Markdown);
+			_html = _html.Replace("<pre><code class=\"language-mermaid\">", "<pre class=\"mermaid\">");
+            await Task.Delay(500);
+           
+        }
+        finally
+        {
+            _isInitialized = true;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Call the JavaScript function to initialize Highlight.js
+            await JSRuntime.InvokeVoidAsync("initHighlightJs");
+
+            // Call the JavaScript function to initialize Mermaid.js
+            await JSRuntime.InvokeVoidAsync("initMermaidJs");
+
+            // Just for demonstration: log a message from Blazor to JS console
+            await JSRuntime.InvokeVoidAsync("logMessage", "Blazor component has finished its first render!");
+        }
+    }
+}

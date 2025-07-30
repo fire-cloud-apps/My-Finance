@@ -1,0 +1,25 @@
+{
+  "version": 2,
+  "dgSpecHash": "VRLJXmPCzYo=",
+  "success": true,
+  "projectFilePath": "D:\\GitHub\\Git.Hotmail\\My-Finance\\My.Learn\\My.Learn.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\sr.ganeshram\\.nuget\\packages\\markdig\\0.41.3\\markdig.0.41.3.nupkg.sha512",
+    "C:\\Users\\sr.ganeshram\\.nuget\\packages\\microsoft.aspnetcore.authorization\\9.0.6\\microsoft.aspnetcore.authorization.9.0.6.nupkg.sha512",
+    "C:\\Users\\sr.ganeshram\\.nuget\\packages\\microsoft.aspnetcore.components\\9.0.6\\microsoft.aspnetcore.components.9.0.6.nupkg.sha512",
+    "C:\\Users\\sr.ganeshram\\.nuget\\packages\\microsoft.aspnetcore.components.analyzers\\9.0.6\\microsoft.aspnetcore.components.analyzers.9.0.6.nupkg.sha512",
+    "C:\\Users\\sr.ganeshram\\.nuget\\packages\\microsoft.aspnetcore.components.forms\\9.0.6\\microsoft.aspnetcore.components.forms.9.0.6.nupkg.sha512",
+    "C:\\Users\\sr.ganeshram\\.nuget\\packages\\microsoft.aspnetcore.components.web\\9.0.6\\microsoft.aspnetcore.components.web.9.0.6.nupkg.sha512",
+    "C:\\Users\\sr.ganeshram\\.nuget\\packages\\microsoft.aspnetcore.metadata\\9.0.6\\microsoft.aspnetcore.metadata.9.0.6.nupkg.sha512",
+    "C:\\Users\\sr.ganeshram\\.nuget\\packages\\microsoft.extensions.dependencyinjection\\9.0.6\\microsoft.extensions.dependencyinjection.9.0.6.nupkg.sha512",
+    "C:\\Users\\sr.ganeshram\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\9.0.6\\microsoft.extensions.dependencyinjection.abstractions.9.0.6.nupkg.sha512",
+    "C:\\Users\\sr.ganeshram\\.nuget\\packages\\microsoft.extensions.localization\\9.0.1\\microsoft.extensions.localization.9.0.1.nupkg.sha512",
+    "C:\\Users\\sr.ganeshram\\.nuget\\packages\\microsoft.extensions.localization.abstractions\\9.0.1\\microsoft.extensions.localization.abstractions.9.0.1.nupkg.sha512",
+    "C:\\Users\\sr.ganeshram\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\9.0.6\\microsoft.extensions.logging.abstractions.9.0.6.nupkg.sha512",
+    "C:\\Users\\sr.ganeshram\\.nuget\\packages\\microsoft.extensions.options\\9.0.6\\microsoft.extensions.options.9.0.6.nupkg.sha512",
+    "C:\\Users\\sr.ganeshram\\.nuget\\packages\\microsoft.extensions.primitives\\9.0.6\\microsoft.extensions.primitives.9.0.6.nupkg.sha512",
+    "C:\\Users\\sr.ganeshram\\.nuget\\packages\\microsoft.jsinterop\\9.0.6\\microsoft.jsinterop.9.0.6.nupkg.sha512",
+    "C:\\Users\\sr.ganeshram\\.nuget\\packages\\mudblazor\\8.8.0\\mudblazor.8.8.0.nupkg.sha512"
+  ],
+  "logs": []
+}

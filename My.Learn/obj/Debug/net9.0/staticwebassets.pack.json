@@ -1,0 +1,37 @@
+{
+  "Files": [
+    {
+      "Id": "D:\\GitHub\\Git.Hotmail\\My-Finance\\My.Learn\\obj\\Debug\\net9.0\\scopedcss\\projectbundle\\My.Learn.bundle.scp.css",
+      "PackagePath": "staticwebassets\\My.Learn.sho72d0y9l.bundle.scp.css"
+    },
+    {
+      "Id": "D:\\GitHub\\Git.Hotmail\\My-Finance\\My.Learn\\wwwroot\\background.png",
+      "PackagePath": "staticwebassets\\background.png"
+    },
+    {
+      "Id": "D:\\GitHub\\Git.Hotmail\\My-Finance\\My.Learn\\wwwroot\\exampleJsInterop.js",
+      "PackagePath": "staticwebassets\\exampleJsInterop.js"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.My.Learn.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssetEndpoints.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.My.Learn.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.build.My.Learn.props",
+      "PackagePath": "build\\My.Learn.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.buildMultiTargeting.My.Learn.props",
+      "PackagePath": "buildMultiTargeting\\My.Learn.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.buildTransitive.My.Learn.props",
+      "PackagePath": "buildTransitive\\My.Learn.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

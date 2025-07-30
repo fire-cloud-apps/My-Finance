@@ -48,6 +48,8 @@ builder.Services.Configure<MetaDetails>(configuration.GetSection("MetaDetails"))
 
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddMudServices();
+// Temporarily added Blazor for MdView.
+//builder.Services.AddBlazorBootstrap();
 
 // Register the authentication token provider service
 // IAuthTokenProvider and AuthTokenProvider are now in the Supabase.RestAPI namespace

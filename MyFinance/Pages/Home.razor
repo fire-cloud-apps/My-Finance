@@ -8,12 +8,14 @@
 @using Supabase.RestAPI
 @using static MyFinance.Component.DeviceDetect
 
+@inject IJSRuntime JsRuntime
 @inject SupabaseApiService<Goal> GoalService
 @inject SupabaseApiService<GoalEntry> GoalEntryService
 @inject IAuthTokenProvider AuthTokenProvider
 
 @if (_isInitializing)
 {
+   
     <MudCard>
         <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="200px" />
         <MudCardContent>
@@ -28,9 +30,9 @@
     </MudCard>
 }
 else
-{    
-    
-
+{
+   @*  <My.Learn.CodeBase Markdown="@_html" /> *@
+   
     <GoalsDashboard GoalApiService="@GoalService" />
     <br />
     <GoalDashboard GoalApiService="@GoalService" />
@@ -42,6 +44,8 @@ else
 @code {
 
     private bool _isInitializing = true;
+    private string _html;
+    private string _markdown = string.Empty;
     protected override async Task OnInitializedAsync()
     {
 
@@ -56,9 +60,13 @@ else
                 level: LogLevel.Information);
             GoalService.AccessToken = GlobalServices.AuthToken;
             GoalEntryService.AccessToken = GlobalServices.AuthToken;
-			
+
             await Task.Delay(500);
 
+            _markdown = await HTTPClient.GetStringAsync("md/Real-time-Analytics.md");
+            _html = Markdig.Markdown.ToHtml(_markdown);
+
+            
             StateHasChanged();
         }
         finally

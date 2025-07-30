@@ -1,0 +1,25 @@
+﻿
+
+@* 
+<Markdown style="overflow-y:auto;">@Markdown</Markdown>
+ *@
+ 
+
+@code{
+    private bool _isInitialized = false;
+    [Parameter]
+    public string Markdown { get; set; } = string.Empty;
+    protected override async Task OnInitializedAsync()
+    {
+        _isInitialized = false;
+        try
+        {
+            await Task.Delay(500);
+        }
+        finally
+        {
+            _isInitialized = true;
+        }
+    }
+
+}
